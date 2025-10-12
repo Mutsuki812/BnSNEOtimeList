@@ -38,6 +38,7 @@
   --color-success: #9FB1A5;              /* 龜甲青綠 Kamenozoki */
   
   /* ━━━ 間距系統 | Spacing System ━━━ */
+   --space-2xs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -295,7 +296,7 @@ body {
   grid-template-columns: 115px 100px 1fr;
   align-items: center;
   min-height: 52px;
-  padding: var(--space-md);
+  padding: var(--space-2xs);
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-bold);
   text-align: center;
@@ -815,4 +816,5 @@ select:focus-visible {
     --color-text-secondary: #1a1a1a;
     --color-border: #333333;
   }
+
 }
