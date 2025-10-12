@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>B&S NEO 時間表</title>
+
+  <link rel="stylesheet" href="./style/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 日期與時間 -->
+    <header id="topBar">
+      <div id="topLeft">
+        <div id="dateLabel" class="dateLabel"></div>
+        <div id="timeBox" class="timeBox"></div>
+      </div>
+      <!-- 切換按鈕 -->
+      <div id="topRight">
+        <button id="langBtn" class="langBtn"></button>
+      </div>
+    </header>
+    <!-- 說明文字 -->
+    <div class="langText"></div>
+
+    <!-- 整個任務區 -->
+    <section id="mainCard" class="mainCard ">
+      <div id="taskContainer" class="taskContainer m-plus-1p-regular"></div>
+    </section>
+
+    <!-- 回報區 -->
+    <section id="reportSection" class="reportSection">
+      <div class="reportTitle"></div>
+      <div class="reportForm">
+        <div class="reportText"></div>
+        <select id="reportTaskType">
+          <option value="gishiki"></option>
+          <option value="mizuki"></option>
+          <option value="shirao"></option>
+          <option value="other"></option>
+        </select>
+
+        <select id="reportType">
+          <option value="date_report"></option>
+          <option value="other"></option>
+        </select>
+        <input type="text" id="reportComment" placeholder="10/08 19:26 地點 地點" />
+
+        <div class="reportContainer">
+          <div id="reportMessage"></div>
+          <div class="reportButtons">
+            <button id="submitReport"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 回報紀錄-->
+      <div class="reportLog">
+        <div id="reportList" class="reportList"></div>
+        <div id="reportDel">
+          <button id="clearReports" style="display: none;"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="./script/main.js"></script>
+</body>
+
+</html>
