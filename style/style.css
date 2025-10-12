@@ -296,7 +296,6 @@ body {
   grid-template-columns: 115px 100px 1fr;
   align-items: center;
   min-height: 52px;
-  padding: var(--space-2xs);
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-bold);
   text-align: center;
@@ -818,3 +817,4 @@ select:focus-visible {
   }
 
 }
+
