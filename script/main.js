@@ -31,7 +31,7 @@ const REPORT_TYPES = {
 const dateRanges = {
   zh: {
     start: new Date('2025-10-15T11:00:00+08:00'), // 台灣時間 10/15 11:00
-    end: new Date('2025-10-22T05:59:59+08:00')     // 台灣時間 10/22 06:00
+    end: new Date('2025-10-15T11:00:01+08:00')     // 台灣時間 10/22 06:00
   },
   jp: {
     start: new Date('2025-10-15T10:00:00+09:00'), // 日本時間 10/15 10:00
@@ -149,10 +149,10 @@ function timeStringToDateToday(timeStr) {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
 }
 
-// 判斷是否應該顯示「其他時間」按鈕（21:00 後隱藏）
-function shouldShowRemaining() {
-  return getNowBySVR().getHours() < 21;
-}
+// // 判斷是否應該顯示「其他時間」按鈕（21:00 後隱藏）
+// function shouldShowRemaining() {
+//   return getNowBySVR().getHours() < 21;
+// }
 
 /* ==========================
    ====== 當前日期是否為每一季的第一周 ======
@@ -217,14 +217,17 @@ function updateLangText() {
   }
   const texts = {
     zh: "<b>白青山脈Ｓ２　2025.10.15-2025.11.12</b><br>" +
+      "新開始的第一周 暫無數據<br>" +
+      "請各位大俠幫幫忙<br><br>" +
       "・表記時間為<b>系統出字</b>提示的時間<br>" +
       "・出字提示後約５分鐘Boss登場。<br>" +
-      "・黃色時間代表的是路過時看到 Boss 在閒晃的時間，<br>" +
+      "・時間後標有[?]的部分，表示是路過時看到 Boss 在閒晃的時間，<br>" +
       "　並不是系統出字的時間，若有更準確的時間資訊，歡迎補充！<br>",
     jp: "<b>白青シーズン２　2025.10.15-2025.11.12</b><br>" +
       "・表の時間 ＝ 予兆が表示の時間<br>" +
       "・予兆後約５分でボスが出現します。<br>" +
-      "・黄色の時間は、通りすがりでボスが徘徊しているのを確認した時間です。<br>" +
+      "・時間の後ろに[？]が付いている場合は、<br>" +
+      "　通りすがりでボスが徘徊しているのを確認した時間です。<br>" +
       "　予兆の出現時間ではありません。<br>" +
       "　もしより詳しい時間が分かる場合は、ぜひご提供ください。<br>"
   };
@@ -415,7 +418,7 @@ function renderAllGroups(rows) {
   });
 }
 
-// === 新增：取得指定星期的任務列表 ===
+// === 取得指定星期的任務列表 ===
 function getTaskListForWeek(rows, type, weekZh) {
   return rows
     .filter(r => r["Week-zh"] === weekZh && r[`${type.key}-time`])
@@ -429,8 +432,19 @@ function getTaskListForWeek(rows, type, weekZh) {
         timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
       }
 
+      // 處理 _? 後綴
+      let actualTime = String(timeStr || "00:00");
+      let hasQuestionMark = false;
+
+      if (actualTime.includes("_?")) {
+        hasQuestionMark = true;
+        actualTime = actualTime.replace("_?", ""); // 移除 _? 保留純時間
+      }
+
       return {
-        time: String(timeStr || "00:00"),
+        // time: String(timeStr || "00:00"),
+        time: actualTime,  // 純時間用於排序和比較
+        hasQuestionMark: hasQuestionMark,  // 標記是否有 ?
         zh: r[`${type.key}-zh`] || "",
         jp: r[`${type.key}-jp`] || "",
         isNextDay: false // 預設為今天
@@ -489,9 +503,22 @@ function createCurrentTaskRow(type, item) {
 
   const content = item ? getTaskContent(item) : "-------";
   const isMaintenance = item && isMaintenanceTask(item);
-  const timeText = isMaintenance ? "" : (item?.time || "--:--");
-  const maintenanceClass = isMaintenance ? "maintenance" : "";
 
+  let timeText = "";
+  if (!isMaintenance) {
+    if (item) {
+      timeText = item.time || "--:--";
+      if (item.hasQuestionMark) {
+        timeText += ' <span class="question-mark">[?]</span>';
+      }
+    } else {
+      timeText = "--:--";
+    }
+  }
+
+
+  // isMaintenance ? "" : (item?.time || "--:--");
+  const maintenanceClass = isMaintenance ? "maintenance" : "";
 
   row.innerHTML = `
     <div class="col-type">${lang === "zh" ? type.labelZh : type.labelJp}</div>
@@ -538,12 +565,15 @@ function createTaskRow(item, isRemaining = false) {
   if (!isMaintenance) {
     // 不是維修任務，才顯示時間
     displayTime = item.time || "--:--";
+    // 加入 [?] 標記
+    if (item.hasQuestionMark) {
+      displayTime += ' <span class="question-mark">[?]</span>';
+    }
   }
   if (item.isNextDay) {
     const nextDayLabel = lang === "zh" ? "(明)" : "(翌)";
     displayTime = `<span class="tomorrow">${nextDayLabel}</span><br>${item.displayTime || item.time}`;
   }
-
 
   taskRow.innerHTML = `
     <span class="placeholder"></span>

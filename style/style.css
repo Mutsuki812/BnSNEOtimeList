@@ -412,6 +412,12 @@ body {
   padding: var(--space-xs) var(--space-sm);
 }
 
+/* [?] 標記樣式：小字、灰色 */
+.question-mark {
+  font-size: var(--font-size-xs);
+  color: #999;        /* 灰色 */
+  margin-left: 2px;
+}
 
 /* ====================================================================
    🔽 可收合區塊 | Collapsible Section
