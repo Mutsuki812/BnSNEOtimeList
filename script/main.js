@@ -27,6 +27,18 @@ const REPORT_TYPES = {
   ]
 };
 
+// 每一季的第一周時間
+const dateRanges = {
+  zh: {
+    start: new Date('2025-10-15T11:00:00+08:00'), // 台灣時間 10/15 11:00
+    end: new Date('2025-10-22T05:59:59+08:00')     // 台灣時間 10/22 06:00
+  },
+  jp: {
+    start: new Date('2025-10-15T10:00:00+09:00'), // 日本時間 10/15 10:00
+    end: new Date('2025-10-22T05:59:59+09:00')     // 日本時間 10/22 06:00
+  }
+};
+
 const REPORT_STORAGE_KEY = "myReports";
 
 // 維修任務的匹配模式
@@ -66,10 +78,18 @@ document.getElementById("langBtn").addEventListener("click", () => {
   // 儲存使用者的語言選擇
   localStorage.setItem('userLang', lang);
 
+  // 更新按鈕文字
   updateLangButtonText();
+
+  // 更新時間顯示
   updateTopTime();
-  loadTasksAndRender();
-  updateLangText();
+  // 根據期間重新初始化
+  if (isInDateRange()) {
+    initInDateRange();
+  } else {
+    initOutDateRange();
+  }
+  // 更新回報區文字
   updateReportText();
   updateReportTaskOptions();
   updateReportTypeOptions();
@@ -135,28 +155,104 @@ function shouldShowRemaining() {
 }
 
 /* ==========================
+   ====== 當前日期是否為每一季的第一周 ======
+   ========================== */
+// 判斷當前是否在特定時間範圍內
+function isInDateRange() {
+  const now = getNowBySVR(); // 取得對應時區的當前時間
+  const range = dateRanges[lang]; // 根據當前語系取得對應的時間範圍
+
+  return now >= range.start && now <= range.end;
+}
+
+/* ==========================
+   ====== 期間內初始化 ======
+   ========================== */
+function initInDateRange() {
+  // 顯示 noDate
+  updateNoDateText();
+  const noDateDiv = document.getElementById("noDate");
+  if (noDateDiv) noDateDiv.style.display = "block";
+
+  // 隱藏 langText
+  const langTextDiv = document.getElementById("langText");
+  if (langTextDiv) langTextDiv.style.display = "none";
+
+  // 隱藏 taskContainer
+  const taskContainerDiv = document.getElementById("taskContainer");
+  if (taskContainerDiv) taskContainerDiv.style.display = "none";
+}
+
+/* ==========================
+   ====== 期間外初始化 ======
+   ========================== */
+function initOutDateRange() {
+  // 隱藏 noDate
+  const noDateDiv = document.getElementById("noDate");
+  if (noDateDiv) noDateDiv.style.display = "none";
+
+  // 顯示 langText
+  updateLangText();
+  const langTextDiv = document.getElementById("langText");
+  if (langTextDiv) langTextDiv.style.display = "block";
+
+  // 顯示 taskContainer 並載入資料
+  const taskContainerDiv = document.getElementById("taskContainer");
+  if (taskContainerDiv) {
+    taskContainerDiv.style.display = "block";
+    loadTasksAndRender(); // 載入 Excel 並渲染任務
+  }
+}
+
+/* ==========================
    ====== 說明文字 ======
    ========================== */
 function updateLangText() {
-  let langText = document.querySelector(".langText");
-  if (!langText) {
-    langText = document.createElement("div");
-    langText.className = "langText";
-    document.body.appendChild(langText);
+  let langTextDiv = document.getElementById("langText");
+  if (!langTextDiv) {
+    langTextDiv = document.createElement("div");
+    langTextDiv.id = "langText";
+    langTextDiv.className = "langText";
+    document.body.appendChild(langTextDiv);
   }
-
   const texts = {
-    zh: "<b>白青山脈S1　2025.09.03-2025.10.15</b><br>" +
-      "・時間為<b>系統出字</b>提示的時間<br>" +
-      "・儀式：出字提示後、等待10分鐘出怪<br>" +
-      "・野王：出字提示後、等待  5分鐘出王",
-    jp: "<b>白青シーズン１　2025.09.03-2025.10.15</b><br>" +
-      "・表の時間＝予兆が出る時間<br>" +
-      "・怪しい儀式 ：予兆後、約10分でボス出現<br>" +
-      "・水月/白青FB：予兆後、約 5分でボス出現"
+    zh: "<b>白青山脈Ｓ２　2025.10.15-2025.11.12</b><br>" +
+      "・表記時間為<b>系統出字</b>提示的時間<br>" +
+      "・出字提示後約５分鐘Boss登場。<br>" +
+      "・黃色時間代表的是路過時看到 Boss 在閒晃的時間，<br>" +
+      "　並不是系統出字的時間，若有更準確的時間資訊，歡迎補充！<br>",
+    jp: "<b>白青シーズン２　2025.10.15-2025.11.12</b><br>" +
+      "・表の時間 ＝ 予兆が表示の時間<br>" +
+      "・予兆後約５分でボスが出現します。<br>" +
+      "・黄色の時間は、通りすがりでボスが徘徊しているのを確認した時間です。<br>" +
+      "　予兆の出現時間ではありません。<br>" +
+      "　もしより詳しい時間が分かる場合は、ぜひご提供ください。<br>"
   };
+  langTextDiv.innerHTML = texts[lang];
+}
 
-  langText.innerHTML = texts[lang];
+// 沒有數據時的任務表
+function updateNoDateText() {
+  let noDateDiv = document.getElementById("noDate");
+  if (!noDateDiv) {
+    noDateDiv = document.createElement("div");
+    noDateDiv.id = "noDate";
+    noDateDiv.className = "noDate m-plus-1p-regular";
+
+    const mainCard = document.getElementById("mainCard");
+    if (mainCard) {
+      mainCard.appendChild(noDateDiv);
+    }
+  }
+  const texts = {
+    zh: "<b>白青山脈S2</b>　2025.10.15 - 2025.11.12<br>" +
+      "新開始的第一周 暫無數據<br>" +
+      "請各位大俠幫幫忙",
+    jp: "<b>白青シーズン２</b>　2025.10.15 - 2025.11.12<br>" +
+      "新シーズンが始まったばかりのため、まだデータがありません。<br>" +
+      "情報提供のご協力をよろしくお願いします！"
+  };
+  noDateDiv.innerHTML = texts[lang];
 }
 
 /* ==========================
@@ -241,6 +337,11 @@ async function loadTasksAndRender() {
 // 所有任務群組（儀式、水月、白青）
 function renderAllGroups(rows) {
   const container = document.getElementById("taskContainer");
+
+  // taskContainer不存在，直接返回
+  if (!container || container.style.display === "none") {
+    return;
+  }
   container.innerHTML = "";
 
   const now = getNowBySVR();
@@ -255,10 +356,8 @@ function renderAllGroups(rows) {
   TASK_TYPES.forEach(type => {
     // 步驟 1: 取得今天的任務
     let todayList = getTaskListForWeek(rows, type, todayWeekZh);
-
     // 步驟 2: 取得明天的任務（用於剩餘任務顯示）
     let tomorrowList = getTaskListForWeek(rows, type, tomorrowWeekZh);
-
     // 步驟 3: 合併今天和明天的任務（如果有）
     let combinedList = [...todayList];
     if (tomorrowList.length > 0) {
@@ -312,6 +411,7 @@ function renderAllGroups(rows) {
     group.appendChild(wrapper);
 
     container.appendChild(group);
+
   });
 }
 
@@ -392,6 +492,7 @@ function createCurrentTaskRow(type, item) {
   const timeText = isMaintenance ? "" : (item?.time || "--:--");
   const maintenanceClass = isMaintenance ? "maintenance" : "";
 
+
   row.innerHTML = `
     <div class="col-type">${lang === "zh" ? type.labelZh : type.labelJp}</div>
     <div class="col-time ${maintenanceClass}">${timeText}</div>
@@ -416,39 +517,45 @@ function createCurrentTaskRow(type, item) {
   return row;
 }
 
-// 創建一般任務列（接下來兩小時 & 剩餘任務）
-function createTaskRow(item, isInRemainingArea = false) {
-  const row = document.createElement("div");
-  row.className = "taskRow";
-
-  const isMaintenance = isMaintenanceTask(item);
-  let timeText = isMaintenance ? "" : (item.displayTime || item.time);
-
-  // 如果是隔天的任務且在剩餘任務區，添加視覺標記
-  if (item.isNextDay && !isMaintenance) {
-    const prefix = lang === "zh" ? "(明日) " : "(翌日) ";
-    timeText = `<span class="tomorrow">${prefix}</span><br>
-                ${timeText}`;
-  }
-
-  const maintenanceClass = isMaintenance ? "maintenance" : "";
+// 創建任務列（接下來兩小時 & 剩餘任務）
+function createTaskRow(item, isRemaining = false) {
   const content = getTaskContent(item);
 
-  row.innerHTML = `
-    <div class="placeholder"></div>
-    <div class="col-time ${maintenanceClass}">${timeText}</div>
-    <div class="col-content ${maintenanceClass}">${content}</div>
+  // 如果 content 為空或只有空白，不顯示這一行
+  if (!content || content.trim() === "") {
+    return document.createDocumentFragment(); // 回傳空元素
+  }
+
+  const taskRow = document.createElement("div");
+  taskRow.className = isRemaining ? "taskRow remaining" : "taskRow";
+
+  // 判斷是否為維修中
+  const isMaintenance = MAINTENANCE_PATTERN.test(content);
+  const maintenanceClass = isMaintenance ? 'maintenance' : '';
+
+  // 處理時間顯示
+  let displayTime = "";
+  if (!isMaintenance) {
+    // 不是維修任務，才顯示時間
+    displayTime = item.time || "--:--";
+  }
+  if (item.isNextDay) {
+    const nextDayLabel = lang === "zh" ? "(明)" : "(翌)";
+    displayTime = `<span class="tomorrow">${nextDayLabel}</span><br>${item.displayTime || item.time}`;
+  }
+
+
+  taskRow.innerHTML = `
+    <span class="placeholder"></span>
+    <span class="col-time ${maintenanceClass}">${displayTime}</span>
+    <span class="col-content ${maintenanceClass}">${content}</span>
   `;
-
-  // row.querySelectorAll(".col-time, .col-content").forEach(el =>
-  //   el.classList.add("row-gray")
-  // );
-
-  return row;
+  return taskRow;
 }
 
 // 底部按鈕區
 function createFooterWithButton(remWrapper, remainingItems) {
+  noDate
   const footer = document.createElement("div");
   footer.className = "groupFooter";
 
@@ -507,12 +614,6 @@ function scheduleHourlyReload() {
     setInterval(loadTasksAndRender, 3600000); // 之後每小時執行一次
   }, msToNextHour);
 }
-
-// 初始化
-updateLangText();
-updateReportText();
-loadTasksAndRender();
-scheduleHourlyReload();
 
 /* ==========================
    ====== 回報區域操作 ======
@@ -676,5 +777,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 初始載入回報記錄
+/* ==========================
+   ====== 初始化流程 ======
+   ========================== */
+
+// 步驟 1: 偵測並設定語系
+detectLangByTimezone();
+
+// 步驟 2: 更新必定顯示的內容（header 時間）
+updateTopTime();
+
+// 步驟 3: 根據期間判斷要執行什麼
+if (isInDateRange()) {
+  // ③ 期間內：只顯示 noDate
+  initInDateRange();
+} else {
+  // ② 期間外：顯示完整任務表
+  initOutDateRange();
+}
+
+// 步驟 4: 初始化回報區（期間內外都需要）
+updateReportText();
+updateReportTaskOptions();
+updateReportTypeOptions();
+updateReportCommentPlaceholder();
 loadReports();
+
+// 步驟 5: 每小時更新一次所有內容
+setInterval(() => {
+  updateTopTime();
+
+  if (isInDateRange()) {
+    initInDateRange();
+  } else {
+    initOutDateRange();
+  }
+}, 3600000); // 3600000 毫秒 = 1 小時
+
+// 每秒更新時間顯示
+setInterval(updateTopTime, 1000);

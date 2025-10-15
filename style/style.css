@@ -5,38 +5,56 @@
 
 :root {
   /* ━━━ 色彩系統 | Color Palette ━━━ */
-  
+
   /* 主背景色 - Wabi-Sabi 風格溫暖米色 */
-  --color-bg-primary: #F5F1E8;          /* 骨白 Bone White */
-  --color-bg-secondary: #FFFDF7;         /* 淺米黃 Light Cream */
-  --color-bg-card: #FFFFFF;              /* 純白卡片 */
-  
+  --color-bg-primary: #F5F1E8;
+  /* 骨白 Bone White */
+  --color-bg-secondary: #FFFDF7;
+  /* 淺米黃 Light Cream */
+  --color-bg-card: #FFFFFF;
+  /* 純白卡片 */
+
   /* 文字顏色 */
-  --color-text-primary: #3A3533;         /* 木炭黑 Charcoal */
-  --color-text-secondary: #777777;       /* 中性灰 Medium Grey */
-  --color-text-tertiary: #8B8B8B;        /* 淺灰 Light Grey */
-  --color-text-disabled: #B3AFA8;        /* 霧灰 Ash Grey */
-  
+  --color-text-primary: #3A3533;
+  /* 木炭黑 Charcoal */
+  --color-text-secondary: #777777;
+  /* 中性灰 Medium Grey */
+  --color-text-tertiary: #8B8B8B;
+  /* 淺灰 Light Grey */
+  --color-text-disabled: #B3AFA8;
+  /* 霧灰 Ash Grey */
+
   /* 品牌色 - 日本傳統色 */
-  --color-gishiki: #7058A3;              /* 藤紫鼠 Wisteria Purple */
-  --color-gishiki-light: #B6ACCB;        /* 藤鼠 Light Wisteria */
+  --color-gishiki: #7058A3;
+  /* 藤紫鼠 Wisteria Purple */
+  --color-gishiki-light: #B6ACCB;
+  /* 藤鼠 Light Wisteria */
   --color-gishiki-bg: rgba(182, 172, 203, 0.15);
-  
-  --color-mizuki: #507EA4;               /* 錫色 Tin Blue */
-  --color-mizuki-light: #A7BBC6;         /* 藍白橡 Light Blue */
+
+  --color-mizuki: #507EA4;
+  /* 錫色 Tin Blue */
+  --color-mizuki-light: #A7BBC6;
+  /* 藍白橡 Light Blue */
   --color-mizuki-bg: rgba(167, 187, 198, 0.15);
-  
-  --color-shirao: #65A48D;               /* 青磁鼠 Celadon Green */
-  --color-shirao-light: #A4B4A4;         /* 青鈍 Sage Green */
+
+  --color-shirao: #65A48D;
+  /* 青磁鼠 Celadon Green */
+  --color-shirao-light: #A4B4A4;
+  /* 青鈍 Sage Green */
   --color-shirao-bg: rgba(164, 180, 164, 0.15);
-  
+
   /* 功能色 */
-  --color-accent: #C4A888;               /* 溫暖陶土 Warm Clay */
-  --color-border: #E0DDD8;               /* 邊框灰 Border Grey */
-  --color-hover: rgba(0, 0, 0, 0.08);    /* 懸停效果 */
-  --color-maintenance: #8B8B8B;          /* 維修灰 */
-  --color-success: #9FB1A5;              /* 龜甲青綠 Kamenozoki */
-  
+  --color-accent: #C4A888;
+  /* 溫暖陶土 Warm Clay */
+  --color-border: #E0DDD8;
+  /* 邊框灰 Border Grey */
+  --color-hover: rgba(0, 0, 0, 0.08);
+  /* 懸停效果 */
+  --color-maintenance: #8B8B8B;
+  /* 維修灰 */
+  --color-success: #9FB1A5;
+  /* 龜甲青綠 Kamenozoki */
+
   /* ━━━ 間距系統 | Spacing System ━━━ */
   --space-2xs: 2px;
   --space-xs: 4px;
@@ -46,45 +64,54 @@
   --space-xl: 20px;
   --space-2xl: 24px;
   --space-3xl: 32px;
-  
+
   /* ━━━ 字體系統 | Typography ━━━ */
   --font-family-primary: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
   --font-family-accent: "M PLUS 1p", sans-serif;
-  
+
   /* 字體大小 - 桌面版 */
-  --font-size-xs: 0.75rem;     /* 12px */
-  --font-size-sm: 0.875rem;    /* 14px */
-  --font-size-base: 1rem;      /* 16px */
-  --font-size-md: 1.125rem;    /* 18px */
-  --font-size-lg: 1.25rem;     /* 20px */
-  --font-size-xl: 1.5rem;      /* 24px */
-  --font-size-2xl: 2rem;       /* 32px */
-  --font-size-3xl: 2.5rem;     /* 40px */
-  --font-size-4xl: 3rem;       /* 48px */
-  
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-base: 1rem;
+  /* 16px */
+  --font-size-md: 1.125rem;
+  /* 18px */
+  --font-size-lg: 1.25rem;
+  /* 20px */
+  --font-size-xl: 1.5rem;
+  /* 24px */
+  --font-size-2xl: 2rem;
+  /* 32px */
+  --font-size-3xl: 2.5rem;
+  /* 40px */
+  --font-size-4xl: 3rem;
+  /* 48px */
+
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
   --font-weight-black: 900;
-  
+
   /* ━━━ 陰影系統 | Shadow System ━━━ */
   --shadow-xs: 0 1px 3px rgba(58, 53, 51, 0.04);
   --shadow-sm: 0 2px 8px rgba(58, 53, 51, 0.06);
   --shadow-md: 0 4px 16px rgba(58, 53, 51, 0.08);
   --shadow-lg: 0 8px 28px rgba(58, 53, 51, 0.1);
-  
+
   /* ━━━ 圓角系統 | Border Radius ━━━ */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-pill: 999px;
-  
+
   /* ━━━ 過渡動畫 | Transitions ━━━ */
   --transition-fast: 0.15s ease;
   --transition-base: 0.25s ease;
   --transition-slow: 0.4s ease;
-  
+
   /* ━━━ 佈局寬度 | Layout Widths ━━━ */
   --layout-max-width: 600px;
   --layout-padding: var(--space-md);
@@ -355,11 +382,11 @@ body {
    📅 接下來任務與剩餘任務 | Upcoming & Remaining Tasks
 ==================================================================== */
 
-.taskWrapper
-{
+.taskWrapper {
   border-radius: var(--radius-md);
   border-left: 5px solid var(--color-border);
 }
+
 .taskWrapper,
 .remainingContainer .taskRow {
   background: linear-gradient(90deg, rgba(230, 230, 230, 0.3), rgba(250, 250, 250, 0.2));
@@ -373,7 +400,7 @@ body {
   font-size: var(--font-size-lg);
 }
 
-.taskWrapper .col-time .tomorrow{
+.taskWrapper .col-time .tomorrow {
   font-size: var(--font-size-xs);
 }
 
@@ -539,20 +566,29 @@ body {
 ==================================================================== */
 
 @media (max-width: 600px) {
-  
+
   /* ─── CSS 變數覆寫（手機版） ─── */
   :root {
     /* 調整字體大小 */
-    --font-size-xs: 0.7rem;      /* 11px */
-    --font-size-sm: 0.8rem;      /* 13px */
-    --font-size-base: 0.9rem;    /* 14px */
-    --font-size-md: 1rem;        /* 16px */
-    --font-size-lg: 1.1rem;      /* 18px */
-    --font-size-xl: 1.3rem;      /* 21px */
-    --font-size-2xl: 1.6rem;     /* 26px */
-    --font-size-3xl: 2rem;       /* 32px */
-    --font-size-4xl: 2.2rem;     /* 35px */
-    
+    --font-size-xs: 0.7rem;
+    /* 11px */
+    --font-size-sm: 0.8rem;
+    /* 13px */
+    --font-size-base: 0.9rem;
+    /* 14px */
+    --font-size-md: 1rem;
+    /* 16px */
+    --font-size-lg: 1.1rem;
+    /* 18px */
+    --font-size-xl: 1.3rem;
+    /* 21px */
+    --font-size-2xl: 1.6rem;
+    /* 26px */
+    --font-size-3xl: 2rem;
+    /* 32px */
+    --font-size-4xl: 2.2rem;
+    /* 35px */
+
     /* 調整間距 */
     --space-xs: 3px;
     --space-sm: 6px;
@@ -560,105 +596,105 @@ body {
     --space-lg: 12px;
     --space-xl: 16px;
     --space-2xl: 20px;
-    
+
     /* 調整佈局 */
     --layout-padding: var(--space-sm);
   }
-  
+
   /* ─── 主容器 ─── */
   #app {
     margin: var(--space-sm) auto;
     padding: var(--space-sm);
     gap: var(--space-md);
   }
-  
+
   /* ─── 上方工具列 ─── */
   #topBar {
     flex-direction: column;
     gap: var(--space-md);
     margin-bottom: var(--space-md);
   }
-  
+
   #topLeft {
     width: 100%;
     align-items: stretch;
   }
-  
+
   #dateLabel {
     justify-content: center;
     text-align: center;
     font-size: var(--font-size-lg);
     padding-left: 40px;
   }
-  
+
   /* 時間區塊 */
   .timeBox {
     justify-content: center;
     gap: var(--space-sm);
   }
-  
+
   .timeBox .timeLabel {
     font-size: var(--font-size-xs);
     /* padding: var(--space-xs) var(--space-xs); */
   }
-  
+
   .timeBox .timeValue {
     font-size: var(--font-size-3xl);
     padding: var(--space-xs) var(--space-md);
   }
-  
+
   /* 語言按鈕 */
   #topRight {
     width: 100%;
     justify-content: center;
   }
-  
+
   .langBtn {
     width: 100%;
     max-width: 200px;
     padding: var(--space-md) var(--space-xl);
     font-size: var(--font-size-base);
   }
-  
+
   .langText {
     padding-bottom: var(--space-xs);
   }
-  
+
   /* ─── 主卡片 ─── */
   .mainCard {
     padding: var(--space-md);
     gap: var(--space-md);
   }
-  
+
   .taskContainer {
     gap: var(--space-md);
     padding-right: 0;
   }
-  
+
   /* ─── 任務列 ─── */
   .taskRow {
-    grid-template-columns: 85px 75px 1fr;
+    grid-template-columns: 85px 70px 1fr;
     min-height: 44px;
-    padding: var(--space-sm);
+    /* padding: var(--space-sm); */
     font-size: var(--font-size-base);
     gap: var(--space-xs);
   }
-  
+
   /* 當前任務 */
   .current {
     font-size: var(--font-size-md);
   }
 
 
-   .col-type{
+  .col-type {
     font-size: var(--font-size-md);
   }
-  
+
   .taskRow.current .col-time,
   .taskRow.current .col-content {
     font-size: var(--font-size-md);
   }
-  
+
   /* 接下來任務 */
   .taskWrapper .col-time,
   .taskWrapper .col-content,
@@ -666,78 +702,84 @@ body {
   .remainingContainer .col-content {
     font-size: var(--font-size-md);
   }
-  
+
+  .taskRow:has(.col-time.maintenance) {
+    grid-template-columns: 85px 20px 1fr;
+    padding: var(--space-xs);
+  }
+
+  /* ─── 維修狀態調整 ─── */
+  .taskRow .col-content.maintenance {
+    font-size: var(--font-size-md);
+    padding: var(--space-xs);
+    width: 1fr;
+  }
+
+  /* ─── 收合區塊 ─── */
+  .remainingContainer.open {
+    max-height: 1500px;
+  }
+
   /* 群組 */
   .group {
     padding: var(--space-sm);
     gap: var(--space-xs);
   }
-  
+
   /* 按鈕 */
   .showBtn {
     padding: var(--space-xs) var(--space-md);
     font-size: var(--font-size-xs);
   }
-  
+
   /* ─── 回報區塊 ─── */
   .reportSection {
     margin-top: var(--space-lg);
     margin-left: var(--space-sm);
   }
-  
+
   .reportText {
     font-size: var(--font-size-xs);
     margin-bottom: var(--space-sm);
   }
-  
+
   .reportForm input,
   .reportForm select,
   .reportForm button {
     padding: var(--space-sm);
     font-size: var(--font-size-sm);
   }
-  
+
   .reportContainer {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-sm);
   }
-  
+
   .reportButtons {
     width: 100%;
   }
-  
+
   .reportButtons button {
     width: 100%;
     padding: var(--space-md);
   }
-  
+
   #reportMessage {
     text-align: center;
     font-size: var(--font-size-xs);
   }
-  
+
   .reportList {
     padding: var(--space-xs);
     margin-top: var(--space-sm);
     max-height: 200px;
   }
-  
+
   #clearReports {
     width: 100%;
     padding: var(--space-md);
     font-size: var(--font-size-sm);
-  }
-  
-  /* ─── 維修狀態調整 ─── */
-  .taskRow .col-content.maintenance {
-    font-size: var(--font-size-xs);
-    padding: var(--space-xs);
-  }
-  
-  /* ─── 收合區塊 ─── */
-  .remainingContainer.open {
-    max-height: 1500px;
   }
 }
 
@@ -798,6 +840,7 @@ select:focus-visible {
 
 /* 減少動畫偏好設定 */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -816,4 +859,3 @@ select:focus-visible {
   }
 
 }
-
