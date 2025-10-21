@@ -1,81 +1,91 @@
 <!DOCTYPE html>
 <html lang="zh">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>B&S NEO 時間表</title>
 
-    <link rel="stylesheet" href="./style/style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>B&S NEO 時間表</title>
 
-  <body>
-    <div id="app">
-      <!-- 日期與時間 -->
-      <header id="topBar">
-        <div id="topLeft">
-          <div id="dateLabel" class="dateLabel"></div>
-          <div id="timeBox" class="timeBox"></div>
-        </div>
-        <!-- 切換按鈕 -->
-        <div id="topRight">
-          <button id="langBtn" class="langBtn"></button>
-        </div>
-      </header>
-      <!-- 說明文字 -->
-      <div id="langText" class="langText"></div>
+  <link rel="stylesheet" href="./style/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
 
-      <!-- 整個任務區 -->
-      <section id="mainCard" class="mainCard">
-        <!-- 新一季的第一周 沒有Date -->
-        <div id="noDate" class="noDate m-plus-1p-regular"></div>
-        <!-- 第二周開始 -->
-        <div id="taskContainer" class="taskContainer m-plus-1p-regular"></div>
-      </section>
+<body>
+  <div id="app">
+    <!-- 日期與時間 -->
+    <header id="topBar">
+      <div id="topLeft">
+        <div id="dateLabel" class="dateLabel"></div>
+        <div id="timeBox" class="timeBox"></div>
+      </div>
+      <!-- 切換按鈕 -->
+      <div id="topRight">
+        <button id="langBtn" class="langBtn" style="display: none"></button>
+      </div>
+    </header>
+    <!-- 說明文字 -->
+    <div id="langText" class="langText"></div>
+    <div class="dateInfo" style="text-align: right; font-size:0.9rem; padding-right: 20px;">※資料來源：<a
+        href="https://forum.gamer.com.tw/C.php?bsn=12980&snA=79447" target="_blank">巴哈姆特</a></div>
 
-      <!-- 回報區 -->
-      <section id="reportSection" class="reportSection">
-        <div class="reportTitle"></div>
-        <div class="reportForm">
-          <div class="reportText"></div>
-          <select id="reportTaskType">
-            <option value="gishiki"></option>
-            <option value="mizuki"></option>
-            <option value="shirao"></option>
-            <option value="other"></option>
-          </select>
-
-          <select id="reportType">
-            <option value="date_report"></option>
-            <option value="other"></option>
-          </select>
-          <input
-            type="text"
-            id="reportComment"
-            placeholder="10/08 19:26 地點 地點"
-          />
-
-          <div class="reportContainer">
-            <div id="reportMessage"></div>
-            <div class="reportButtons">
-              <button id="submitReport"></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 回報紀錄-->
-        <div class="reportLog">
-          <div id="reportList" class="reportList"></div>
-          <div id="reportDel">
-            <button id="clearReports" style="display: none"></button>
-          </div>
-        </div>
-      </section>
+    <!-- 整個任務區 -->
+    <section id="mainCard" class="mainCard">
+      <!-- 新一季的第一周 沒有Date -->
+      <div id="noDate" class="noDate m-plus-1p-regular"></div>
+      <!-- 第二周開始 -->
+      <div id="taskContainer" class="taskContainer m-plus-1p-regular"></div>
+    </section>
+    <div class="dateInfo" style="text-align: right; font-size:0.8rem; padding-right: 20px;">※感謝<a
+        href="https://home.gamer.com.tw/profile/index.php?&owner=nobody9999" target="_blank">不起眼的路人</a>及各位巴哈使用者的時間地點提供
     </div>
-    <script src="./script/main.js"></script>
-  </body>
+
+    <!-- 回報區 -->
+    <section id="reportSection" class="reportSection">
+      <div class="reportTitle"></div>
+      <div class="reportForm">
+        <div class="reportText"></div>
+        <select id="reportTaskType">
+          <option value="gishiki"></option>
+          <option value="mizuki"></option>
+          <option value="shirao"></option>
+          <option value="other"></option>
+        </select>
+
+        <select id="reportType">
+          <option value="date_report"></option>
+          <option value="other"></option>
+        </select>
+        <input type="text" id="reportComment" placeholder="10/08 19:26 地點 地點" />
+
+        <div class="reportContainer">
+          <div id="reportMessage"></div>
+          <div class="reportButtons">
+            <button id="submitReport"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 回報紀錄-->
+      <div class="reportLog">
+        <div id="reportList" class="reportList"></div>
+        <div id="reportDel">
+          <button id="clearReports" style="display: none"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="./script/main.js"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-7ZDSL0ZW37');
+  </script>
+</body>
+
 </html>

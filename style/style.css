@@ -66,10 +66,11 @@
   --space-3xl: 32px;
 
   /* ━━━ 字體系統 | Typography ━━━ */
-  --font-family-primary: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-  --font-family-accent: "M PLUS 1p", sans-serif;
+  --font-family-zh: "Noto Sans TC" sans-serif;
+  --font-family-jp: "M PLUS 1p", sans-serif;
 
   /* 字體大小 - 桌面版 */
+  --font-size-2xs: 0.5rem;
   --font-size-xs: 0.75rem;
   /* 12px */
   --font-size-sm: 0.875rem;
@@ -113,7 +114,7 @@
   --transition-slow: 0.4s ease;
 
   /* ━━━ 佈局寬度 | Layout Widths ━━━ */
-  --layout-max-width: 600px;
+  --layout-max-width: 550px;
   --layout-padding: var(--space-md);
 }
 
@@ -144,19 +145,23 @@ body {
   padding: 0;
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
-  font-family: var(--font-family-primary);
   font-size: var(--font-size-base);
   line-height: 1.6;
   overflow-x: hidden;
 }
 
 /* 特殊字體類別 */
-.m-plus-1p-regular {
-  font-family: var(--font-family-accent);
+html[lang="jp"] body {
+  font-family: var(--font-family-jp);
   font-weight: var(--font-weight-normal);
   font-style: normal;
 }
 
+html[lang="zh"] body {
+  font-family: var(--font-family-zh);
+  font-weight: var(--font-weight-normal);
+  font-style: normal;
+}
 
 /* ====================================================================
    📦 主容器佈局 | Main Container Layout
@@ -320,9 +325,9 @@ body {
 /* ─── 任務列共通樣式 ─── */
 .taskRow {
   display: grid;
-  grid-template-columns: 115px 100px 1fr;
+  grid-template-columns: 150px 80px 17px 1fr;
   align-items: center;
-  min-height: 52px;
+  min-height: 48px;
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-bold);
   text-align: center;
@@ -344,7 +349,7 @@ body {
 .taskRow.gishiki.current {
   background: linear-gradient(90deg, var(--color-gishiki-bg), rgba(235, 230, 240, 0.25));
   border-left: 5px solid var(--color-gishiki);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
 }
 
 /* 當前水月 - 藍灰色系 */
@@ -362,11 +367,20 @@ body {
 }
 
 /* 當前任務的時間與內容 */
+.taskRow.current .col-time {
+  text-align: right;
+}
+
 .taskRow.current .col-time,
 .taskRow.current .col-content {
   color: var(--color-text-primary);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
+}
+
+/* 文字大小調整 */
+.taskRow .col-content.long-content {
+  font-size: var(--font-size-md);
 }
 
 /* 灰色狀態（已過時間） */
@@ -393,6 +407,16 @@ body {
   color: var(--color-text-primary);
 }
 
+.placeholder,
+.taskWrapper .col-time,
+.remainingContainer .col-time {
+  text-align: right;
+}
+
+.tomorrow {
+  font-size: var(--font-size-xs);
+}
+
 .taskWrapper .col-time,
 .taskWrapper .col-content,
 .remainingContainer .col-time,
@@ -400,23 +424,24 @@ body {
   font-size: var(--font-size-lg);
 }
 
-.taskWrapper .col-time .tomorrow {
-  font-size: var(--font-size-xs);
+/* 維修中狀態 */
+.taskRow:has(.col-time.maintenance) {
+  grid-template-columns: 150px 50px 0px 1fr;
+  padding: var(--space-xs);
 }
 
-/* 維修中狀態 */
 .taskRow .col-content.maintenance {
   background-color: var(--color-maintenance);
   color: #D6D5D5;
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-md);
 }
 
 /* [?] 標記樣式：小字、灰色 */
-.question-mark {
+.col-questionMark {
   font-size: var(--font-size-xs);
-  color: #999;        /* 灰色 */
-  margin-left: 2px;
+  color: #999;
 }
 
 /* ====================================================================
@@ -488,7 +513,6 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-md);
-  font-family: inherit;
   transition: all var(--transition-base);
 }
 
@@ -641,7 +665,6 @@ body {
 
   .timeBox .timeLabel {
     font-size: var(--font-size-xs);
-    /* padding: var(--space-xs) var(--space-xs); */
   }
 
   .timeBox .timeValue {
@@ -679,26 +702,29 @@ body {
 
   /* ─── 任務列 ─── */
   .taskRow {
-    grid-template-columns: 85px 70px 1fr;
+    grid-template-columns: 85px 55px 12px 1fr;
     min-height: 44px;
-    /* padding: var(--space-sm); */
-    font-size: var(--font-size-base);
     gap: var(--space-xs);
   }
 
   /* 當前任務 */
-  .current {
+  .taskRow.gishiki.current .col-type {
     font-size: var(--font-size-md);
   }
 
 
   .col-type {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
   }
 
   .taskRow.current .col-time,
   .taskRow.current .col-content {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
+  }
+
+  /* 文字大小調整 */
+  .taskRow .col-content.long-content {
+    font-size: var(--font-size-base);
   }
 
   /* 接下來任務 */
@@ -710,7 +736,7 @@ body {
   }
 
   .taskRow:has(.col-time.maintenance) {
-    grid-template-columns: 85px 20px 1fr;
+    grid-template-columns: 85px 0px 0px 1fr;
     padding: var(--space-xs);
   }
 

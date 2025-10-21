@@ -30,12 +30,12 @@ const REPORT_TYPES = {
 // 每一季的第一周時間
 const dateRanges = {
   zh: {
-    start: new Date('2025-10-15T11:00:00+08:00'), // 台灣時間 10/15 11:00
-    end: new Date('2025-10-15T11:00:01+08:00')     // 台灣時間 10/22 06:00
+    start: new Date('2025-11-12T10:00:00+08:00'), // 台灣時間 10/15 11:00
+    end: new Date('2025-11-19T05:59:59+08:00')     // 台灣時間 10/22 06:00
   },
   jp: {
-    start: new Date('2025-10-15T10:00:00+09:00'), // 日本時間 10/15 10:00
-    end: new Date('2025-10-22T05:59:59+09:00')     // 日本時間 10/22 06:00
+    start: new Date('2025-11-12T10:00:00+09:00'), // 日本時間 10/15 10:00
+    end: new Date('2025-11-19T05:59:59+09:00')     // 日本時間 10/22 06:00
   }
 };
 
@@ -49,37 +49,37 @@ const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
    ========================== */
 let lang = "zh";
 
-// 根據時區自動判定語系
+// // 根據時區自動判定語系
 function detectLangByTimezone() {
-  // 先檢查是否有儲存的語言偏好
-  const savedLang = localStorage.getItem('userLang');
+  //   // 先檢查是否有儲存的語言偏好
+  //   const savedLang = localStorage.getItem('userLang');
 
-  if (savedLang) {
-    // 如果有儲存的語言，使用儲存的設定
-    lang = savedLang;
-  } else {
-    // 第一次訪問，根據時區判定
-    const timezoneOffset = -new Date().getTimezoneOffset() / 60;
-    lang = timezoneOffset === 9 ? "jp" : "zh";
-  }
+  //   if (savedLang) {
+  //     // 如果有儲存的語言，使用儲存的設定
+  //     lang = savedLang;
+  //   } else {
+  //     // 第一次訪問，根據時區判定
+  //     const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+  //     lang = timezoneOffset === 9 ? "jp" : "zh";
+  //   }
 
-  updateLangButtonText();
-}
+  //   updateLangButtonText();
+  // }
 
-// 更新語系切換按鈕文字
-function updateLangButtonText() {
-  document.getElementById("langBtn").textContent = lang === "zh" ? "日本鯖切替" : "切換到台服";
-}
+  // // 更新語系切換按鈕文字
+  // function updateLangButtonText() {
+  //   document.getElementById("langBtn").textContent = lang === "zh" ? "日本鯖切替" : "切換到台服";
+  // }
 
-// 語系切換按鈕事件
-document.getElementById("langBtn").addEventListener("click", () => {
-  lang = lang === "zh" ? "jp" : "zh";
+  // // 語系切換按鈕事件
+  // document.getElementById("langBtn").addEventListener("click", () => {
+  //   lang = lang === "zh" ? "jp" : "zh";
 
-  // 儲存使用者的語言選擇
-  localStorage.setItem('userLang', lang);
+  //   // 儲存使用者的語言選擇
+  //   localStorage.setItem('userLang', lang);
 
-  // 更新按鈕文字
-  updateLangButtonText();
+  //   // 更新按鈕文字
+  //   updateLangButtonText();
 
   // 更新時間顯示
   updateTopTime();
@@ -89,12 +89,12 @@ document.getElementById("langBtn").addEventListener("click", () => {
   } else {
     initOutDateRange();
   }
-  // 更新回報區文字
-  updateReportText();
-  updateReportTaskOptions();
-  updateReportTypeOptions();
-  updateReportCommentPlaceholder();
-});
+  //   // 更新回報區文字
+  //   updateReportText();
+  //   updateReportTaskOptions();
+  //   updateReportTypeOptions();
+  //   updateReportCommentPlaceholder();
+};
 
 detectLangByTimezone();
 
@@ -148,11 +148,6 @@ function timeStringToDateToday(timeStr) {
   if (isNaN(h) || isNaN(m)) return null;
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
 }
-
-// // 判斷是否應該顯示「其他時間」按鈕（21:00 後隱藏）
-// function shouldShowRemaining() {
-//   return getNowBySVR().getHours() < 21;
-// }
 
 /* ==========================
    ====== 當前日期是否為每一季的第一周 ======
@@ -217,19 +212,16 @@ function updateLangText() {
   }
   const texts = {
     zh: "<b>白青山脈Ｓ２　2025.10.15-2025.11.12</b><br>" +
-      "新開始的第一周 暫無數據<br>" +
-      "請各位大俠幫幫忙<br><br>" +
-      "・表記時間為<b>系統出字</b>提示的時間<br>" +
+      "・表記時間 = 系統出字時間<br>" +
       "・出字提示後約５分鐘Boss登場。<br>" +
-      "・時間後標有[?]的部分，表示是路過時看到 Boss 在閒晃的時間，<br>" +
-      "　並不是系統出字的時間，若有更準確的時間資訊，歡迎補充！<br>",
+      "・時間有[?]，是路上不小心遇到的，不是系統出字時間。<br>" +
+      "　若有更準確的時間資訊，歡迎補充！<br>",
     jp: "<b>白青シーズン２　2025.10.15-2025.11.12</b><br>" +
       "・表の時間 ＝ 予兆が表示の時間<br>" +
       "・予兆後約５分でボスが出現します。<br>" +
-      "・時間の後ろに[？]が付いている場合は、<br>" +
-      "　通りすがりでボスが徘徊しているのを確認した時間です。<br>" +
-      "　予兆の出現時間ではありません。<br>" +
-      "　もしより詳しい時間が分かる場合は、ぜひご提供ください。<br>"
+      "・時間に[？]が付いている場合は、<br>" +
+      "　ボスが散歩中に発見、予兆時間ではない。<br>" +
+      "　もしより詳しい時間が分かれば、ぜひご提供ください。<br>"
   };
   langTextDiv.innerHTML = texts[lang];
 }
@@ -240,7 +232,6 @@ function updateNoDateText() {
   if (!noDateDiv) {
     noDateDiv = document.createElement("div");
     noDateDiv.id = "noDate";
-    noDateDiv.className = "noDate m-plus-1p-regular";
 
     const mainCard = document.getElementById("mainCard");
     if (mainCard) {
@@ -248,10 +239,10 @@ function updateNoDateText() {
     }
   }
   const texts = {
-    zh: "<b>白青山脈S2</b>　2025.10.15 - 2025.11.12<br>" +
+    zh: "<b>白青山脈S2　2025.10.15 - 2025.11.12</b><br>" +
       "新開始的第一周 暫無數據<br>" +
       "請各位大俠幫幫忙",
-    jp: "<b>白青シーズン２</b>　2025.10.15 - 2025.11.12<br>" +
+    jp: "<b>白青シーズン２　2025.10.15 - 2025.11.12</b><br>" +
       "新シーズンが始まったばかりのため、まだデータがありません。<br>" +
       "情報提供のご協力をよろしくお願いします！"
   };
@@ -302,7 +293,7 @@ function mergeConsecutiveMaintenance(list) {
     const isMaintenance = MAINTENANCE_PATTERN.test(content);
 
     if (isMaintenance) {
-      // 找出連續相同的維修項目
+      // 找出連續相同的維修項目並記錄時間範圍（start/end）
       let lastIndex = index;
       for (let i = index + 1; i < list.length; i++) {
         const nextContent = getTaskContent(list[i]);
@@ -312,8 +303,14 @@ function mergeConsecutiveMaintenance(list) {
           break;
         }
       }
-      // 只保留第一筆
-      merged.push(item);
+      // 取得開始與結束小時
+      const startHour = parseInt(item.time.split(":")[0]);
+      const endHour = parseInt(list[lastIndex].time.split(":")[0]);
+      // 建立一筆合併項目，並保存 span 資訊
+      const mergedItem = Object.assign({}, item);
+      mergedItem.maintenanceSpanStart = startHour;
+      mergedItem.maintenanceSpanEnd = endHour;
+      merged.push(mergedItem);
       skipUntil = lastIndex + 1;
     } else {
       merged.push(item);
@@ -414,7 +411,6 @@ function renderAllGroups(rows) {
     group.appendChild(wrapper);
 
     container.appendChild(group);
-
   });
 }
 
@@ -460,34 +456,88 @@ function categorizeTasksByTime(list, currentHour) {
   const remainingItemsToday = [];
   const remainingItemsTomorrow = [];   // 隔天 00:00-05:59 的任務
 
+  // 檢查是否在維修時段內
+  let maintenanceHours = new Set();
+
+  // 找出所有維修時段的小時（支援合併後的 span）
   list.forEach(item => {
-    const itemHour = parseInt(item.time.split(":")[0]);
-
-    // 計算實際小時數（考慮隔天的情況）
-    let actualHour = itemHour;
-    if (item.isNextDay) {
-      actualHour = itemHour + 24; // 隔天的時間加 24
-    }
-
-    const currentActualHour = currentHour;
-
-    // 當前任務
-    if (actualHour === currentActualHour) {
-      currentItem = item;
-    }
-    // 接下來兩小時
-    else if (actualHour === currentActualHour + 1 || actualHour === currentActualHour + 2) {
-      nextItems.push(item);
-    }
-    // 剩餘任務（今天 23:59 前）
-    else if (actualHour > currentActualHour + 2 && !item.isNextDay && itemHour <= 23) {
-      remainingItemsToday.push(item);
-    }
-    // 隔天凌晨 00:00-05:59 的任務
-    else if (item.isNextDay && itemHour >= 0 && itemHour <= 5 && actualHour > currentActualHour + 2) {
-      remainingItemsTomorrow.push(item);
+    if (isMaintenanceTask(item)) {
+      if (typeof item.maintenanceSpanStart === 'number' && typeof item.maintenanceSpanEnd === 'number') {
+        // 展開 span 內的每小時
+        for (let h = item.maintenanceSpanStart; h <= item.maintenanceSpanEnd; h++) {
+          maintenanceHours.add(h);
+        }
+      } else {
+        const itemHour = parseInt(item.time.split(":")[0]);
+        maintenanceHours.add(itemHour);
+      }
     }
   });
+
+  // 檢查當前時間是否在維修時段內
+  const isInMaintenance = maintenanceHours.has(currentHour);
+
+  // 如果當前時間在維修時段內
+  if (isInMaintenance) {
+    // 優先使用 Excel 列表中的維修行（若有合併的 span，優先選擇對應 span 的項目）
+    let maintenanceItem = list.find(it => {
+      if (!isMaintenanceTask(it)) return false;
+      if (typeof it.maintenanceSpanStart === 'number' && typeof it.maintenanceSpanEnd === 'number') {
+        return currentHour >= it.maintenanceSpanStart && currentHour <= it.maintenanceSpanEnd;
+      }
+      const itemHour = parseInt((it.time || '').split(':')[0]);
+      return itemHour === currentHour;
+    });
+
+    // 如果找不到精確匹配，退回到第一筆維修項目（保留 Excel 文本）
+    if (!maintenanceItem) {
+      maintenanceItem = list.find(it => isMaintenanceTask(it)) || null;
+    }
+
+    currentItem = maintenanceItem;
+
+    // 處理接下來兩小時和剩餘任務
+    list.forEach(item => {
+      const itemHour = parseInt(item.time.split(":")[0]);
+      let actualHour = item.isNextDay ? itemHour + 24 : itemHour;
+
+      // 如果不是維修任務，才加入到next或remaining中
+      if (!isMaintenanceTask(item)) {
+        if (actualHour === currentHour + 1 || actualHour === currentHour + 2) {
+          nextItems.push(item);
+        }
+        else if (actualHour > currentHour + 2 && !item.isNextDay && itemHour <= 23) {
+          remainingItemsToday.push(item);
+        }
+        else if (item.isNextDay && itemHour >= 0 && itemHour <= 5 && actualHour > currentHour + 2) {
+          remainingItemsTomorrow.push(item);
+        }
+      }
+    });
+  } else {
+    // 如果不在維修時段，使用一般分類邏輯
+    list.forEach(item => {
+      const itemHour = parseInt(item.time.split(":")[0]);
+      let actualHour = item.isNextDay ? itemHour + 24 : itemHour;
+
+      if (actualHour === currentHour) {
+        currentItem = item;
+      }
+      // 接下來兩小時
+      else if (actualHour === currentHour + 1 || actualHour === currentHour + 2) {
+        nextItems.push(item);
+      }
+      // 剩餘任務（今天 23:59 前）
+      else if (actualHour > currentHour + 2 && !item.isNextDay && itemHour <= 23) {
+        remainingItemsToday.push(item);
+      }
+      // 隔天凌晨 00:00-05:59 的任務
+      else if (item.isNextDay && itemHour >= 0 && itemHour <= 5 && actualHour > currentHour + 2) {
+        remainingItemsTomorrow.push(item);
+      }
+    });
+  }
+
   // 優先使用今天的剩餘任務，如果沒有則使用隔天凌晨的任務
   const remainingItems = remainingItemsToday.length > 0
     ? remainingItemsToday
@@ -501,30 +551,41 @@ function createCurrentTaskRow(type, item) {
   const row = document.createElement("div");
   row.className = `taskRow ${type.key} current`;
 
-  const content = item ? getTaskContent(item) : "-------";
+  let content = item ? getTaskContent(item) : "-------";
   const isMaintenance = item && isMaintenanceTask(item);
 
+  // 處理時間顯示
   let timeText = "";
+  let questionMark = "";
+
   if (!isMaintenance) {
+    // 不是維修任務，才顯示時間
     if (item) {
-      timeText = item.time || "--:--";
+      // 加入 [?] 標記
       if (item.hasQuestionMark) {
-        timeText += ' <span class="question-mark">[?]</span>';
+        questionMark = '[?]';
       }
+      timeText = item.time || "--:--";
     } else {
       timeText = "--:--";
     }
   }
+  if (content == "") {
+    timeText = "--:--";
+    content = "-------";
+  }
 
-
-  // isMaintenance ? "" : (item?.time || "--:--");
   const maintenanceClass = isMaintenance ? "maintenance" : "";
-
   row.innerHTML = `
     <div class="col-type">${lang === "zh" ? type.labelZh : type.labelJp}</div>
     <div class="col-time ${maintenanceClass}">${timeText}</div>
+    <div class="col-questionMark">${questionMark}</div>
     <div class="col-content ${maintenanceClass}">${content}</div>
   `;
+
+  if (!isMaintenance && content.length > 12) {
+    row.querySelector('.col-content').classList.add('long-content');
+  }
 
   // 判斷任務是否已過期變灰
   if (item && !isMaintenance) {
@@ -550,6 +611,7 @@ function createTaskRow(item, isRemaining = false) {
 
   // 如果 content 為空或只有空白，不顯示這一行
   if (!content || content.trim() === "") {
+    console.log("空白數據");
     return document.createDocumentFragment(); // 回傳空元素
   }
 
@@ -561,25 +623,41 @@ function createTaskRow(item, isRemaining = false) {
   const maintenanceClass = isMaintenance ? 'maintenance' : '';
 
   // 處理時間顯示
-  let displayTime = "";
+  let timeText = "";
+  let questionMark = "";
+
   if (!isMaintenance) {
     // 不是維修任務，才顯示時間
-    displayTime = item.time || "--:--";
-    // 加入 [?] 標記
-    if (item.hasQuestionMark) {
-      displayTime += ' <span class="question-mark">[?]</span>';
+    if (item) {
+      // 加入 [?] 標記
+      if (item.hasQuestionMark) {
+        questionMark = '[?]';
+      }
+      timeText = item.time || "--:--";
+    } else {
+      timeText = "--:--";
     }
   }
+
   if (item.isNextDay) {
-    const nextDayLabel = lang === "zh" ? "(明)" : "(翌)";
-    displayTime = `<span class="tomorrow">${nextDayLabel}</span><br>${item.displayTime || item.time}`;
+    const nextDayLabel = lang === "zh" ? "明日" : "翌日";
+    tomorrow = `<span class="tomorrow">${nextDayLabel}</span>`;
+  } else {
+    tomorrow = ``;
   }
 
   taskRow.innerHTML = `
-    <span class="placeholder"></span>
-    <span class="col-time ${maintenanceClass}">${displayTime}</span>
+    <span class="placeholder">${tomorrow}</span>
+    <span class="col-time ${maintenanceClass}">${timeText}</span>
+    <span class="col-questionMark ${maintenanceClass}">${questionMark}</span>
     <span class="col-content ${maintenanceClass}">${content}</span>
   `;
+
+  if (!isMaintenance && content.length > 12) {
+    console.log("変更あり>>>" + content.length);
+    taskRow.querySelector('.col-content').classList.add('long-content');
+  }
+
   return taskRow;
 }
 
@@ -835,6 +913,7 @@ loadReports();
 
 // 步驟 5: 每小時更新一次所有內容
 setInterval(() => {
+  console.log("e/ vup ");
   updateTopTime();
 
   if (isInDateRange()) {
