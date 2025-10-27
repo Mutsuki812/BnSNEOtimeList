@@ -50,37 +50,49 @@ const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
    ========================== */
 let lang = "zh";
 
-// // 根據時區自動判定語系
+// 更新HTML的語系標記
+function updateHtmlLang() {
+  document.documentElement.setAttribute('lang', lang);
+}
+
+// interval id for updating event styles
+let eventStyleIntervalId = null;
+
+// 根據時區自動判定語系
 function detectLangByTimezone() {
-  //   // 先檢查是否有儲存的語言偏好
-  //   const savedLang = localStorage.getItem('userLang');
+  // 先檢查是否有儲存的語言偏好
+  const savedLang = localStorage.getItem('userLang');
 
-  //   if (savedLang) {
-  //     // 如果有儲存的語言，使用儲存的設定
-  //     lang = savedLang;
-  //   } else {
-  //     // 第一次訪問，根據時區判定
-  //     const timezoneOffset = -new Date().getTimezoneOffset() / 60;
-  //     lang = timezoneOffset === 9 ? "jp" : "zh";
-  //   }
+  if (savedLang) {
+    // 如果有儲存的語言，使用儲存的設定
+    lang = savedLang;
+  } else {
+    // 第一次訪問，根據時區判定
+    const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+    lang = timezoneOffset === 9 ? "jp" : "zh";
+  }
 
-  //   updateLangButtonText();
-  // }
+  updateLangButtonText();
+}
 
-  // // 更新語系切換按鈕文字
-  // function updateLangButtonText() {
-  //   document.getElementById("langBtn").textContent = lang === "zh" ? "日本鯖切替" : "切換到台服";
-  // }
+// 更新語系切換按鈕文字
+function updateLangButtonText() {
+  document.getElementById("langBtn").textContent = lang === "zh" ? "日本鯖切替" : "切換到台服";
+}
 
-  // // 語系切換按鈕事件
-  // document.getElementById("langBtn").addEventListener("click", () => {
-  //   lang = lang === "zh" ? "jp" : "zh";
+// 語系切換按鈕事件
+document.getElementById("langBtn").addEventListener("click", () => {
+  lang = lang === "zh" ? "jp" : "zh";
 
-  //   // 儲存使用者的語言選擇
-  //   localStorage.setItem('userLang', lang);
+  // 儲存使用者的語言選擇
+  localStorage.setItem('userLang', lang);
 
-  //   // 更新按鈕文字
-  //   updateLangButtonText();
+  // 更新按鈕文字
+  updateLangButtonText();
+  
+  // 更新HTML語系標記
+  updateHtmlLang();
+  updateEventTitle();
 
   // 更新時間顯示
   updateTopTime();
@@ -90,14 +102,15 @@ function detectLangByTimezone() {
   } else {
     initOutDateRange();
   }
-  //   // 更新回報區文字
-  //   updateReportText();
-  //   updateReportTaskOptions();
-  //   updateReportTypeOptions();
-  //   updateReportCommentPlaceholder();
-};
+  // 更新回報區文字
+  updateReportText();
+  updateReportTaskOptions();
+  updateReportTypeOptions();
+  updateReportCommentPlaceholder();
+});
 
 detectLangByTimezone();
+updateHtmlLang();  // 初期設定時設定HTML語系
 
 /* ==========================
    ====== 時間處理 ======
@@ -212,14 +225,14 @@ function updateLangText() {
     document.body.appendChild(langTextDiv);
   }
   const texts = {
-    zh: "<b>白青山脈Ｓ２　2025.10.15-2025.11.12</b><br>" +
+    zh: "<b>白青山脈Ｓ２　2025.10.15 - 2025.11.12</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
-      "・出字提示後約５分鐘Boss登場。<br>" +
-      "・時間有[?]，是路上不小心遇到的，不是系統出字時間。<br>" +
+      "・出字提示後５分鐘Boss登場。<br>" +
+      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
       "　若有更準確的時間資訊，歡迎補充！<br>",
-    jp: "<b>白青シーズン２　2025.10.15-2025.11.12</b><br>" +
+    jp: "<b>白青シーズン２　2025.10.15 - 2025.11.12</b><br>" +
       "・表の時間 ＝ 予兆が表示の時間<br>" +
-      "・予兆後約５分でボスが出現します。<br>" +
+      "・予兆後、５分でボスが出現します。<br>" +
       "・時間に[？]が付いている場合は、<br>" +
       "　ボスが散歩中に発見、予兆時間ではない。<br>" +
       "　もしより詳しい時間が分かれば、ぜひご提供ください。<br>"
@@ -248,6 +261,117 @@ function updateNoDateText() {
       "情報提供のご協力をよろしくお願いします！"
   };
   noDateDiv.innerHTML = texts[lang];
+}
+
+/* ==========================
+   ====== 特別活動 ======
+   ========================== */
+function updateEventTitle() {
+  let eventTitleDiv = document.querySelector(".eventTitle");  // getElementsByClassName から querySelector に変更
+  const texts = {
+    zh: "暴走雪人的黑色幻影",
+    jp: "ボスラッシュシーズン2"
+  };
+  if (eventTitleDiv) {  // 要素の存在確認
+    eventTitleDiv.innerHTML = texts[lang];
+  }
+}
+
+// 動態產生特別活動區塊（title + times）
+function renderEventBlock() {
+  const eventEl = document.getElementById('event');
+  if (!eventEl) return;
+
+  // 時間陣列：若你想從設定或檔案讀取，可改成變數來源
+  const times = ['16:00', '19:00', '22:00', '01:00'];
+
+  // 清空並建立新的內容
+  eventEl.innerHTML = '';
+
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'eventTitle';
+  // 直接使用 updateEventTitle 可讓語系一致
+  const texts = { zh: '暴走雪人的黑色幻影', jp: 'ボスラッシュシーズン2' };
+  titleDiv.innerHTML = texts[lang];
+  eventEl.appendChild(titleDiv);
+
+  const timeWrapper = document.createElement('div');
+  timeWrapper.id = 'eventTime';
+  times.forEach(t => {
+    const hourClass = t.split(':')[0];
+    const d = document.createElement('div');
+    // 保留原本的 class 格式（例如: "event 16"）
+    d.className = `event ${hourClass}`;
+    d.textContent = t;
+    timeWrapper.appendChild(d);
+  });
+  eventEl.appendChild(timeWrapper);
+
+  // 初次建立後立即套用樣式，並啟動定時器定期更新（避免建立多個 timer）
+  updateEventStyles();
+  if (eventStyleIntervalId) {
+    clearInterval(eventStyleIntervalId);
+  }
+  // 每 30 秒更新一次，以便在 15 分鐘倒數期間動畫與顏色能及時顯示
+  eventStyleIntervalId = setInterval(updateEventStyles, 30000);
+}
+
+// 更新 event 時間塊的樣式（淺灰 / 深灰 / 紅色 + 動畫）
+function updateEventStyles() {
+  const wrapper = document.getElementById('eventTime');
+  if (!wrapper) return;
+
+  const now = getNowBySVR();
+console.log("now>>>>" + now);
+  Array.from(wrapper.children).forEach(div => {
+    // 移除先前的樣式
+    div.classList.remove('time-light', 'time-deep', 'time-alert', 'fade-animation');
+    div.style.color = '';
+
+    const text = div.textContent.trim();
+    if (!text) return;
+    const [hStr, mStr] = text.split(':');
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10) || 0;
+
+    // 建立當日的事件時間
+    let eventDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+
+console.log("eventDate>>>>" + eventDate);
+    // 若該時間距現在小於 -12 小時，視為隔天的時間，將日期加一天
+    if ((eventDate.getTime() - now.getTime()) < -12 * 3600000) {
+      eventDate.setDate(eventDate.getDate() + 1);
+    }
+
+    // 若該時間距現在大於 +12 小時，視為前一天的時間
+    if ((eventDate.getTime() - now.getTime()) > 12 * 3600000) {
+      eventDate.setDate(eventDate.getDate() - 1);
+    }
+
+    const diffMin = Math.round((eventDate.getTime() - now.getTime()) / 60000);
+
+    // 狀態判定：
+    // diffMin > 60       => 淺灰 (還差超過一小時)
+    // 15 < diffMin <= 60 => 深灰 (距離一小時到15分鐘間)
+    // 0 <= diffMin <= 15 => 紅色 + 動畫 (倒數 15 分鐘內)
+    // diffMin < 0        => 已過，顯示淺灰
+
+// console.log("diffMin>>>>" + diffMin);
+    if (diffMin > 60) {
+      console.log("diffMin>60>>>" + diffMin);
+      div.classList.add('time-light');
+    } else if (diffMin > 15 && diffMin <= 60) {
+      console.log("diffMin>>>1560>" + diffMin);
+      div.classList.add('time-deep');
+    } else if (diffMin >= 0 && diffMin <= 15) {
+      console.log("diffMin>>>15>" + diffMin);
+      div.classList.add('time-alert');
+      div.classList.add('fade-animation');
+    } else {
+      // 已過或其他狀態顯示淺灰
+      div.classList.add('time-light');
+    }
+  });
 }
 
 /* ==========================
@@ -540,7 +664,7 @@ function categorizeTasksByTime(list, currentHour) {
   }
 
   // 優先使用今天的剩餘任務，如果沒有則使用隔天凌晨的任務
-  const remainingItems = remainingItemsToday.length > 0
+  const remainingItems = remainingItemsToday.length > 0 || currentHour <21
     ? remainingItemsToday
     : remainingItemsTomorrow;
 
@@ -612,7 +736,6 @@ function createTaskRow(item, isRemaining = false) {
 
   // 如果 content 為空或只有空白，不顯示這一行
   if (!content || content.trim() === "") {
-    console.log("空白數據");
     return document.createDocumentFragment(); // 回傳空元素
   }
 
@@ -655,7 +778,6 @@ function createTaskRow(item, isRemaining = false) {
   `;
 
   if (!isMaintenance && content.length > 12) {
-    console.log("変更あり>>>" + content.length);
     taskRow.querySelector('.col-content').classList.add('long-content');
   }
 
@@ -906,6 +1028,7 @@ if (isInDateRange()) {
 }
 
 // 步驟 4: 初始化回報區（期間內外都需要）
+renderEventBlock();
 updateReportText();
 updateReportTaskOptions();
 updateReportTypeOptions();
@@ -925,5 +1048,4 @@ setInterval(() => {
 }, 3600000); // 3600000 毫秒 = 1 小時
 
 // 每秒更新時間顯示
-
 setInterval(updateTopTime, 1000);

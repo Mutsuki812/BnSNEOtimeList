@@ -66,8 +66,10 @@
   --space-3xl: 32px;
 
   /* ━━━ 字體系統 | Typography ━━━ */
-  --font-family-zh: "Noto Sans TC" sans-serif;
-  --font-family-jp: "M PLUS 1p", sans-serif;
+  --font-family-time: "M PLUS 1p", sans-serif;
+  --font-family-jp: "Kosugi Maru", sans-serif;
+  --font-family-zh: "Kosugi Maru", sans-serif;
+
 
   /* 字體大小 - 桌面版 */
   --font-size-2xs: 0.5rem;
@@ -150,17 +152,14 @@ body {
   overflow-x: hidden;
 }
 
-/* 特殊字體類別 */
+/* 日文用字 */
 html[lang="jp"] body {
   font-family: var(--font-family-jp);
-  font-weight: var(--font-weight-normal);
-  font-style: normal;
 }
 
+/* 中文用字 */
 html[lang="zh"] body {
   font-family: var(--font-family-zh);
-  font-weight: var(--font-weight-normal);
-  font-style: normal;
 }
 
 /* ====================================================================
@@ -239,6 +238,7 @@ html[lang="zh"] body {
 .timeBox .timeValue {
   color: var(--color-text-primary);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12));
+  font-family: var(--font-family-time);
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-black);
   border-radius: var(--radius-lg);
@@ -305,6 +305,58 @@ html[lang="zh"] body {
   gap: var(--space-lg);
 }
 
+/* ====================================================================
+   ⭐ 特別活動 | event Styles
+==================================================================== */
+.eventTitle {
+  text-align: center;
+  font-family: "Dela Gothic One", sans-serif;
+  font-size: var(--font-size-2xl);
+  color: #777;
+}
+
+#eventTime {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.event {
+  width: 25%;
+  text-align: center;
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-black);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-xs);
+  gap: var(--space-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* 時間外 */
+.time-light {
+  color: #c0c0c0;
+}
+
+/* 一小時內發生 */
+.time-deep {
+  color: #444;
+}
+
+.time-alert {
+  color: #c53d43;
+}
+
+.fade-animation {
+  animation: breathing 2s ease-in-out infinite;
+  background-color: #e4d2d8;
+}
+
+@keyframes breathing {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
 
 /* ====================================================================
    📋 任務群組樣式 | Task Group Styles
@@ -333,7 +385,6 @@ html[lang="zh"] body {
   text-align: center;
   transition: all var(--transition-base);
 }
-
 
 /* ====================================================================
    ⭐ 當前任務樣式 | Current Task Styles
@@ -374,6 +425,7 @@ html[lang="zh"] body {
 .taskRow.current .col-time,
 .taskRow.current .col-content {
   color: var(--color-text-primary);
+  font-family: var(--font-family-time);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
 }
@@ -421,7 +473,9 @@ html[lang="zh"] body {
 .taskWrapper .col-content,
 .remainingContainer .col-time,
 .remainingContainer .col-content {
+  font-family: var(--font-family-time);
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
 }
 
 /* 維修中狀態 */
@@ -592,10 +646,10 @@ html[lang="zh"] body {
 
 /* ====================================================================
    📱 手機響應式設計 | Mobile Responsive Design
-   適用於 600px 以下的裝置
+   適用於 450px 以下的裝置
 ==================================================================== */
 
-@media (max-width: 600px) {
+@media (max-width: 450px) {
 
   /* ─── CSS 變數覆寫（手機版） ─── */
   :root {
@@ -650,11 +704,12 @@ html[lang="zh"] body {
     align-items: stretch;
   }
 
+  /* 日期 星期 */
   #dateLabel {
     justify-content: center;
     text-align: center;
     font-size: var(--font-size-lg);
-    padding-left: 40px;
+    padding-left: 70px;
   }
 
   /* 時間區塊 */
@@ -664,12 +719,14 @@ html[lang="zh"] body {
   }
 
   .timeBox .timeLabel {
-    font-size: var(--font-size-xs);
+    /* font-size: var(--font-size-xs); */
   }
 
   .timeBox .timeValue {
-    font-size: var(--font-size-3xl);
-    padding: var(--space-xs) var(--space-md);
+    /* font-family: var(--font-family-time); */
+    /* font-size: var(--font-size-4xl); */
+    /* font-weight: var(--font-weight-black); */
+    /* padding: var(--space-xs) var(--space-md); */
   }
 
   /* 語言按鈕 */
@@ -681,12 +738,12 @@ html[lang="zh"] body {
   .langBtn {
     width: 100%;
     max-width: 200px;
-    padding: var(--space-md) var(--space-xl);
-    font-size: var(--font-size-base);
+    /* padding: var(--space-md) var(--space-xs); */
+    /* font-size: var(--font-size-base); */
   }
 
   .langText {
-    padding-bottom: var(--space-xs);
+    /* padding-bottom: var(--space-xs); */
   }
 
   /* ─── 主卡片 ─── */
@@ -889,5 +946,4 @@ select:focus-visible {
     --color-text-secondary: #1a1a1a;
     --color-border: #333333;
   }
-
 }
