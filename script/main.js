@@ -92,7 +92,8 @@ document.getElementById("langBtn").addEventListener("click", () => {
   
   // 更新HTML語系標記
   updateHtmlLang();
-  updateEventTitle();
+  // updateEventTitle();
+  renderEventBlock();
 
   // 更新時間顯示
   updateTopTime();
@@ -266,16 +267,16 @@ function updateNoDateText() {
 /* ==========================
    ====== 特別活動 ======
    ========================== */
-function updateEventTitle() {
-  let eventTitleDiv = document.querySelector(".eventTitle");  // getElementsByClassName から querySelector に変更
-  const texts = {
-    zh: "暴走雪人的黑色幻影",
-    jp: "ボスラッシュシーズン2"
-  };
-  if (eventTitleDiv) {  // 要素の存在確認
-    eventTitleDiv.innerHTML = texts[lang];
-  }
-}
+// function updateEventTitle() {
+//   let eventTitleDiv = document.querySelector(".eventTitle");  // getElementsByClassName から querySelector に変更
+//   const texts = {
+//     zh: "暴走雪人的黑色幻影",
+//     jp: "ボスラッシュシーズン2"
+//   };
+//   if (eventTitleDiv) {  // 要素の存在確認
+//     eventTitleDiv.innerHTML = texts[lang];
+//   }
+// }
 
 // 動態產生特別活動區塊（title + times）
 function renderEventBlock() {
@@ -323,6 +324,8 @@ function updateEventStyles() {
 
   const now = getNowBySVR();
 console.log("now>>>>" + now);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   Array.from(wrapper.children).forEach(div => {
     // 移除先前的樣式
     div.classList.remove('time-light', 'time-deep', 'time-alert', 'fade-animation');
@@ -330,46 +333,29 @@ console.log("now>>>>" + now);
 
     const text = div.textContent.trim();
     if (!text) return;
+
     const [hStr, mStr] = text.split(':');
     const h = parseInt(hStr, 10);
     const m = parseInt(mStr, 10) || 0;
+    const eventMinutes = h * 60 + m;
 
-    // 建立當日的事件時間
-    let eventDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+    // 差距（分鐘）
+    let diff = eventMinutes - currentMinutes;
+    if (diff < 0) diff += 24 * 60; // 如果已過該時刻，就視為隔天同時段（不跨日但重複循環）
 
-console.log("eventDate>>>>" + eventDate);
-    // 若該時間距現在小於 -12 小時，視為隔天的時間，將日期加一天
-    if ((eventDate.getTime() - now.getTime()) < -12 * 3600000) {
-      eventDate.setDate(eventDate.getDate() + 1);
-    }
-
-    // 若該時間距現在大於 +12 小時，視為前一天的時間
-    if ((eventDate.getTime() - now.getTime()) > 12 * 3600000) {
-      eventDate.setDate(eventDate.getDate() - 1);
-    }
-
-    const diffMin = Math.round((eventDate.getTime() - now.getTime()) / 60000);
-
-    // 狀態判定：
-    // diffMin > 60       => 淺灰 (還差超過一小時)
-    // 15 < diffMin <= 60 => 深灰 (距離一小時到15分鐘間)
-    // 0 <= diffMin <= 15 => 紅色 + 動畫 (倒數 15 分鐘內)
-    // diffMin < 0        => 已過，顯示淺灰
-
-// console.log("diffMin>>>>" + diffMin);
-    if (diffMin > 60) {
-      console.log("diffMin>60>>>" + diffMin);
-      div.classList.add('time-light');
-    } else if (diffMin > 15 && diffMin <= 60) {
-      console.log("diffMin>>>1560>" + diffMin);
-      div.classList.add('time-deep');
-    } else if (diffMin >= 0 && diffMin <= 15) {
-      console.log("diffMin>>>15>" + diffMin);
-      div.classList.add('time-alert');
-      div.classList.add('fade-animation');
+    // 條件判定（Case1～4）
+    if (diff > 60) {
+      // 距離事件超過1小時：淺灰
+      div.classList.add("time-light");
+    } else if (diff > 15) {
+      // 1小時內但超過15分鐘：深灰
+      div.classList.add("time-deep");
+    } else if (diff >= 0) {
+      // 15分鐘內：紅色 + 跳動
+      div.classList.add("time-alert", "fade-animation");
     } else {
-      // 已過或其他狀態顯示淺灰
-      div.classList.add('time-light');
+      // 已過 → 淺灰
+      div.classList.add("time-light");
     }
   });
 }
