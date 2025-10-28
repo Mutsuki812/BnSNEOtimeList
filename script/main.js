@@ -89,7 +89,7 @@ document.getElementById("langBtn").addEventListener("click", () => {
 
   // 更新按鈕文字
   updateLangButtonText();
-  
+
   // 更新HTML語系標記
   updateHtmlLang();
   // updateEventTitle();
@@ -267,17 +267,6 @@ function updateNoDateText() {
 /* ==========================
    ====== 特別活動 ======
    ========================== */
-// function updateEventTitle() {
-//   let eventTitleDiv = document.querySelector(".eventTitle");  // getElementsByClassName から querySelector に変更
-//   const texts = {
-//     zh: "暴走雪人的黑色幻影",
-//     jp: "ボスラッシュシーズン2"
-//   };
-//   if (eventTitleDiv) {  // 要素の存在確認
-//     eventTitleDiv.innerHTML = texts[lang];
-//   }
-// }
-
 // 動態產生特別活動區塊（title + times）
 function renderEventBlock() {
   const eventEl = document.getElementById('event');
@@ -323,7 +312,6 @@ function updateEventStyles() {
   if (!wrapper) return;
 
   const now = getNowBySVR();
-console.log("now>>>>" + now);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   Array.from(wrapper.children).forEach(div => {
@@ -464,6 +452,10 @@ function renderAllGroups(rows) {
   const todayWeekZh = weekdaysZh[currentDay];
   const tomorrowWeekZh = weekdaysZh[(currentDay + 1) % 7];
 
+  console.log("todayWeekZh>>>" + todayWeekZh);
+  console.log("tomorrowWeekZh>>>" + tomorrowWeekZh);
+  console.log("currentHour>>>" + currentHour);
+
   TASK_TYPES.forEach(type => {
     // 步驟 1: 取得今天的任務
     let todayList = getTaskListForWeek(rows, type, todayWeekZh);
@@ -471,7 +463,7 @@ function renderAllGroups(rows) {
     let tomorrowList = getTaskListForWeek(rows, type, tomorrowWeekZh);
     // 步驟 3: 合併今天和明天的任務（如果有）
     let combinedList = [...todayList];
-    if (tomorrowList.length > 0) {
+    if (tomorrowList.length > 0 && currentHour > 20) {
       // 為明天的任務標記日期
       const markedTomorrowList = tomorrowList.map(item => ({
         ...item,
@@ -650,7 +642,7 @@ function categorizeTasksByTime(list, currentHour) {
   }
 
   // 優先使用今天的剩餘任務，如果沒有則使用隔天凌晨的任務
-  const remainingItems = remainingItemsToday.length > 0 || currentHour <21
+  const remainingItems = remainingItemsToday.length > 0 || currentHour < 21
     ? remainingItemsToday
     : remainingItemsTomorrow;
 
