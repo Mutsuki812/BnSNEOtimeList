@@ -181,24 +181,32 @@ function isInDateRange() {
    ====== 期間內初始化 ======
    ========================== */
 function initInDateRange() {
-  // 清理任務刷新定時器（期間內不需要顯示任務列表）
-  if (minuteRefreshIntervalId) {
-    clearInterval(minuteRefreshIntervalId);
-    minuteRefreshIntervalId = null;
-  }
-  
   // 顯示 noDate
   updateNoDateText();
   const noDateDiv = document.getElementById("noDate");
   if (noDateDiv) noDateDiv.style.display = "block";
 
-  // 隱藏 langText
+  // 顯示 langText
+  updateLangText();
   const langTextDiv = document.getElementById("langText");
-  if (langTextDiv) langTextDiv.style.display = "none";
+  if (langTextDiv) langTextDiv.style.display = "block";
 
-  // 隱藏 taskContainer
+  // 顯示 taskContainer 並載入資料
   const taskContainerDiv = document.getElementById("taskContainer");
-  if (taskContainerDiv) taskContainerDiv.style.display = "none";
+  if (taskContainerDiv) {
+    taskContainerDiv.style.display = "block";
+    loadTasksAndRender(); // 載入 Excel 並渲染任務
+
+    // 啟動每分鐘刷新任務列表 UI（使用緩存數據）
+    if (minuteRefreshIntervalId) {
+      clearInterval(minuteRefreshIntervalId);
+    }
+    minuteRefreshIntervalId = setInterval(() => {
+      if (cachedExcelRows) {
+        renderAllGroups(cachedExcelRows); // 使用緩存數據刷新 UI
+      }
+    }, 60000); // 每1分鐘（60,000 毫秒）
+  }
 }
 
 /* ==========================
@@ -219,7 +227,7 @@ function initOutDateRange() {
   if (taskContainerDiv) {
     taskContainerDiv.style.display = "block";
     loadTasksAndRender(); // 載入 Excel 並渲染任務
-    
+
     // 啟動每分鐘刷新任務列表 UI（使用緩存數據）
     if (minuteRefreshIntervalId) {
       clearInterval(minuteRefreshIntervalId);
@@ -272,112 +280,13 @@ function updateNoDateText() {
     }
   }
   const texts = {
-    zh: "<b>白青山脈S3　2025.11.12 - 2025.12.17</b><br>" +
-      "新開始的第一周 暫無數據<br>" +
+    zh: "新開始的第一周 暫無數據<br>" +
       "請各位大俠幫幫忙",
-    jp: "<b>白青シーズン３　2025.11.12 - 2025.12.10</b><br>" +
-      "新シーズンが始まったばかりのため、まだデータがありません。<br>" +
+    jp: "新シーズンが始まったばかりのため、まだデータがありません。<br>" +
       "情報提供のご協力をよろしくお願いします！"
   };
   noDateDiv.innerHTML = texts[lang];
 }
-
-/* ==========================
-   ====== 特別活動 ======
-   ========================== */
-// 動態產生特別活動區塊（title + times）
-// function renderEventBlock() {
-//   const eventEl = document.getElementById('event');
-//   if (!eventEl) return;
-
-//   // 時間陣列：若你想從設定或檔案讀取，可改成變數來源
-//   const times = ['16:00', '19:00', '22:00', '01:00'];
-
-//   // 清空並建立新的內容
-//   eventEl.innerHTML = '';
-
-//   const titleDiv = document.createElement('div');
-//   titleDiv.className = 'eventTitle';
-//   // 直接使用 updateEv3ntTitle 可讓語系一致
-//   const texts = { zh: '星河的懸賞通緝令', jp: 'ボスラッシュシーズン2' };
-//   titleDiv.innerHTML = texts[lang];
-//   eventEl.appendChild(titleDiv);
-
-//   const timeWrapper = document.createElement('div');
-//   timeWrapper.id = 'eventTime';
-//   times.forEach(t => {
-//     const hourClass = t.split(':')[0];
-//     const hourValue = parseInt(hourClass, 10); // 轉為數字以匹配 EVENT_TIMES
-//     const d = document.createElement('div');
-//     // 保留原本的 class 格式（例如: "event 16"）並添加 has-checkbox
-//     d.className = `event ${hourClass} has-checkbox`;
-
-//     // 創建 checkbox (預設隱藏，點擊鈴鐺後才顯示)
-//     const checkbox = document.createElement('input');
-//     checkbox.type = 'checkbox';
-//     checkbox.id = `notify-${hourValue}`; // 使用數字ID以匹配 EVENT_TIMES
-//     checkbox.value = hourValue;
-//     checkbox.className = 'notify-checkbox';
-
-//     // 創建時間文字節點
-//     const timeText = document.createTextNode(t);
-
-//     d.appendChild(checkbox);
-//     d.appendChild(timeText);
-//     timeWrapper.appendChild(d);
-//   });
-//   eventEl.appendChild(timeWrapper);
-
-//   // 初次建立後立即套用樣式，並啟動定時器定期更新（避免建立多個 timer）
-//   updateEventStyles();
-//   if (eventStyleIntervalId) {
-//     clearInterval(eventStyleIntervalId);
-//   }
-//   // 每 1分鐘更新一次，以便在 15 分鐘倒數期間動畫與顏色能及時顯示
-//   eventStyleIntervalId = setInterval(updateEventStyles, 60000);
-// }
-
-// // 更新 event 時間塊的樣式（淺灰 / 深灰 / 紅色 + 動畫）
-// function updateEventStyles() {
-//   const wrapper = document.getElementById('eventTime');
-//   if (!wrapper) return;
-
-//   const now = getNowBySVR();
-//   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-//   Array.from(wrapper.children).forEach(div => {
-//     // 移除先前的樣式
-//     div.classList.remove('time-light', 'time-deep', 'time-alert', 'fade-animation');
-//     div.style.color = '';
-
-//     const text = div.textContent.trim();
-//     if (!text) return;
-
-//     const [hStr, mStr] = text.split(':');
-//     const h = parseInt(hStr, 10);
-//     const m = parseInt(mStr, 10) || 0;
-//     const eventMinutes = h * 60 + m;
-
-//     // 差距（分鐘）
-//     let diff = eventMinutes - currentMinutes;
-//     if (diff < 0) diff += 24 * 60; // 如果已過該時刻，就視為隔天同時段（不跨日但重複循環）
-
-//     // 條件判定（Case1～4）
-//     if (diff > 60) {
-//       // 距離事件超過1小時：淺灰
-//       div.classList.add("time-light");
-//     } else if (diff > 15) {
-//       // 1小時內但超過15分鐘：深灰
-//       div.classList.add("time-deep");
-//     } else if (diff >= 0) {
-//       // 15分鐘內：紅色 + 跳動
-//       div.classList.add("time-alert", "fade-animation");
-//     } else {
-//       // 已過 → 淺灰
-//       div.classList.add("time-light");
-//     }
-//   });
-// }
 
 /* ==========================
    ====== Excel 讀取 ======
@@ -473,7 +382,7 @@ function renderAllGroups(rows) {
   if (!container || container.style.display === "none") {
     return;
   }
-  
+
   // 在清空 container 之前，保存哪些任務類型的「其他時間」是展開的
   const openStates = {};
   TASK_TYPES.forEach(type => {
@@ -485,7 +394,7 @@ function renderAllGroups(rows) {
       }
     }
   });
-  
+
   container.innerHTML = "";
 
   const now = getNowBySVR();
@@ -544,12 +453,12 @@ function renderAllGroups(rows) {
     // 剩餘任務（可收合）
     const remWrapper = document.createElement("div");
     remWrapper.className = "remainingContainer";
-    
+
     // 如果之前是展開狀態，恢復展開
     if (openStates[type.key]) {
       remWrapper.classList.add('open');
     }
-    
+
     remainingItems.forEach(item => {
       remWrapper.appendChild(createTaskRow(item, true)); // true = 在剩餘任務區
     });
@@ -854,7 +763,7 @@ function createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = fa
   const btn = document.createElement("button");
   btn.className = "showBtn";
   // 根據初始狀態設置按鈕文字
-  btn.textContent = isInitiallyOpen 
+  btn.textContent = isInitiallyOpen
     ? (lang === "zh" ? "關閉 ▲" : "閉じる ▲")
     : (lang === "zh" ? "其他時間 ▼" : "その他 ▼");
   btn.type = "button";
@@ -1110,9 +1019,107 @@ setInterval(() => {
 setInterval(updateTopTime, 1000);
 
 
-/* ==========================
-   ====== 特別活動 通知功能 ======
-   ========================== */
+// /* ==========================
+//    ====== 特別活動 ======
+//    ========================== */
+// // 動態產生特別活動區塊（title + times）
+// function renderEventBlock() {
+//   const eventEl = document.getElementById('event');
+//   if (!eventEl) return;
+
+//   // 時間陣列：若你想從設定或檔案讀取，可改成變數來源
+//   const times = ['16:00', '19:00', '22:00', '01:00'];
+
+//   // 清空並建立新的內容
+//   eventEl.innerHTML = '';
+
+//   const titleDiv = document.createElement('div');
+//   titleDiv.className = 'eventTitle';
+//   // 直接使用 updateEv3ntTitle 可讓語系一致
+//   const texts = { zh: '星河的懸賞通緝令', jp: 'ボスラッシュシーズン2' };
+//   titleDiv.innerHTML = texts[lang];
+//   eventEl.appendChild(titleDiv);
+
+//   const timeWrapper = document.createElement('div');
+//   timeWrapper.id = 'eventTime';
+//   times.forEach(t => {
+//     const hourClass = t.split(':')[0];
+//     const hourValue = parseInt(hourClass, 10); // 轉為數字以匹配 EVENT_TIMES
+//     const d = document.createElement('div');
+//     // 保留原本的 class 格式（例如: "event 16"）並添加 has-checkbox
+//     d.className = `event ${hourClass} has-checkbox`;
+
+//     // 創建 checkbox (預設隱藏，點擊鈴鐺後才顯示)
+//     const checkbox = document.createElement('input');
+//     checkbox.type = 'checkbox';
+//     checkbox.id = `notify-${hourValue}`; // 使用數字ID以匹配 EVENT_TIMES
+//     checkbox.value = hourValue;
+//     checkbox.className = 'notify-checkbox';
+
+//     // 創建時間文字節點
+//     const timeText = document.createTextNode(t);
+
+//     d.appendChild(checkbox);
+//     d.appendChild(timeText);
+//     timeWrapper.appendChild(d);
+//   });
+//   eventEl.appendChild(timeWrapper);
+
+//   // 初次建立後立即套用樣式，並啟動定時器定期更新（避免建立多個 timer）
+//   updateEventStyles();
+//   if (eventStyleIntervalId) {
+//     clearInterval(eventStyleIntervalId);
+//   }
+//   // 每 1分鐘更新一次，以便在 15 分鐘倒數期間動畫與顏色能及時顯示
+//   eventStyleIntervalId = setInterval(updateEventStyles, 60000);
+// }
+
+// // 更新 event 時間塊的樣式（淺灰 / 深灰 / 紅色 + 動畫）
+// function updateEventStyles() {
+//   const wrapper = document.getElementById('eventTime');
+//   if (!wrapper) return;
+
+//   const now = getNowBySVR();
+//   const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+//   Array.from(wrapper.children).forEach(div => {
+//     // 移除先前的樣式
+//     div.classList.remove('time-light', 'time-deep', 'time-alert', 'fade-animation');
+//     div.style.color = '';
+
+//     const text = div.textContent.trim();
+//     if (!text) return;
+
+//     const [hStr, mStr] = text.split(':');
+//     const h = parseInt(hStr, 10);
+//     const m = parseInt(mStr, 10) || 0;
+//     const eventMinutes = h * 60 + m;
+
+//     // 差距（分鐘）
+//     let diff = eventMinutes - currentMinutes;
+//     if (diff < 0) diff += 24 * 60; // 如果已過該時刻，就視為隔天同時段（不跨日但重複循環）
+
+//     // 條件判定（Case1～4）
+//     if (diff > 60) {
+//       // 距離事件超過1小時：淺灰
+//       div.classList.add("time-light");
+//     } else if (diff > 15) {
+//       // 1小時內但超過15分鐘：深灰
+//       div.classList.add("time-deep");
+//     } else if (diff >= 0) {
+//       // 15分鐘內：紅色 + 跳動
+//       div.classList.add("time-alert", "fade-animation");
+//     } else {
+//       // 已過 → 淺灰
+//       div.classList.add("time-light");
+//     }
+//   });
+// }
+
+
+// /* ==========================
+//    ====== 特別活動 通知功能 ======
+//    ========================== */
 
 // const NOTIFICATION_STORAGE_KEY = "bossRushNotifications";
 // const EVENT_TIMES = [16, 19, 22, 1]; // Boss Rush 時間（小時）
@@ -1162,11 +1169,11 @@ setInterval(updateTopTime, 1000);
 //   bellButton.id = 'bellButton';
 //   bellButton.innerHTML = `<img src="images/bell-${settings.enabled ? 'on' : 'off'}01.svg" alt="通知">`;
 
-// // 將 titleDiv 和 bellContainer 包裝
+//   // 將 titleDiv 和 bellContainer 包裝
 //   if (titleDiv) {
-//   wrapper.appendChild(titleDiv);
-//   wrapper.appendChild(bellButton);
-//   eventEl.insertBefore(wrapper, eventEl.firstChild);
+//     wrapper.appendChild(titleDiv);
+//     wrapper.appendChild(bellButton);
+//     eventEl.insertBefore(wrapper, eventEl.firstChild);
 //   }
 
 //   // 創建通知設定面板（放在時間列表後面）
