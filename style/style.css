@@ -67,8 +67,7 @@
 
   /* ━━━ 字體系統 | Typography ━━━ */
   --font-family-time: "M PLUS 1p", sans-serif;
-  --font-family-jp: "Kosugi Maru", sans-serif;
-  --font-family-zh: "Kosugi Maru", sans-serif;
+  --font-family-content: "Kosugi Maru", sans-serif;
 
 
   /* 字體大小 - 桌面版 */
@@ -150,16 +149,6 @@ body {
   font-size: var(--font-size-base);
   line-height: 1.6;
   overflow-x: hidden;
-}
-
-/* 日文用字 */
-html[lang="jp"] body {
-  font-family: var(--font-family-jp);
-}
-
-/* 中文用字 */
-html[lang="zh"] body {
-  font-family: var(--font-family-zh);
 }
 
 /* ====================================================================
@@ -318,14 +307,14 @@ html[lang="zh"] body {
 #eventTime {
   display: flex;
   flex-wrap: wrap;
-}
-
-.event {
-  width: 25%;
   text-align: center;
   font-family: var(--font-family-time);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-black);
+}
+
+.event {
+  width: 25%;
   background: rgba(255, 255, 255, 0.95);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -363,6 +352,164 @@ html[lang="zh"] body {
   50% {
     filter: brightness(1.3);
   }
+}
+
+/* ====================================================================
+   🔔 通知功能樣式 | Notification Styles
+   包含：鈴鐺按鈕、設定面板、checkbox、測試按鈕
+==================================================================== */
+
+/* 通知區塊容器 - 重疊布局 */
+.notificationWrapper {
+  position: relative;
+  margin-bottom: var(--space-sm);
+}
+
+.notificationWrapper .eventTitle {
+  text-align: center;
+  /* padding-right: 40px; */
+  /* 為鈴鐺按鈕留出空間 */
+}
+
+/* 鈴鐺按鈕 - 絕對定位靠右上 */
+.bellButton {
+  position: absolute;
+  top: 15%;
+  right: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-xs);
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.bellButton:hover {
+  transform: scale(1.1);
+}
+
+.bellButton img {
+  width: 28px;
+  height: 28px;
+}
+
+/* 通知設定面板 */
+.notificationPanel {
+  background: rgba(232, 184, 109, 0.08);
+  border: 1px solid #E8B86D;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-md);
+  display: none;
+}
+
+.notificationPanel.active {
+  display: block;
+}
+
+/* Checkbox 時間選擇區 - 改為在時間項前面顯示 */
+.event.has-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.event input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #E8B86D;
+  margin: 0;
+}
+
+/* 當通知面板啟用時顯示 checkbox */
+#eventTime.show-checkboxes .event input[type="checkbox"] {
+  display: inline-block;
+}
+
+#eventTime .event input[type="checkbox"] {
+  display: none;
+}
+
+/* 設定控制區 */
+.notificationControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.notificationControls label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.notificationControls select {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.notificationControls select:focus {
+  outline: none;
+  border-color: #E8B86D;
+  box-shadow: 0 0 0 3px rgba(232, 184, 109, 0.2);
+}
+
+/* 按鈕群組 */
+.notificationButtons {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.notificationButtons button {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.notificationButtons button:hover {
+  background: #B89978;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.notificationButtons button.testButton {
+  background: var(--color-mizuki);
+}
+
+.notificationButtons button.testButton:hover {
+  background: #4a6d8e;
+}
+
+/* 測試結果訊息 */
+.testMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+  margin-top: var(--space-xs);
+  text-align: center;
+}
+
+.testMessage.error {
+  color: #c53d43;
 }
 
 /* ====================================================================
@@ -434,19 +581,32 @@ html[lang="zh"] body {
   color: var(--color-text-primary);
   font-family: var(--font-family-time);
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  /* font-weight: var(--font-weight-bold); */
+}
+
+.taskRow.current .col-content {
+  font-family: var(--font-family-content);
 }
 
 /* 文字大小調整 */
-.taskRow .col-content.long-content {
+.col-content.long11,
+.col-content.gray.long11 {
+  /* font-size: var(--font-size-lg); */
+}
+
+.col-content.long12,
+.col-content.gray.long12 {
+  /* font-size: var(--font-size-lg); */
+}
+
+.col-content.long13,
+.col-content.gray.long13 {
   font-size: var(--font-size-md);
 }
 
 /* 灰色狀態（已過時間） */
 .taskRow.current .col-time.gray,
-.taskRow.current .col-time.row-gray,
-.taskRow.current .col-content.gray,
-.taskRow.current .col-content.row-gray {
+.taskRow.current .col-content.gray {
   color: var(--color-text-tertiary);
 }
 
@@ -477,12 +637,17 @@ html[lang="zh"] body {
 }
 
 .taskWrapper .col-time,
-.taskWrapper .col-content,
 .remainingContainer .col-time,
+.taskWrapper .col-content,
 .remainingContainer .col-content {
   font-family: var(--font-family-time);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
+}
+
+.taskWrapper .col-content,
+.remainingContainer .col-content {
+  font-family: var(--font-family-content);
 }
 
 /* 維修中狀態 */
@@ -496,6 +661,19 @@ html[lang="zh"] body {
   color: #D6D5D5;
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-md);
+}
+
+/* 文字大小調整 */
+.col-content.long11 {
+  /* font-size: var(--font-size-lg); */
+}
+
+.col-content.long12 {
+  /* font-size: var(--font-size-lg); */
+}
+
+.col-content.long13 {
   font-size: var(--font-size-md);
 }
 
@@ -652,11 +830,48 @@ html[lang="zh"] body {
 
 
 /* ====================================================================
-   📱 手機響應式設計 | Mobile Responsive Design
-   適用於 450px 以下的裝置
+   📱 響應式設計 | Mobile Responsive Design
+   適用於 480px 以下的裝置
 ==================================================================== */
+@media (max-width: 560px) and (min-width: 431px) {
 
-@media (max-width: 450px) {
+  /* 文字大小調整 */
+  .col-content.long12 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 557px) and (min-width: 540px) {
+
+  /* 文字大小調整 */
+  .col-content.long13 {
+    font-size: 0.95rem;
+  }
+
+  .col-content.long12 {
+    font-size: 1rem
+  }
+}
+
+@media (max-width: 539px) and (min-width: 526px) {
+
+  /* 文字大小調整 */
+  .col-content.long11 {
+    font-size: 1.15rem;
+  }
+
+  .col-content.long13 {
+    font-size: 0.95rem;
+  }
+
+  .col-content.long12 {
+    font-size: 1rem
+  }
+}
+
+@media (max-width: 525px) and (min-width: 431px) {}
+
+@media (max-width: 431px) {
 
   /* ─── CSS 變數覆寫（手機版） ─── */
   :root {
@@ -725,17 +940,6 @@ html[lang="zh"] body {
     gap: var(--space-sm);
   }
 
-  .timeBox .timeLabel {
-    /* font-size: var(--font-size-xs); */
-  }
-
-  .timeBox .timeValue {
-    /* font-family: var(--font-family-time); */
-    /* font-size: var(--font-size-4xl); */
-    /* font-weight: var(--font-weight-black); */
-    /* padding: var(--space-xs) var(--space-md); */
-  }
-
   /* 語言按鈕 */
   #topRight {
     width: 100%;
@@ -745,12 +949,6 @@ html[lang="zh"] body {
   .langBtn {
     width: 100%;
     max-width: 200px;
-    /* padding: var(--space-md) var(--space-xs); */
-    /* font-size: var(--font-size-base); */
-  }
-
-  .langText {
-    /* padding-bottom: var(--space-xs); */
   }
 
   /* ─── 主卡片 ─── */
@@ -766,7 +964,7 @@ html[lang="zh"] body {
 
   /* ─── 任務列 ─── */
   .taskRow {
-    grid-template-columns: 85px 55px 12px 1fr;
+    grid-template-columns: 100px 55px 12px 1fr;
     min-height: 44px;
     gap: var(--space-xs);
   }
@@ -774,8 +972,8 @@ html[lang="zh"] body {
   /* 當前任務 */
   .taskRow.gishiki.current .col-type {
     font-size: var(--font-size-md);
+    padding-left: var(--space-sm);
   }
-
 
   .col-type {
     font-size: var(--font-size-lg);
@@ -784,11 +982,6 @@ html[lang="zh"] body {
   .taskRow.current .col-time,
   .taskRow.current .col-content {
     font-size: var(--font-size-lg);
-  }
-
-  /* 文字大小調整 */
-  .taskRow .col-content.long-content {
-    font-size: var(--font-size-base);
   }
 
   /* 接下來任務 */
