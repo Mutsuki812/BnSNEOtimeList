@@ -258,7 +258,7 @@ function updateLangText() {
       "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
       "　若有更準確的時間資訊，歡迎補充！<br>",
     jp: "<b>白青シーズン３　2025.11.12 - 2025.12.17</b><br>" +
-      "・表の時間 ＝ 予兆が表示の時間<br>" +
+      "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
       "・予兆後、５分でボスが出現します。<br>" +
       "・時間に[？]が付いている場合は、<br>" +
       "　ボスが散歩中に発見、予兆時間ではない。<br>" +
@@ -399,6 +399,7 @@ function renderAllGroups(rows) {
 
   const now = getNowBySVR();
   const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();  // 獲取當前分鐘
   const currentDay = now.getDay();
 
   // 取得今天和明天的星期標籤
@@ -427,8 +428,8 @@ function renderAllGroups(rows) {
     // 步驟 4: 合併連續維修任務
     combinedList = mergeConsecutiveMaintenance(combinedList);
 
-    // 步驟 5: 分類任務（當前、接下來、剩餘）
-    const { currentItem, nextItems, remainingItems } = categorizeTasksByTime(
+    // 步驟 5: 分類任務（前一小時、當前、接下來、剩餘、維修判定）
+    const { previousItem, currentItem, nextItems, remainingItems, isMaintenance } = categorizeTasksByTime(
       combinedList,
       currentHour
     );
@@ -436,6 +437,12 @@ function renderAllGroups(rows) {
     // 步驟 6: 創建任務群組容器
     const group = document.createElement("div");
     group.className = `group ${type.key}`;
+
+    // === 渲染前一小時任務（僅日文介面 + 非維修時段顯示）===
+    if (lang === "jp" && !isMaintenance) {
+      const previousRow = createPreviousHourTaskRow(previousItem, currentItem, currentHour, currentMinute);
+      group.appendChild(previousRow);
+    }
 
     // === 渲染當前任務 ===
     const curRow = createCurrentTaskRow(type, currentItem);
@@ -511,6 +518,7 @@ function getTaskListForWeek(rows, type, weekZh) {
 // === 根據時間分類任務 ===
 function categorizeTasksByTime(list, currentHour) {
   let currentItem = null;
+  let previousItem = null;  // 前一個小時的任務
   const nextItems = [];
   const remainingItemsToday = [];
   const remainingItemsTomorrow = [];   // 隔天 00:00-05:59 的任務
@@ -575,11 +583,18 @@ function categorizeTasksByTime(list, currentHour) {
     });
   } else {
     // 如果不在維修時段，使用一般分類邏輯
+    // 計算前一個小時（處理跨日：0點時前一小時是23點）
+    const previousHour = (currentHour + 23) % 24;
+
     list.forEach(item => {
       const itemHour = parseInt(item.time.split(":")[0]);
       let actualHour = item.isNextDay ? itemHour + 24 : itemHour;
 
-      if (actualHour === currentHour) {
+      // 前一個小時的任務（不包含維修任務）
+      if (itemHour === previousHour && !item.isNextDay && !isMaintenanceTask(item)) {
+        previousItem = item;
+      }
+      else if (actualHour === currentHour) {
         currentItem = item;
       }
       // 接下來兩小時
@@ -602,8 +617,64 @@ function categorizeTasksByTime(list, currentHour) {
     ? remainingItemsToday
     : remainingItemsTomorrow;
 
-  return { currentItem, nextItems, remainingItems };
+  return { previousItem, currentItem, nextItems, remainingItems, isInMaintenance };
 }
+
+
+// 創建前一小時任務列
+// 顯示條件：有前一個任務 且 (當前時間 < 當前任務時間 OR 沒有當前任務)
+function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute) {
+  // 如果沒有前一個任務，返回空元素
+  if (!item) {
+    return document.createDocumentFragment();
+  }
+
+  // 判斷顯示條件：(當前時間 < 當前任務時間) OR (沒有當前任務)
+  // 如果有當前任務，檢查時間條件
+  if (currentItem) {
+    // 獲取當前任務的小時和分鐘
+    const timeParts = (currentItem.time || "00:00").split(":");
+    const currentItemHour = parseInt(timeParts[0]) || 0;
+    const currentItemMinute = parseInt(timeParts[1]) || 0;
+
+    // 計算當前時間和當前任務時間的總分鐘數
+    const nowTotalMinutes = currentHour * 60 + currentMinute;
+    const taskTotalMinutes = currentItemHour * 60 + currentItemMinute;
+
+    // 如果當前時間 >= 當前任務時間，不顯示前一個任務
+    if (nowTotalMinutes >= taskTotalMinutes) {
+      return document.createDocumentFragment();
+    }
+  }
+  // 如果沒有當前任務（currentItem 為 null），繼續顯示前一小時任務
+  const content = getTaskContent(item);
+
+  // 如果 content 為空，不顯示
+  if (!content || content.trim() === "") {
+    return document.createDocumentFragment();
+  }
+
+  const taskRow = document.createElement("div");
+  taskRow.className = "previoushour";  // 使用 previoushour class
+
+  // 處理時間顯示
+  let timeText = item.time || "--:--";
+  let questionMark = "";
+
+  if (item.hasQuestionMark) {
+    questionMark = '[?]';
+  }
+
+  taskRow.innerHTML = `
+    <span class="previoushour_placeholder">未クリアの可能性があり、探してみよう</span>
+    <span class="col-time gray">${timeText}</span>
+    <span class="col-questionMark gray">${questionMark}</span>
+    <span class="col-content gray">${content}</span>
+  `;
+
+  return taskRow;
+}
+
 
 // 創建當前任務列
 function createCurrentTaskRow(type, item) {
@@ -890,7 +961,7 @@ function updateReportTypeOptions() {
 
 // 更新回報備註的提示文字
 function updateReportCommentPlaceholder() {
-  reportCommentEl.placeholder = lang === "zh" ? "10/08 19:26 地點 地點" : "10/08 19:26 場所 場所";
+  reportCommentEl.placeholder = lang === "zh" ? "10/15 19:26 地點 / 地點" : "10/15 19:26 場所 / 場所";
   submitReportBtn.textContent = lang === "zh" ? "送出" : "送信";
 }
 
