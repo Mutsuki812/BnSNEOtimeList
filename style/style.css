@@ -123,7 +123,6 @@
 /* ====================================================================
    🔧 全局重置與基礎樣式 | Global Reset & Base Styles
 ==================================================================== */
-
 *,
 *::before,
 *::after {
@@ -149,6 +148,7 @@ body {
   font-size: var(--font-size-base);
   line-height: 1.6;
   overflow-x: hidden;
+  font-family: var(--font-family-content);
 }
 
 /* ====================================================================
@@ -350,7 +350,6 @@ body {
 }
 
 .previoushour .col-content {
-  font-family: var(--font-family-content);
 }
 
 .previoushour .col-time {
@@ -401,7 +400,6 @@ body {
 }
 
 .taskRow.current .col-content {
-  font-family: var(--font-family-content);
 }
 
 .col-content.long13,
@@ -453,7 +451,6 @@ body {
 
 .taskWrapper .col-content,
 .remainingContainer .col-content {
-  font-family: var(--font-family-content);
 }
 
 /* 維修中狀態 */

@@ -666,7 +666,7 @@ function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute
   }
 
   taskRow.innerHTML = `
-    <span class="previoushour_placeholder">未クリアの可能性があり、探してみよう</span>
+    <span class="previoushour_placeholder">未クリアの可能性があり、<br>探してみよう</span>
     <span class="col-time gray">${timeText}</span>
     <span class="col-questionMark gray">${questionMark}</span>
     <span class="col-content gray">${content}</span>
