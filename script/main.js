@@ -518,7 +518,7 @@ function getTaskListForWeek(rows, type, weekZh) {
 // === 根據時間分類任務 ===
 function categorizeTasksByTime(list, currentHour) {
   let currentItem = null;
-  let previousItem = null;  // 前一個小時的任務
+  let previousItem = null;  // 前半個小時的任務
   const nextItems = [];
   const remainingItemsToday = [];
   const remainingItemsTomorrow = [];   // 隔天 00:00-05:59 的任務
@@ -585,16 +585,26 @@ function categorizeTasksByTime(list, currentHour) {
     // 如果不在維修時段，使用一般分類邏輯
     // 計算前一個小時（處理跨日：0點時前一小時是23點）
     const previousHour = (currentHour + 23) % 24;
+    // 前一個小時的後半段：:30 到 :59
+    const halfHourStart = previousHour * 60 + 30;
+    const halfHourEnd = previousHour * 60 + 59; 
 
     list.forEach(item => {
       const itemHour = parseInt(item.time.split(":")[0]);
+      const itemMinute = parseInt(item.time.split(":")[1]) || 0;
+      const itemTotalMinutes = itemHour * 60 + itemMinute;
+
       let actualHour = item.isNextDay ? itemHour + 24 : itemHour;
 
-      // 前一個小時的任務（不包含維修任務）
-      if (itemHour === previousHour && !item.isNextDay && !isMaintenanceTask(item)) {
-        previousItem = item;
+      // 前半個小時的任務（不包含維修任務）
+      if (!item.isNextDay && !isMaintenanceTask(item)) {
+        // 檢查任務時間是否在前一個小時的 :30-:59 範圍內
+        if (itemTotalMinutes >= halfHourStart && itemTotalMinutes <= halfHourEnd) {
+          previousItem = item;
+        }
       }
-      else if (actualHour === currentHour) {
+      
+      if (actualHour === currentHour) {
         currentItem = item;
       }
       // 接下來兩小時
@@ -734,7 +744,7 @@ function createCurrentTaskRow(type, item) {
             console.log("long12");
             el.classList.add('long12');
           }
-          if (content.length == 13) {
+          if (content.length >= 13) {
             console.log("long13");
             el.classList.add('long13');
           }
@@ -801,19 +811,13 @@ function createTaskRow(item, isRemaining = false) {
   console.log("content.length>>>" + timeText + ">" + content.length);
 
   if (!isMaintenance) {
-    if (content.length == 11) {
-      taskRow.querySelector('.col-content').classList.add('long11');
-      console.log("long11");
+    if (content.length == 16) {
+      taskRow.querySelector('.col-content').classList.add('long16');
+      console.log("long16");
     }
-
-    if (content.length == 12) {
-      taskRow.querySelector('.col-content').classList.add('long12');
-      console.log("long12");
-    }
-
-    if (content.length == 13) {
-      taskRow.querySelector('.col-content').classList.add('long13');
-      console.log("long13");
+        if (content.length == 15) {
+      taskRow.querySelector('.col-content').classList.add('long15');
+      console.log("long15");
     }
   }
 
