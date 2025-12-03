@@ -254,12 +254,14 @@ function updateLangText() {
   const texts = {
     zh: "<b>白青山脈Ｓ３　2025.11.12 - 2025.12.17</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
-      "・出字提示後５分鐘Boss登場。<br>" +
+      "・儀式：出字提示後３分鐘Boss登場。<br>" +
+      "・水月/白青野王：出字提示後５分鐘Boss登場。<br>" +
       "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
       "　若有更準確的時間資訊，歡迎補充！<br>",
     jp: "<b>白青シーズン３　2025.11.12 - 2025.12.17</b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
-      "・予兆後、５分でボスが出現します。<br>" +
+      "・儀式：予兆後、５分でボスが出現します。<br>" +
+      "・水月/白青FB：予兆後、５分でボスが出現します。<br>" +
       "・時間に[？]が付いている場合は、<br>" +
       "　ボスが散歩中に発見、予兆時間ではない。<br>" +
       "　もしより詳しい時間が分かれば、ぜひご提供ください。<br>"
@@ -587,7 +589,7 @@ function categorizeTasksByTime(list, currentHour) {
     const previousHour = (currentHour + 23) % 24;
     // 前一個小時的後半段：:30 到 :59
     const halfHourStart = previousHour * 60 + 30;
-    const halfHourEnd = previousHour * 60 + 59; 
+    const halfHourEnd = previousHour * 60 + 59;
 
     list.forEach(item => {
       const itemHour = parseInt(item.time.split(":")[0]);
@@ -603,7 +605,7 @@ function categorizeTasksByTime(list, currentHour) {
           previousItem = item;
         }
       }
-      
+
       if (actualHour === currentHour) {
         currentItem = item;
       }
@@ -815,7 +817,7 @@ function createTaskRow(item, isRemaining = false) {
       taskRow.querySelector('.col-content').classList.add('long16');
       console.log("long16");
     }
-        if (content.length == 15) {
+    if (content.length == 15) {
       taskRow.querySelector('.col-content').classList.add('long15');
       console.log("long15");
     }
