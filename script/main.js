@@ -3,8 +3,7 @@
    ========================== */
 const EXCEL_URL = "./files/timeList.xlsx";
 const SHEET_NAME = "timeList";
-const SHEET_JP = "timeList_JP";
-const SHEET_TW = "timeList_TW";
+// const SHEET_NAME = lang === zh ? "timeList_ZH" : "timeList_JP";
 
 const TASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式", color: "#7a4171", offsetMin: 10 },
@@ -32,13 +31,13 @@ const REPORT_TYPES = {
 // 每一季的第一周時間
 const dateRanges = {
   zh: {
-    start: new Date('2025-11-12T11:00:00+08:00'), // 台灣時間 10/15 11:00
-    end: new Date('2025-11-19T05:59:59+08:00')     // 台灣時間 10/22 06:00
+    start: new Date('2025-12-17T11:00:00+08:00'), // 台灣時間 10/15 11:00
+    end: new Date('2025-12-24T05:59:59+08:00')     // 台灣時間 10/22 06:00
 
   },
   jp: {
-    start: new Date('2025-11-12T10:00:00+09:00'), // 日本時間 10/15 10:00
-    end: new Date('2025-11-19T05:59:59+09:00')     // 日本時間 10/22 06:00
+    start: new Date('2025-12-17T10:00:00+09:00'), // 日本時間 10/15 10:00
+    end: new Date('2025-12-24T05:59:59+09:00')     // 日本時間 10/22 06:00
   }
 };
 
@@ -252,13 +251,13 @@ function updateLangText() {
     document.body.appendChild(langTextDiv);
   }
   const texts = {
-    zh: "<b>白青山脈Ｓ３　2025.11.12 - 2025.12.17</b><br>" +
+    zh: "<b>白青第４賽季　2025.12.17 - 2026.01.21</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
       "・儀式：出字提示後３分鐘Boss登場。<br>" +
       "・水月/白青野王：出字提示後５分鐘Boss登場。<br>" +
       "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
       "　若有更準確的時間資訊，歡迎補充！<br>",
-    jp: "<b>白青シーズン３　2025.11.12 - 2025.12.17</b><br>" +
+    jp: "<b>白青シーズン４　2025.12.17 - 2026.01.21</b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
       "・儀式：予兆後、３分でボスが出現します。<br>" +
       "・水月/白青FB：予兆後、５分でボスが出現します。<br>" +
@@ -678,7 +677,7 @@ function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute
   }
 
   taskRow.innerHTML = `
-    <span class="previoushour_placeholder">未クリアの可能性があり、<br>探してみよう</span>
+    <span class="previoushour_placeholder">未クリアの可能性もあり、<br>探してみよう</span>
     <span class="col-time gray">${timeText}</span>
     <span class="col-questionMark gray">${questionMark}</span>
     <span class="col-content gray">${content}</span>
@@ -730,27 +729,11 @@ function createCurrentTaskRow(type, item) {
   if (item && !isMaintenance) {
     const taskDate = timeStringToDateToday(item.time);
     const now = getNowBySVR();
+    const offSetMin = (type === 'gishiki') ? 3 : 5;
 
-    if (taskDate && now.getTime() > taskDate.getTime() + type.offsetMin * 60000) {
+    if (taskDate && now.getTime() > taskDate.getTime() + offSetMin * 60000) {
       row.querySelectorAll(".col-time, .col-content").forEach(el => {
-
         el.classList.add("gray")
-
-        if (type.key == "gishiki") {
-          console.log("gishiki>>>");
-          if (content.length == 11) {
-            console.log("long11");
-            el.classList.add('long11');
-          }
-          if (content.length == 12) {
-            console.log("long12");
-            el.classList.add('long12');
-          }
-          if (content.length >= 13) {
-            console.log("long13");
-            el.classList.add('long13');
-          }
-        }
       });
     }
 
@@ -811,17 +794,6 @@ function createTaskRow(item, isRemaining = false) {
   `;
 
   console.log("content.length>>>" + timeText + ">" + content.length);
-
-  if (!isMaintenance) {
-    if (content.length == 16) {
-      taskRow.querySelector('.col-content').classList.add('long16');
-      console.log("long16");
-    }
-    if (content.length == 15) {
-      taskRow.querySelector('.col-content').classList.add('long15');
-      console.log("long15");
-    }
-  }
 
   return taskRow;
 }
