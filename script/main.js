@@ -2,8 +2,6 @@
    ====== 設定 & 資料 ======
    ========================== */
 const EXCEL_URL = "./files/timeList.xlsx";
-const SHEET_NAME = "timeList";
-// const SHEET_NAME = lang === zh ? "timeList_ZH" : "timeList_JP";
 
 const TASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式", color: "#7a4171", offsetMin: 10 },
@@ -31,13 +29,13 @@ const REPORT_TYPES = {
 // 每一季的第一周時間
 const dateRanges = {
   zh: {
-    start: new Date('2026-01-07T11:00:00+08:00'), // 台灣時間 10/15 11:00
-    end: new Date('2026-01-14T05:59:59+08:00')     // 台灣時間 10/22 06:00
+    start: new Date('2026-01-07T11:00:00+08:00'), // 台灣時間
+    end: new Date('2026-01-14T05:59:59+08:00')
 
   },
   jp: {
-    start: new Date('2025-12-17T10:00:00+09:00'), // 日本時間 10/15 10:00
-    end: new Date('2025-12-24T05:59:59+09:00')     // 日本時間 10/22 06:00
+    start: new Date('2025-12-17T10:00:00+09:00'), // 日本時間
+    end: new Date('2025-12-24T05:59:59+09:00')
   }
 };
 
@@ -294,6 +292,9 @@ function updateNoDateText() {
    ========================== */
 async function loadExcel() {
   try {
+    // const SHEET_NAME = "timeList";
+    const SHEET_NAME = lang === "zh" ? "timeList_ZH" : "timeList_JP";
+
     const res = await fetch(EXCEL_URL);
     const buf = await res.arrayBuffer();
     const workbook = XLSX.read(buf, { type: "array" });
