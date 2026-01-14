@@ -6,8 +6,8 @@
 プレイヤー報告機能を通じて、コミュニティ主導で時間データの補完・修正が可能です。
 
 ### 🔗 デモ
-台湾サーバー：https://bit.ly/BnSNEOtimeList<br>
-日本サーバー：https://x.gd/rkSjt　`2026/03/11 サービス終了`
+台湾サーバー：<https://bit.ly/BnSNEOtimeList><br>
+日本サーバー：<https://x.gd/rkSjt>　`2026/03/11 サービス終了`
 
 ## ✨ 機能概要
 ### 🌏 言語・タイムゾーン自動判定

@@ -9,8 +9,8 @@
 並提供 玩家回報機制，協助社群共同補齊與修正時間資料。
 
 ### 🔗 Demo
-台服：https://bit.ly/BnSNEOtimeList<br>
-日服：https://x.gd/rkSjt　`2026/03/11 停止服務`
+台服：<https://bit.ly/BnSNEOtimeList><br>
+日服：<https://x.gd/rkSjt>　`2026/03/11 停止服務`
 
 
 ## ✨ 功能特色

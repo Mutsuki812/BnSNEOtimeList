@@ -7,8 +7,8 @@ It supports automatic language and timezone switching for Taiwan / Japan servers
 and includes a player reporting system that allows the community to refine and correct timing data collaboratively.
 
 ### 🔗 Demo
-Taiwan Server: https://bit.ly/BnSNEOtimeList<br>
-Japan Server: https://x.gd/rkSjt　`2026/03/11 Service Termination`
+Taiwan Server: <https://bit.ly/BnSNEOtimeList><br>
+Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 
 ## ✨ Features
 ### 🌏 言語・タイムゾーン自動判定
