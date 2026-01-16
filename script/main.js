@@ -445,6 +445,10 @@ function renderAllGroups(rows) {
       const previousRow = createPreviousHourTaskRow(previousItem, currentItem, currentHour, currentMinute);
       group.appendChild(previousRow);
     }
+    if (lang === "zh" && !isMaintenance && type.key === "gishiki") {
+      const previousRow = createPreviousHourTaskRow(previousItem, currentItem, currentHour, currentMinute);
+      group.appendChild(previousRow);
+    }
 
     // === 渲染當前任務 ===
     const curRow = createCurrentTaskRow(type, currentItem);
@@ -678,7 +682,7 @@ function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute
   }
 
   taskRow.innerHTML = `
-    <span class="previoushour_placeholder">未クリアの可能性もあり、<br>探してみよう</span>
+    <span class="previoushour_placeholder">${lang === "zh" ? "可能還沒死,可以找找看" : "未クリアの可能性もあり、<br>探してみよう"}</span>
     <span class="col-time gray">${timeText}</span>
     <span class="col-questionMark gray">${questionMark}</span>
     <span class="col-content gray">${content}</span>
