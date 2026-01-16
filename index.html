@@ -32,7 +32,7 @@
     <div class="dateInfo" style="text-align: right; font-size:0.9rem; padding-right: 20px;">※資料來源：<a
         href="https://forum.gamer.com.tw/C.php?bsn=12980&snA=79447" target="_blank">巴哈姆特</a></div>
 
-    <!-- 特別活動 -->
+    <!-- 特別活動  -->
     <div id="event" class="mainCard" style="display: none"></div>
 
     <!-- 整個任務區 -->
@@ -54,8 +54,8 @@
         <div class="reportText"></div>
         <select id="reportTaskType">
           <option value="gishiki"></option>
-          <option value="mizuki"></option>
           <option value="shirao"></option>
+          <option value="sengentou"></option>
           <option value="other"></option>
         </select>
 
@@ -63,7 +63,7 @@
           <option value="date_report"></option>
           <option value="other"></option>
         </select>
-        <input type="text" id="reportComment" placeholder="10/08 19:26 地點 地點" />
+        <input type="text" id="reportComment" />
 
         <div class="reportContainer">
           <div id="reportMessage"></div>
@@ -83,34 +83,19 @@
     </section>
   </div>
 
-  <script src="./script/main.js"></script>
+  <script src="./script/main copy.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
+
     gtag('js', new Date());
 
     gtag('config', 'G-7ZDSL0ZW37');
+    gtag('config', 'G-CMF0FG4JRV');
+    gtag('config', 'G-MN9SG0GVBY');
   </script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMF0FG4JRV"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-CMF0FG4JRV');
-</script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MN9SG0GVBY"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-MN9SG0GVBY');
-</script>
 </body>
-
 </html>
