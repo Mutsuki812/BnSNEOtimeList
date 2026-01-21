@@ -8,6 +8,7 @@ const EXCEL_URL = "./files/timeList.xlsx";
 // ─── 任務文字 ───
 const TASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式", color: "#7a4171", offsetMin: 10 },
+  { key: "mizuki", labelZh: "水月野王", labelJp: "水月FB", color: "#1e50a2", offsetMin: 5 },
   { key: "shirao", labelZh: "白青野王", labelJp: "白青FB", color: "#7b8d42", offsetMin: 5 },
   { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB", color: "#B08F3E", offsetMin: 5 },
 ];
@@ -34,6 +35,7 @@ const REPORT_STORAGE_KEY = "myReports";
 // ─── 回報表單 - 任務區分 ───
 const REPORTTASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式" },
+  { key: "mizuki", labelZh: "水月野王", labelJp: "水月FB" },
   { key: "shirao", labelZh: "白青野王", labelJp: "白青FB" },
   { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB" },
   { key: "other", labelZh: "其他", labelJp: "その他" },
@@ -288,7 +290,7 @@ function updateNotice() {
       "・白青/仙幻島野王：出字提示後５分鐘Boss登場。<br>" +
       "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
       "　若有更準確的時間資訊，歡迎補充！<br>",
-    jp: "<b>仙幻島シーズン１　2026.01.21 - 2026.02.25</b><br>" +
+    jp: "<b>ソウルパス白青シーズン4　2025.12.17 - </b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
       "・儀式：予兆後、３分でボスが出現します。<br>" +
       "・白青/仙幻島FB：予兆後、５分でボスが出現します。<br>" +
@@ -396,6 +398,20 @@ async function loadTasksAndRender() {
   renderAllGroups(rows);
 }
 
+// 根據語系 顯示任務區（中：gishiki、shirao、sengen　　日：gishiki、mizuki、shirao）
+function getVisibleTaskTypes() {
+  if (lang === "zh") {
+    return TASK_TYPES.filter(type =>
+      ["gishiki", "shirao", "sengen"].includes(type.key)
+    );
+  }
+
+  // 預設日文
+  return TASK_TYPES.filter(type =>
+    ["gishiki", "mizuki", "shirao"].includes(type.key)
+  );
+}
+
 // ─── 所有任務群組（儀式、白青、仙幻島） ───
 function renderAllGroups(rows) {
   const container = document.getElementById("taskContainer");
@@ -407,7 +423,7 @@ function renderAllGroups(rows) {
 
   // 在清空 container 之前，保存哪些任務類型的「其他時間」是展開的
   const openStates = {};
-  TASK_TYPES.forEach(type => {
+  getVisibleTaskTypes().forEach(type => {
     const existingGroup = container.querySelector(`.group.${type.key}`);
     if (existingGroup) {
       const remContainer = existingGroup.querySelector('.remainingContainer');
@@ -429,7 +445,7 @@ function renderAllGroups(rows) {
   const todayWeekZh = weekdaysZh[currentDay];
   const tomorrowWeekZh = weekdaysZh[(currentDay + 1) % 7];
 
-  TASK_TYPES.forEach(type => {
+  getVisibleTaskTypes().forEach(type => {
     // 步驟 1: 取得今天的任務
     let todayList = getTaskListForWeek(rows, type, todayWeekZh);
     // 步驟 2: 取得明天的任務（用於剩餘任務顯示）
