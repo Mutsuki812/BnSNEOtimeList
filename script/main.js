@@ -1,21 +1,45 @@
 /* ==========================
-   ====== 設定 & 資料 ======
+   ======= 設定 & 資料 =======
    ========================== */
+
+// ─── 連攜數據 ───
 const EXCEL_URL = "./files/timeList.xlsx";
 
+// ─── 任務文字 ───
 const TASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式", color: "#7a4171", offsetMin: 10 },
-  { key: "mizuki", labelZh: "水月野王", labelJp: "水月FB", color: "#1e50a2", offsetMin: 5 },
   { key: "shirao", labelZh: "白青野王", labelJp: "白青FB", color: "#7b8d42", offsetMin: 5 },
+  { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB", color: "#B08F3E", offsetMin: 5 },
 ];
 
+// ─── 維修文字 ───
+const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
+
+// ─── 特定時間：新一季的第一周 時間設定 ───
+const dateRanges = {
+  zh: {
+    start: new Date('2026-01-21T11:00:00+08:00'), // 台灣
+    end: new Date('2026-01-28T05:59:59+08:00')
+
+  },
+  jp: {
+    start: new Date('2026-01-21T10:00:00+09:00'), // 日本
+    end: new Date('2026-01-28T05:59:59+09:00')
+  }
+};
+
+// ─── 回報表單 ───
+const REPORT_STORAGE_KEY = "myReports";
+
+// ─── 回報表單 - 任務區分 ───
 const REPORTTASK_TYPES = [
   { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式" },
-  { key: "mizuki", labelZh: "水月野王", labelJp: "水月FB" },
   { key: "shirao", labelZh: "白青野王", labelJp: "白青FB" },
+  { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB" },
   { key: "other", labelZh: "其他", labelJp: "その他" },
 ];
 
+// ─── 回報表單 - 回報類型 ───
 const REPORT_TYPES = {
   default: [
     { value: "date_report", labelZh: "時間回報", labelJp: "時間報告" },
@@ -26,48 +50,26 @@ const REPORT_TYPES = {
   ]
 };
 
-// 每一季的第一周時間
-const dateRanges = {
-  zh: {
-    start: new Date('2026-01-07T11:00:00+08:00'), // 台灣時間
-    end: new Date('2026-01-14T05:59:59+08:00')
 
-  },
-  jp: {
-    start: new Date('2025-12-17T10:00:00+09:00'), // 日本時間
-    end: new Date('2025-12-24T05:59:59+09:00')
-  }
-};
-
-const REPORT_STORAGE_KEY = "myReports";
-
-// 維修任務的匹配模式
-const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
 
 /* ==========================
-   ====== 語系判定 & 切換 ======
+   ===== 語系判定 & 切換 =====
    ========================== */
+
 let lang = "zh";
 
-// 更新HTML的語系標記
+// ─── 更新語系 ───
 function updateHtmlLang() {
   document.documentElement.setAttribute('lang', lang);
 }
 
-// interval id for updating event styles
-let eventStyleIntervalId = null;
-
-// Excel 數據緩存和刷新控制
-let cachedExcelRows = null;           // 緩存的 Excel 數據
-let minuteRefreshIntervalId = null;   // 每分鐘刷新任務列表的定時器 ID
-
-// 根據時區自動判定語系
+// ─── 根據時區 判定語系 ───
 function detectLangByTimezone() {
-  // 先檢查是否有儲存的語言偏好
+  // 檢查是否有儲存的語言偏好
   const savedLang = localStorage.getItem('userLang');
 
   if (savedLang) {
-    // 如果有儲存的語言，使用儲存的設定
+    // 有儲存的語言，使用儲存設定
     lang = savedLang;
   } else {
     // 第一次訪問，根據時區判定
@@ -78,12 +80,12 @@ function detectLangByTimezone() {
   updateLangButtonText();
 }
 
-// 更新語系切換按鈕文字
+// ─── 根據語系 切換按鈕文字 ───
 function updateLangButtonText() {
   document.getElementById("langBtn").textContent = lang === "zh" ? "日本鯖切替" : "切換到台服";
 }
 
-// 語系切換按鈕事件
+// ─── 切換語系 時間文字更新 ───
 document.getElementById("langBtn").addEventListener("click", () => {
   lang = lang === "zh" ? "jp" : "zh";
 
@@ -93,19 +95,19 @@ document.getElementById("langBtn").addEventListener("click", () => {
   // 更新按鈕文字
   updateLangButtonText();
 
-  // 更新HTML語系標記
+  // 更新語系
   updateHtmlLang();
-  // updateEventTitle();
-  // renderEventBlock();
 
-  // 更新時間顯示
+  // 更新時間
   updateTopTime();
+
   // 根據期間重新初始化
   if (isInDateRange()) {
     initInDateRange();
   } else {
     initOutDateRange();
   }
+
   // 更新回報區文字
   updateReportText();
   updateReportTaskOptions();
@@ -116,36 +118,41 @@ document.getElementById("langBtn").addEventListener("click", () => {
 detectLangByTimezone();
 updateHtmlLang();  // 初期設定時設定HTML語系
 
+
+
 /* ==========================
-   ====== 時間處理 ======
+   ======== 時間處理 ========
    ========================== */
-// 根據當前語系取得對應時區的時間
+
+// ─── 根據語系 取得對應時區時間 ───
 function getNowBySVR() {
-  const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  const offset = (lang === "zh" ? 8 : 9) * 60 * 60000;
+  const now     = new Date();
+  const utc     = now.getTime() + now.getTimezoneOffset() * 60000;
+  const offset  = (lang === "zh" ? 8 : 9) * 60 * 60000;
+
   return new Date(utc + offset);
 }
 
-// 格式化日期標籤（年/月/日（星期））
+// ─── 更新頁面頂部的（年/月/日（星期）） ───
 function formatDateLabel(d) {
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
+  const year    = d.getFullYear();
+  const month   = d.getMonth() + 1;
+  const day     = d.getDate();
   const weekdays = {
     zh: ["日", "一", "二", "三", "四", "五", "六"],
     jp: ["日", "月", "火", "水", "木", "金", "土"]
   };
   const weekday = weekdays[lang][d.getDay()];
+
   return `${year}/${month}/${day}（${weekday}）`;
 }
 
-// 更新頁面頂部的時間顯示
+// ─── 更新頁面頂部的時間顯示 ───
 function updateTopTime() {
   const now = getNowBySVR();
   document.getElementById("dateLabel").textContent = formatDateLabel(now);
 
-  const locale = lang === "zh" ? "zh-TW" : "ja-JP";
+  const locale  = lang === "zh" ? "zh-TW" : "ja-JP";
   const options = { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
   const timeStr = now.toLocaleTimeString(locale, options);
 
@@ -155,145 +162,153 @@ function updateTopTime() {
   `;
 }
 
-// 將時間字串（HH:MM）轉換為今天的 Date 物件
+// ─── 將時間字串（HH:MM）轉換為今天的 Date 物件 ───
 function timeStringToDateToday(timeStr) {
-  const now = getNowBySVR();
-  const [h, m] = (timeStr || "--:--").split(":").map(Number);
+  const now     = getNowBySVR();
+  const [h, m]  =  (timeStr || "--:--").split(":").map(Number);
+
   if (isNaN(h) || isNaN(m)) return null;
+
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
 }
 
-/* ==========================
-   ====== 當前日期是否為每一季的第一周 ======
-   ========================== */
-// 判斷當前是否在特定時間範圍內
+
+
+/* =========================================
+   ======= 當前日期是否為每一季的第一周 ======
+   ========================================= */
+
+// ─── 判斷當前是否在特定時間範圍內 ───
 function isInDateRange() {
-  const now = getNowBySVR(); // 取得對應時區的當前時間
-  const range = dateRanges[lang]; // 根據當前語系取得對應的時間範圍
+  const now   = getNowBySVR();      // 取得對應時區的當前時間
+  const range = dateRanges[lang];   // 根據當前語系取得對應的時間範圍
 
   return now >= range.start && now <= range.end;
 }
 
+
+
 /* ==========================
-   ====== 期間內初始化 ======
+   ========= 初始化 =========
    ========================== */
-function initInDateRange() {
-  // 顯示 noDate
-  updateNoDateText();
-  const noDateDiv = document.getElementById("noDate");
-  if (noDateDiv) noDateDiv.style.display = "block";
 
-  // 顯示 langText
-  updateLangText();
-  const langTextDiv = document.getElementById("langText");
-  if (langTextDiv) langTextDiv.style.display = "block";
+// ─── Excel 數據緩存和刷新控制 ───
+let cachedExcelRows         = null;   // 緩存的 Excel 數據
+let minuteRefreshIntervalId = null;   // 每分鐘刷新任務列表的定時器 ID
 
-  // 顯示 taskContainer 並載入資料
+function initCommon({ showFirstWeek }) {
+  const firstWeekDiv     = document.getElementById("firstWeek");
+  const noticeDiv      = document.getElementById("notice");
   const taskContainerDiv = document.getElementById("taskContainer");
+
+  // 處理：說明文字 notice 
+  updateNotice();
+  if (noticeDiv) {
+    noticeDiv.style.display = "block";
+  }
+
+  // 處理：新一季的第一周 公告
+  if (firstWeekDiv) {
+    firstWeekDiv.style.display = showFirstWeek ? "block" : "none";
+    // 當前日期為新一季的第一周 顯示文字
+    if (showFirstWeek) {
+      updateFirstWeekText();
+    }
+  }
+
+  // 處理：任務列表
   if (taskContainerDiv) {
     taskContainerDiv.style.display = "block";
     loadTasksAndRender(); // 載入 Excel 並渲染任務
-
-    // 啟動每分鐘刷新任務列表 UI（使用緩存數據）
-    if (minuteRefreshIntervalId) {
-      clearInterval(minuteRefreshIntervalId);
-    }
-    minuteRefreshIntervalId = setInterval(() => {
-      if (cachedExcelRows) {
-        renderAllGroups(cachedExcelRows); // 使用緩存數據刷新 UI
-      }
-    }, 60000); // 每1分鐘（60,000 毫秒）
   }
+
+  // 處裡：每分鐘刷新任務列表 UI（使用緩存數據）
+  if (minuteRefreshIntervalId) {
+    clearInterval(minuteRefreshIntervalId);
+  }
+  minuteRefreshIntervalId = setInterval(() => {
+    if (cachedExcelRows) {
+      renderAllGroups(cachedExcelRows); // 使用緩存數據刷新 UI
+    }
+  }, 60000);
 }
 
+
 /* ==========================
-   ====== 期間外初始化 ======
+   ===== 特定時間初期化 =====
    ========================== */
+
+// ─── 時間外 ───
 function initOutDateRange() {
-  // 隱藏 noDate
-  const noDateDiv = document.getElementById("noDate");
-  if (noDateDiv) noDateDiv.style.display = "none";
-
-  // 顯示 langText
-  updateLangText();
-  const langTextDiv = document.getElementById("langText");
-  if (langTextDiv) langTextDiv.style.display = "block";
-
-  // 顯示 taskContainer 並載入資料
-  const taskContainerDiv = document.getElementById("taskContainer");
-  if (taskContainerDiv) {
-    taskContainerDiv.style.display = "block";
-    loadTasksAndRender(); // 載入 Excel 並渲染任務
-
-    // 啟動每分鐘刷新任務列表 UI（使用緩存數據）
-    if (minuteRefreshIntervalId) {
-      clearInterval(minuteRefreshIntervalId);
-    }
-    minuteRefreshIntervalId = setInterval(() => {
-      if (cachedExcelRows) {
-        renderAllGroups(cachedExcelRows); // 使用緩存數據刷新 UI
-      }
-    }, 60000); // 每1分鐘（60,000 毫秒）
-  }
+  initCommon({ showFirstWeek: false });
+}
+// ─── 時間內 ───
+function initInDateRange() {
+  initCommon({ showFirstWeek: true });
 }
 
-/* ==========================
-   ====== 說明文字 ======
-   ========================== */
-function updateLangText() {
-  let langTextDiv = document.getElementById("langText");
-  if (!langTextDiv) {
-    langTextDiv = document.createElement("div");
-    langTextDiv.id = "langText";
-    langTextDiv.className = "langText";
-    document.body.appendChild(langTextDiv);
-  }
-  const texts = {
-    zh: "<b>白青第４賽季　2025.12.17 - 2026.01.21</b><br>" +
-      "・表記時間 = 系統出字時間<br>" +
-      "・儀式：出字提示後３分鐘Boss登場。<br>" +
-      "・水月/白青野王：出字提示後５分鐘Boss登場。<br>" +
-      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
-      "　若有更準確的時間資訊，歡迎補充！<br>",
-    jp: "<b>白青シーズン４　2025.12.17 - 2026.01.21</b><br>" +
-      "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
-      "・儀式：予兆後、３分でボスが出現します。<br>" +
-      "・水月/白青FB：予兆後、５分でボスが出現します。<br>" +
-      "・時間に[？]が付いている場合は、<br>" +
-      "　ボスが散歩中に発見、予兆時間ではない。<br>" +
-      "　もしより詳しい時間が分かれば、ぜひご提供ください。<br>"
-  };
-  langTextDiv.innerHTML = texts[lang];
-}
-
-// 沒有數據時的任務表
-function updateNoDateText() {
-  let noDateDiv = document.getElementById("noDate");
-  if (!noDateDiv) {
-    noDateDiv = document.createElement("div");
-    noDateDiv.id = "noDate";
+// ─── 時間內：公告文字 ───
+function updateFirstWeekText() {
+  let firstWeekDiv = document.getElementById("firstWeek");
+  if (!firstWeekDiv) {
+    firstWeekDiv = document.createElement("div");
+    firstWeekDiv.id = "firstWeek";
 
     const mainCard = document.getElementById("mainCard");
     if (mainCard) {
-      mainCard.appendChild(noDateDiv);
+      mainCard.appendChild(firstWeekDiv);
     }
   }
   const texts = {
-    zh: "1/7維修後 數據重置 需要再次蒐集<br>" +
+    zh: "新的賽季的第一周 暫時沒有數據<br>" +
       "請各位大俠幫幫忙 辛苦各位了",
     jp: "新シーズンが始まったばかりのため、まだデータがありません。<br>" +
       "情報提供のご協力をよろしくお願いします！"
   };
-  noDateDiv.innerHTML = texts[lang];
+  firstWeekDiv.innerHTML = texts[lang];
 }
 
 /* ==========================
-   ====== Excel 讀取 ======
+   ======== 說明公告 ========
    ========================== */
+
+// ─── 公告文字 ───
+function updateNotice() {
+  let noticeDiv = document.getElementById("notice");
+  if (!noticeDiv) {
+    noticeDiv = document.createElement("div");
+    noticeDiv.id = "notice";
+    noticeDiv.className = "notice";
+    document.body.appendChild(noticeDiv);
+  }
+  const texts = {
+    zh: "<b>仙幻島第１賽季　2026.01.21 - 2026.02.25</b><br>" +
+      "・表記時間 = 系統出字時間<br>" +
+      "・儀式：出字提示後３分鐘Boss登場、30分鐘後消失<br>" +
+      "・白青/仙幻島野王：出字提示後５分鐘Boss登場。<br>" +
+      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
+      "　若有更準確的時間資訊，歡迎補充！<br>",
+    jp: "<b>仙幻島シーズン１　2026.01.21 - 2026.02.25</b><br>" +
+      "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
+      "・儀式：予兆後、３分でボスが出現します。<br>" +
+      "・白青/仙幻島FB：予兆後、５分でボスが出現します。<br>" +
+      "・時間に[？]が付いている場合は、<br>" +
+      "　ボスが散歩中に発見、予兆時間ではない。<br>" +
+      "　もしより詳しい時間が分かれば、ぜひご提供ください。<br>"
+  };
+  noticeDiv.innerHTML = texts[lang];
+}
+
+
+/* ==========================
+   ======= Excel 讀取 =======
+   ========================== */
+
 async function loadExcel() {
   try {
-    // const SHEET_NAME = "timeList";
-    const SHEET_NAME = lang === "zh" ? "timeList_ZH" : "timeList_JP";
+
+    // 雙表
+    const SHEET_NAME = lang === "zh" ? "timeList" : "timeList_JP";
 
     const res = await fetch(EXCEL_URL);
     const buf = await res.arrayBuffer();
@@ -307,21 +322,22 @@ async function loadExcel() {
 }
 
 /* ==========================
-   ====== 任務處理輔助函數 ======
+   ====== 合併維修處裡 ======
    ========================== */
-// 檢查任務項是否為[維修]
+
+// ─── 檢查是否為[維修] ───
 function isMaintenanceTask(item) {
   if (!item) return false;
   const content = lang === "zh" ? item.zh : item.jp;
   return MAINTENANCE_PATTERN.test(content);
 }
 
-// 取得任務內容（根據當前語系）
+// ─── 根據當前語系 取得任務內容 ───
 function getTaskContent(item) {
   return lang === "zh" ? item.zh : item.jp;
 }
 
-// 合併連續的相同維修任務
+// ─── 合併連續的相同維修任務 ───
 function mergeConsecutiveMaintenance(list) {
   const merged = [];
   let skipUntil = -1;
@@ -334,7 +350,7 @@ function mergeConsecutiveMaintenance(list) {
     const isMaintenance = MAINTENANCE_PATTERN.test(content);
 
     if (isMaintenance) {
-      // 找出連續相同的維修項目並記錄時間範圍（start/end）
+      // 找出連續相同的維修項目 並記錄時間範圍（start/end）
       let lastIndex = index;
       for (let i = index + 1; i < list.length; i++) {
         const nextContent = getTaskContent(list[i]);
@@ -347,6 +363,7 @@ function mergeConsecutiveMaintenance(list) {
       // 取得開始與結束小時
       const startHour = parseInt(item.time.split(":")[0]);
       const endHour = parseInt(list[lastIndex].time.split(":")[0]);
+
       // 建立一筆合併項目，並保存 span 資訊
       const mergedItem = Object.assign({}, item);
       mergedItem.maintenanceSpanStart = startHour;
@@ -361,22 +378,25 @@ function mergeConsecutiveMaintenance(list) {
   return merged;
 }
 
-// 將時間字串轉換為分鐘數（用於排序）
+// ─── 將時間 轉換為分鐘數（用於排序） ───
 function timeToMinutes(timeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + (minutes || 0);
 }
 
+
+
 /* ==========================
-   ====== 整個任務區任務 ======
+   ====== 整個任務群組 ======
    ========================== */
+
 async function loadTasksAndRender() {
   const rows = await loadExcel();
   cachedExcelRows = rows; // 緩存數據供每分鐘刷新使用
   renderAllGroups(rows);
 }
 
-// 所有任務群組（儀式、水月、白青）
+// ─── 所有任務群組（儀式、白青、仙幻島） ───
 function renderAllGroups(rows) {
   const container = document.getElementById("taskContainer");
 
@@ -440,21 +460,17 @@ function renderAllGroups(rows) {
     const group = document.createElement("div");
     group.className = `group ${type.key}`;
 
-    // === 渲染前一小時任務（僅日文介面 + 非維修時段顯示）===
-    if (lang === "jp" && !isMaintenance) {
-      const previousRow = createPreviousHourTaskRow(previousItem, currentItem, currentHour, currentMinute);
-      group.appendChild(previousRow);
-    }
-    if (lang === "zh" && !isMaintenance && type.key === "gishiki") {
+    // 前一小時
+    if (lang === "jp" || (lang === "zh" && type.key === "gishiki") && !isMaintenance) {
       const previousRow = createPreviousHourTaskRow(previousItem, currentItem, currentHour, currentMinute);
       group.appendChild(previousRow);
     }
 
-    // === 渲染當前任務 ===
+    // 當前小時
     const curRow = createCurrentTaskRow(type, currentItem);
     group.appendChild(curRow);
 
-    // === 渲染接下來兩小時 + 剩餘任務 ===
+    // 接下來兩小時 + 剩餘任務
     const wrapper = document.createElement("div");
     wrapper.className = "taskWrapper";
 
@@ -463,7 +479,7 @@ function renderAllGroups(rows) {
       wrapper.appendChild(createTaskRow(item, false));
     });
 
-    // 剩餘任務（可收合）
+    // 剩餘小時（可收合）
     const remWrapper = document.createElement("div");
     remWrapper.className = "remainingContainer";
 
@@ -486,7 +502,7 @@ function renderAllGroups(rows) {
   });
 }
 
-// === 取得指定星期的任務列表 ===
+// ─── 取得指定星期的任務列表 ───
 function getTaskListForWeek(rows, type, weekZh) {
   return rows
     .filter(r => r["Week-zh"] === weekZh && r[`${type.key}-time`])
@@ -521,7 +537,7 @@ function getTaskListForWeek(rows, type, weekZh) {
     .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 }
 
-// === 根據時間分類任務 ===
+// ─── 根據時間分類任務 ───
 function categorizeTasksByTime(list, currentHour) {
   let currentItem = null;
   let previousItem = null;  // 前半個小時的任務
@@ -587,8 +603,7 @@ function categorizeTasksByTime(list, currentHour) {
         }
       }
     });
-  } else {
-    // 如果不在維修時段，使用一般分類邏輯
+  } else {    // 如果不在維修時段，使用一般分類邏輯
     // 計算前一個小時（處理跨日：0點時前一小時是23點）
     const previousHour = (currentHour + 23) % 24;
     // 前一個小時的後半段：:30 到 :59
@@ -637,7 +652,7 @@ function categorizeTasksByTime(list, currentHour) {
 }
 
 
-// 創建前一小時任務列
+// ─── 前一小時任務 ───
 // 顯示條件：有前一個任務 且 (當前時間 < 當前任務時間 OR 沒有當前任務)
 function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute) {
   // 如果沒有前一個任務，返回空元素
@@ -671,18 +686,19 @@ function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute
   }
 
   const taskRow = document.createElement("div");
-  taskRow.className = "previoushour";  // 使用 previoushour class
+  taskRow.className = "previoushour";
 
   // 處理時間顯示
   let timeText = item.time || "--:--";
-  let questionMark = "";
+  let questionMark = item.hasQuestionMark ? '[?]' : "";
 
-  if (item.hasQuestionMark) {
-    questionMark = '[?]';
-  }
+    const hintText =
+    lang === "zh"
+      ? "可能還沒死,可以找找看"
+      : "未クリアの可能性もあり、<br>探してみよう";
 
   taskRow.innerHTML = `
-    <span class="previoushour_placeholder">${lang === "zh" ? "可能還沒死,可以找找看" : "未クリアの可能性もあり、<br>探してみよう"}</span>
+    <span class="previoushour_placeholder">${hintText}</span>
     <span class="col-time gray">${timeText}</span>
     <span class="col-questionMark gray">${questionMark}</span>
     <span class="col-content gray">${content}</span>
@@ -691,8 +707,7 @@ function createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute
   return taskRow;
 }
 
-
-// 創建當前任務列
+// 當前小時
 function createCurrentTaskRow(type, item) {
   const row = document.createElement("div");
   row.className = `taskRow ${type.key} current`;
@@ -805,7 +820,7 @@ function createTaskRow(item, isRemaining = false) {
 
 // 底部按鈕區
 function createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = false) {
-  noDate
+  firstWeek
   const footer = document.createElement("div");
   footer.className = "groupFooter";
 
@@ -869,7 +884,7 @@ function scheduleHourlyReload() {
 }
 
 /* ==========================
-   ====== 回報區域操作 ======
+   ======= 回報區域操作 ======
    ========================== */
 const reportTaskTypeEl = document.getElementById("reportTaskType");
 const reportTypeEl = document.getElementById("reportType");
@@ -887,7 +902,7 @@ function getTaskTypeLabelSingle(key) {
 
 // 取得回報類型標籤
 function getReportTypeLabelSingle(value, taskKey) {
-  const types = ["gishiki", "mizuki", "shirao"].includes(taskKey)
+  const types = ["gishiki", "shirao" , "sengentou"].includes(taskKey)
     ? REPORT_TYPES.default
     : REPORT_TYPES.otherOnly;
   const type = types.find(t => t.value === value) || { labelZh: value, labelJp: value };
@@ -929,7 +944,7 @@ function updateReportTaskOptions() {
 // 更新回報類型下拉選單
 function updateReportTypeOptions() {
   const selectedTask = reportTaskTypeEl.value;
-  const options = ["gishiki", "mizuki", "shirao"].includes(selectedTask)
+  const options = ["gishiki", "shirao" , "sengentou"].includes(selectedTask)
     ? REPORT_TYPES.default
     : REPORT_TYPES.otherOnly;
 
@@ -944,7 +959,7 @@ function updateReportTypeOptions() {
 
 // 更新回報備註的提示文字
 function updateReportCommentPlaceholder() {
-  reportCommentEl.placeholder = lang === "zh" ? "10/15 19:26 地點 / 地點" : "10/15 19:26 場所 / 場所";
+  reportCommentEl.placeholder = lang === "zh" ? "10/15 09:26 地點 / 地點" : "10/15 09:26 場所 / 場所";
   submitReportBtn.textContent = lang === "zh" ? "送出" : "送信";
 }
 
@@ -1015,7 +1030,7 @@ clearReportsBtn.addEventListener("click", () => {
 });
 
 /* ==========================
-   ====== 管理者Key ======
+   ======= 管理者Key ======
    ========================== */
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -1031,7 +1046,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================
-   ====== 初始化流程 ======
+   ======= 初始化流程 ======
    ========================== */
 
 // 步驟 1: 偵測並設定語系
@@ -1042,7 +1057,7 @@ updateTopTime();
 
 // 步驟 3: 根據期間判斷要執行什麼
 if (isInDateRange()) {
-  // ③ 期間內：只顯示 noDate
+  // ③ 期間內：只顯示 firstWeek
   initInDateRange();
 } else {
   // ② 期間外：顯示完整任務表
@@ -1073,62 +1088,69 @@ setInterval(() => {
 setInterval(updateTopTime, 1000);
 
 
+
 // /* ==========================
 //    ====== 特別活動 ======
 //    ========================== */
-// // 動態產生特別活動區塊（title + times）
+
+// /* ─── 事件樣式更新 Timer 管理 ─── */
+// let eventStyleIntervalId = null;
+
+// /* ─── 特別活動區塊（標題 + 時間） ─── */
 // function renderEventBlock() {
 //   const eventEl = document.getElementById('event');
 //   if (!eventEl) return;
 
-//   // 時間陣列：若你想從設定或檔案讀取，可改成變數來源
+//   // 活動時間定義
 //   const times = ['16:00', '19:00', '22:00', '01:00'];
 
-//   // 清空並建立新的內容
+//   // 清空原內容
 //   eventEl.innerHTML = '';
 
+//   // ─── 標題 ───
 //   const titleDiv = document.createElement('div');
 //   titleDiv.className = 'eventTitle';
-//   // 直接使用 updateEv3ntTitle 可讓語系一致
-//   const texts = { zh: '星河的懸賞通緝令', jp: 'ボスラッシュシーズン2' };
+
+//   const texts = {
+//     zh: '星河的懸賞通緝令',
+//     jp: 'ボスラッシュシーズン2'
+//   };
 //   titleDiv.innerHTML = texts[lang];
 //   eventEl.appendChild(titleDiv);
 
+//   // ─── 時間列表 ───
 //   const timeWrapper = document.createElement('div');
 //   timeWrapper.id = 'eventTime';
+
 //   times.forEach(t => {
+//     // 時間解析
 //     const hourClass = t.split(':')[0];
-//     const hourValue = parseInt(hourClass, 10); // 轉為數字以匹配 EVENT_TIMES
+//     const hourValue = parseInt(hourClass, 10);
+
 //     const d = document.createElement('div');
-//     // 保留原本的 class 格式（例如: "event 16"）並添加 has-checkbox
 //     d.className = `event ${hourClass} has-checkbox`;
 
-//     // 創建 checkbox (預設隱藏，點擊鈴鐺後才顯示)
+//     // 通知 checkbox（預設隱藏）
 //     const checkbox = document.createElement('input');
 //     checkbox.type = 'checkbox';
-//     checkbox.id = `notify-${hourValue}`; // 使用數字ID以匹配 EVENT_TIMES
+//     checkbox.id = `notify-${hourValue}`;
 //     checkbox.value = hourValue;
 //     checkbox.className = 'notify-checkbox';
 
-//     // 創建時間文字節點
-//     const timeText = document.createTextNode(t);
-
 //     d.appendChild(checkbox);
-//     d.appendChild(timeText);
+//     d.appendChild(document.createTextNode(t));
 //     timeWrapper.appendChild(d);
 //   });
+
 //   eventEl.appendChild(timeWrapper);
 
-//   // 初次建立後立即套用樣式，並啟動定時器定期更新（避免建立多個 timer）
+//   // ─── 初次樣式更新與 Timer 管理 ───
 //   updateEventStyles();
-//   if (eventStyleIntervalId) {
-//     clearInterval(eventStyleIntervalId);
-//   }
-//   // 每 1分鐘更新一次，以便在 15 分鐘倒數期間動畫與顏色能及時顯示
+//   if (eventStyleIntervalId) clearInterval(eventStyleIntervalId);
 //   eventStyleIntervalId = setInterval(updateEventStyles, 60000);
 // }
 
-// // 更新 event 時間塊的樣式（淺灰 / 深灰 / 紅色 + 動畫）
+// /* ─── 依時間更新活動樣式 ─── */
 // function updateEventStyles() {
 //   const wrapper = document.getElementById('eventTime');
 //   if (!wrapper) return;
@@ -1137,54 +1159,43 @@ setInterval(updateTopTime, 1000);
 //   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
 //   Array.from(wrapper.children).forEach(div => {
-//     // 移除先前的樣式
+//     // 重置樣式
 //     div.classList.remove('time-light', 'time-deep', 'time-alert', 'fade-animation');
 //     div.style.color = '';
 
 //     const text = div.textContent.trim();
 //     if (!text) return;
 
+//     // 事件時間解析
 //     const [hStr, mStr] = text.split(':');
-//     const h = parseInt(hStr, 10);
-//     const m = parseInt(mStr, 10) || 0;
-//     const eventMinutes = h * 60 + m;
+//     const eventMinutes = parseInt(hStr, 10) * 60 + (parseInt(mStr, 10) || 0);
 
-//     // 差距（分鐘）
 //     let diff = eventMinutes - currentMinutes;
-//     if (diff < 0) diff += 24 * 60; // 如果已過該時刻，就視為隔天同時段（不跨日但重複循環）
+//     if (diff < 0) diff += 1440;
 
-//     // 條件判定（Case1～4）
+//     // 時間區間判定
 //     if (diff > 60) {
-//       // 距離事件超過1小時：淺灰
-//       div.classList.add("time-light");
+//       div.classList.add('time-light');
 //     } else if (diff > 15) {
-//       // 1小時內但超過15分鐘：深灰
-//       div.classList.add("time-deep");
+//       div.classList.add('time-deep');
 //     } else if (diff >= 0) {
-//       // 15分鐘內：紅色 + 跳動
-//       div.classList.add("time-alert", "fade-animation");
+//       div.classList.add('time-alert', 'fade-animation');
 //     } else {
-//       // 已過 → 淺灰
-//       div.classList.add("time-light");
+//       div.classList.add('time-light');
 //     }
 //   });
 // }
 
-
 // /* ==========================
-//    ====== 特別活動 通知功能 ======
+//    ====== 通知功能（設定 & UI） ======
 //    ========================== */
 
-// const NOTIFICATION_STORAGE_KEY = "bossRushNotifications";
-// const EVENT_TIMES = [16, 19, 22, 1]; // Boss Rush 時間（小時）
+// const NOTIFICATION_STORAGE_KEY = 'bossRushNotifications';
+// const EVENT_TIMES = [16, 19, 22, 1];
 
-// // 取得通知設定
+// /* ─── 通知設定存取 ─── */
 // function getNotificationSettings() {
-//   const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
-//   if (stored) {
-//     return JSON.parse(stored);
-//   }
-//   return {
+//   return JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY)) || {
 //     enabled: false,
 //     selectedTimes: [],
 //     notifyBefore: 30,
@@ -1192,17 +1203,15 @@ setInterval(updateTopTime, 1000);
 //   };
 // }
 
-// // 儲存通知設定
 // function saveNotificationSettings(settings) {
 //   localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(settings));
 // }
 
-// // 修改 renderEventBlock 函數以加入鈴鐺按鈕和通知面板
+// /* ─── 包裝原 renderEventBlock 加入通知 UI ─── */
 // const originalRenderEventBlock = renderEventBlock;
 // renderEventBlock = function () {
 //   originalRenderEventBlock();
 
-//   // 只在中文介面顯示通知功能
 //   if (lang !== 'zh') return;
 
 //   const eventEl = document.getElementById('event');
@@ -1210,330 +1219,122 @@ setInterval(updateTopTime, 1000);
 
 //   const settings = getNotificationSettings();
 
-//   // 創建包裝容器
+//   // ─── 標題 + 鈴鐺包裝 ───
 //   const wrapper = document.createElement('div');
 //   wrapper.className = 'notificationWrapper';
 
-//   // 取得已有的 titleDiv
 //   const titleDiv = eventEl.querySelector('.eventTitle');
 
-//   // 創建鈴鐺按鈕
 //   const bellButton = document.createElement('button');
 //   bellButton.className = 'bellButton';
 //   bellButton.id = 'bellButton';
-//   bellButton.innerHTML = `<img src="images/bell-${settings.enabled ? 'on' : 'off'}01.svg" alt="通知">`;
+//   bellButton.innerHTML =
+//     `<img src="images/bell-${settings.enabled ? 'on' : 'off'}01.svg">`;
 
-//   // 將 titleDiv 和 bellContainer 包裝
 //   if (titleDiv) {
 //     wrapper.appendChild(titleDiv);
 //     wrapper.appendChild(bellButton);
 //     eventEl.insertBefore(wrapper, eventEl.firstChild);
 //   }
 
-//   // 創建通知設定面板（放在時間列表後面）
+//   // ─── 通知設定面板 ───
 //   const panel = createNotificationPanel(settings);
 //   const eventTime = document.getElementById('eventTime');
-//   if (eventTime) {
-//     // 將面板插入到時間列表之後
-//     if (eventTime.nextSibling) {
-//       eventEl.insertBefore(panel, eventTime.nextSibling);
-//     } else {
-//       eventEl.appendChild(panel);
-//     }
-//   }
+//   if (eventTime) eventEl.insertBefore(panel, eventTime.nextSibling);
 
-//   // 綁定鈴鐺按鈕點擊事件
 //   bellButton.addEventListener('click', toggleNotificationPanel);
 // };
 
-// // 創建通知設定面板
+// /* ─── 建立通知設定面板 ─── */
 // function createNotificationPanel(settings) {
 //   const panel = document.createElement('div');
 //   panel.className = 'notificationPanel';
 //   panel.id = 'notificationPanel';
 
-//   // 控制區（下拉選單 + 按鈕）
+//   // 控制區
 //   const controlsDiv = document.createElement('div');
 //   controlsDiv.className = 'notificationControls';
 
-//   // 提前通知下拉選單
-//   const selectWrapper = document.createElement('div');
-//   const selectLabel = document.createElement('label');
-//   selectLabel.textContent = '提前通知：';
 //   const select = document.createElement('select');
 //   select.id = 'notifyBeforeSelect';
 
-//   [45, 30, 15].forEach(minutes => {
+//   [45, 30, 15].forEach(m => {
 //     const option = document.createElement('option');
-//     option.value = minutes;
-//     option.textContent = `${minutes}分鐘前`;
-//     if (settings.notifyBefore === minutes) {
-//       option.selected = true;
-//     }
+//     option.value = m;
+//     option.textContent = `${m}分鐘前`;
+//     if (settings.notifyBefore === m) option.selected = true;
 //     select.appendChild(option);
 //   });
 
-//   selectWrapper.appendChild(selectLabel);
-//   selectWrapper.appendChild(select);
-//   controlsDiv.appendChild(selectWrapper);
+//   controlsDiv.appendChild(select);
 
 //   // 按鈕群組
 //   const buttonsDiv = document.createElement('div');
 //   buttonsDiv.className = 'notificationButtons';
 
 //   const testButton = document.createElement('button');
-//   testButton.className = 'testButton';
 //   testButton.textContent = '測試';
-//   testButton.addEventListener('click', testNotification);
+//   testButton.onclick = testNotification;
 
 //   const clearButton = document.createElement('button');
 //   clearButton.textContent = '清除';
-//   clearButton.addEventListener('click', clearNotificationConfig);
+//   clearButton.onclick = clearNotificationConfig;
 
 //   const saveButton = document.createElement('button');
 //   saveButton.textContent = '保存';
-//   saveButton.addEventListener('click', saveNotificationConfig);
+//   saveButton.onclick = saveNotificationConfig;
 
-//   buttonsDiv.appendChild(testButton);
-//   buttonsDiv.appendChild(clearButton);
-//   buttonsDiv.appendChild(saveButton);
+//   buttonsDiv.append(testButton, clearButton, saveButton);
 //   controlsDiv.appendChild(buttonsDiv);
-
 //   panel.appendChild(controlsDiv);
 
-//   // 測試訊息區
+//   // 訊息區
 //   const messageDiv = document.createElement('div');
-//   messageDiv.className = 'testMessage';
 //   messageDiv.id = 'testMessage';
+//   messageDiv.className = 'testMessage';
 //   panel.appendChild(messageDiv);
 
 //   return panel;
 // }
 
-// // 切換通知面板顯示/隱藏
-// function toggleNotificationPanel() {
-//   const panel = document.getElementById('notificationPanel');
-//   const eventTime = document.getElementById('eventTime');
-//   const settings = getNotificationSettings();
+// /* ==========================
+//    ====== 通知排程與播放 ======
+//    ========================== */
 
-//   if (panel.classList.contains('active')) {
-//     // 關閉面板，隱藏 checkbox
-//     panel.classList.remove('active');
-//     if (eventTime) {
-//       eventTime.classList.remove('show-checkboxes');
-//     }
-//   } else {
-//     // 開啟面板，顯示 checkbox 並恢復選中狀態
-//     panel.classList.add('active');
-//     if (eventTime) {
-//       eventTime.classList.add('show-checkboxes');
-//       // 恢復之前保存的選中狀態
-//       EVENT_TIMES.forEach(hour => {
-//         const checkbox = document.getElementById(`notify-${hour}`);
-//         if (checkbox) {
-//           checkbox.checked = settings.selectedTimes.includes(hour);
-//         }
-//       });
-//     }
-//   }
-// }
-
-// // 保存通知設定
-// function saveNotificationConfig() {
-//   const selectedTimes = [];
-//   EVENT_TIMES.forEach(hour => {
-//     const checkbox = document.getElementById(`notify-${hour}`);
-//     if (checkbox && checkbox.checked) {
-//       selectedTimes.push(hour);
-//     }
-//   });
-
-//   const notifyBefore = parseInt(document.getElementById('notifyBeforeSelect').value);
-
-//   const settings = {
-//     enabled: selectedTimes.length > 0,
-//     selectedTimes: selectedTimes,
-//     notifyBefore: notifyBefore,
-//     lastNotified: getNotificationSettings().lastNotified || {}
-//   };
-
-//   saveNotificationSettings(settings);
-
-//   // 更新鈴鐺圖示
-//   const button = document.getElementById('bellButton');
-//   if (button) {
-//     button.innerHTML = `<img src="images/bell-${settings.enabled ? 'on' : 'off'}01.svg" alt="通知">`;
-//   }
-
-//   // 關閉面板並隱藏 checkbox
-//   const panel = document.getElementById('notificationPanel');
-//   const eventTime = document.getElementById('eventTime');
-//   if (panel) {
-//     panel.classList.remove('active');
-//   }
-//   if (eventTime) {
-//     eventTime.classList.remove('show-checkboxes');
-//   }
-
-//   // 顯示保存成功訊息
-//   const messageDiv = document.getElementById('testMessage');
-//   if (messageDiv) {
-//     messageDiv.textContent = '設定已保存！';
-//     messageDiv.className = 'testMessage';
-//     setTimeout(() => {
-//       messageDiv.textContent = '';
-//     }, 3000);
-//   }
-// }
-
-// // 清除通知設定
-// function clearNotificationConfig() {
-//   // 取消所有 checkbox
-//   EVENT_TIMES.forEach(hour => {
-//     const checkbox = document.getElementById(`notify-${hour}`);
-//     if (checkbox) {
-//       checkbox.checked = false;
-//     }
-//   });
-
-//   // 清除保存的設定
-//   const settings = {
-//     enabled: false,
-//     selectedTimes: [],
-//     notifyBefore: 30,
-//     lastNotified: {}
-//   };
-
-//   saveNotificationSettings(settings);
-
-//   // 更新鈴鐺圖示
-//   const button = document.getElementById('bellButton');
-//   if (button) {
-//     button.innerHTML = `<img src="images/bell-off01.svg" alt="通知">`;
-//   }
-
-//   // 顯示清除成功訊息
-//   const messageDiv = document.getElementById('testMessage');
-//   if (messageDiv) {
-//     messageDiv.textContent = '設定已清除！';
-//     messageDiv.className = 'testMessage';
-//     setTimeout(() => {
-//       messageDiv.textContent = '';
-//     }, 3000);
-//   }
-// }
-
-// // 測試通知
-// function testNotification() {
-//   const messageDiv = document.getElementById('testMessage');
-
-//   try {
-//     // 測試音效
-//     const audio = new Audio('files/notification.mp3');
-//     audio.play().catch(err => {
-//       console.log('音效播放失敗（可能尚未上傳音效檔）:', err);
-//     });
-
-//     // 測試震動
-//     if ('vibrate' in navigator) {
-//       navigator.vibrate([200, 100, 200]);
-//       messageDiv.textContent = '✓ 音效和震動測試成功';
-//       messageDiv.className = 'testMessage';
-//     } else {
-//       messageDiv.textContent = '✓ 音效測試成功（此裝置不支援震動）';
-//       messageDiv.className = 'testMessage';
-//     }
-//   } catch (err) {
-//     messageDiv.textContent = '✗ 測試失敗：' + err.message;
-//     messageDiv.className = 'testMessage error';
-//   }
-
-//   // 3秒後清除訊息
-//   setTimeout(() => {
-//     messageDiv.textContent = '';
-//   }, 3000);
-// }
-
-// // 播放通知
+// /* ─── 播放通知 ─── */
 // function playNotification() {
 //   try {
-//     // 播放音效
-//     const audio = new Audio('files/notification.mp3');
-//     audio.play().catch(err => {
-//       console.log('音效播放失敗:', err);
-//     });
-
-//     // 震動
-//     if ('vibrate' in navigator) {
-//       navigator.vibrate([200, 100, 200, 100, 200]);
-//     }
+//     new Audio('files/notification.mp3').play().catch(() => {});
+//     if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 //   } catch (err) {
-//     console.error('通知播放失敗:', err);
+//     console.error(err);
 //   }
 // }
 
-// // 檢查並執行通知
+// /* ─── 檢查是否需要通知 ─── */
 // function checkAndNotify() {
 //   const settings = getNotificationSettings();
-
-//   // 如果通知功能未啟用或沒有選擇任何時間，直接返回
-//   if (!settings.enabled || settings.selectedTimes.length === 0) {
-//     return;
-//   }
+//   if (!settings.enabled || !settings.selectedTimes.length) return;
 
 //   const now = getNowBySVR();
-//   const currentHour = now.getHours();
-//   const currentMinute = now.getMinutes();
+//   const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
 
-//   // 為每個選中的時間檢查是否需要通知
 //   settings.selectedTimes.forEach(eventHour => {
-//     // 計算通知時間範圍（最多提前45分鐘，不會跨日）
 //     const eventTotalMinutes = eventHour * 60;
-//     const startTotalMinutes = eventTotalMinutes - settings.notifyBefore;
-//     const endTotalMinutes = eventTotalMinutes - 10;
-//     const currentTotalMinutes = currentHour * 60 + currentMinute;
+//     const start = eventTotalMinutes - settings.notifyBefore;
+//     const end = eventTotalMinutes - 10;
 
-//     // 檢查當前時間是否在通知範圍內
-//     if (currentTotalMinutes < startTotalMinutes || currentTotalMinutes > endTotalMinutes) {
-//       return;
-//     }
+//     if (currentTotalMinutes < start || currentTotalMinutes > end) return;
+//     if ((currentTotalMinutes - start) % 10 !== 0) return;
 
-//     // 檢查是否是10分鐘的整數倍
-//     const minutesSinceStart = currentTotalMinutes - startTotalMinutes;
-//     if (minutesSinceStart % 10 !== 0) {
-//       return;
-//     }
+//     const key = `${now.toISOString().slice(0, 10)}-${currentTotalMinutes}`;
+//     if (settings.lastNotified[key]) return;
 
-//     // 檢查是否已經在這個時間點通知過
-//     const today = now.toISOString().split('T')[0];
-//     const notifyKey = `${today}-${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-
-//     if (settings.lastNotified[notifyKey]) {
-//       return; // 已經通知過了
-//     }
-
-//     // 執行通知
 //     playNotification();
-
-//     // 記錄已通知
-//     settings.lastNotified[notifyKey] = true;
-
-//     // 清理超過1天的記錄
-//     Object.keys(settings.lastNotified).forEach(key => {
-//       const keyDate = key.split('-').slice(0, 3).join('-');
-//       const keyTime = new Date(keyDate);
-//       const daysDiff = (now - keyTime) / (1000 * 60 * 60 * 24);
-//       if (daysDiff > 1) {
-//         delete settings.lastNotified[key];
-//       }
-//     });
-
+//     settings.lastNotified[key] = true;
 //     saveNotificationSettings(settings);
 //   });
 // }
 
-// // 每分鐘檢查一次是否需要通知
 // setInterval(checkAndNotify, 60000);
-
-// // 頁面載入時立即檢查一次
 // checkAndNotify();
