@@ -24,24 +24,45 @@
   --color-text-disabled: #B3AFA8;
   /* 霧灰 Ash Grey */
 
-  /* 品牌色 - 日本傳統色 */
-  --color-gishiki: #7058A3;
-  /* 藤紫鼠 Wisteria Purple */
-  --color-gishiki-light: #B6ACCB;
-  /* 藤鼠 Light Wisteria */
-  --color-gishiki-bg: rgba(182, 172, 203, 0.15);
+/* =========================
+   儀式（紫系）
+   ========================= */
+/* 藤紫鼠 / Wisteria Nezumi（暗紫灰調） */
+--color-gishiki: #7A4171;
+/* 藤鼠 / Light Wisteria Nezumi（淡紫灰） */
+--color-gishiki-light: #B89FB4;
+/* 紫系儀式背景（藤紫鼠 15%） */
+--color-gishiki-bg: rgba(184, 159, 180, 0.25);
 
-  --color-mizuki: #507EA4;
-  /* 錫色 Tin Blue */
-  --color-mizuki-light: #A7BBC6;
-  /* 藍白橡 Light Blue */
-  --color-mizuki-bg: rgba(167, 187, 198, 0.15);
+/* =========================
+   水月野王（藍系）
+   ========================= */
+/* 錫色 / Tin Blue（低飽和灰藍） */
+--color-mizuki: #507EA4;
+/* 藍白橡 / Light Blue Ash（淡灰藍） */
+--color-mizuki-light: #A7BBC6;
+/* 藍系野王背景（錫色 15%） */
+--color-mizuki-bg: rgba(167, 187, 198, 0.25);
 
-  --color-shirao: #65A48D;
-  /* 青磁鼠 Celadon Green */
-  --color-shirao-light: #A4B4A4;
-  /* 青鈍 Sage Green */
-  --color-shirao-bg: rgba(164, 180, 164, 0.15);
+/* =========================
+   白青野王（綠系）
+   ========================= */
+/* 青磁鼠 / Celadon Nezumi（青綠灰） */
+--color-shirao: #65A48D;
+/* 青鈍 / Dull Celadon（淡青灰綠） */
+--color-shirao-light: #A4B4A4;
+/* 綠系野王背景（青磁鼠 15%） */
+--color-shirao-bg: rgba(164, 180, 164, 0.25);
+
+/* =========================
+   仙幻島野王（金系）
+   ========================= */
+/* 仙幻金 / Muted Japanese Gold（沉穩金） */
+--color-sengen: #B08F3E;
+/* 淡金 / Soft Gold（低對比高級金） */
+--color-sengen-light: #D6C48F;
+/* 金系野王背景（仙幻金 14%） */
+--color-sengen-bg: rgba(176, 143, 62, 0.15);
 
   /* 功能色 */
   --color-accent: #C4A888;
@@ -68,7 +89,6 @@
   /* ━━━ 字體系統 | Typography ━━━ */
   --font-family-time: "M PLUS 1p", sans-serif;
   --font-family-content: "Kosugi Maru", sans-serif;
-
 
   /* 字體大小 - 桌面版 */
   --font-size-2xs: 0.5rem;
@@ -358,7 +378,7 @@ body {
 
 /* ====================================================================
    ⭐ 當前任務樣式 | Current Task Styles
-   三種類型：儀式 (gishiki)、水月 (mizuki)、白青 (shirao)
+   三種類型：儀式 (gishiki)、水月 (mizuki)、白青 (shirao)、仙幻島（sengen）
 ==================================================================== */
 
 .current {
@@ -384,6 +404,13 @@ body {
 .taskRow.shirao.current {
   background: linear-gradient(90deg, var(--color-shirao-bg), rgba(230, 238, 230, 0.25));
   border-left: 5px solid var(--color-shirao);
+  font-size: var(--font-size-xl);
+}
+
+/* 當前仙幻島 - 金色系 */
+.taskRow.sengen.current {
+  background: linear-gradient(90deg, var(--color-sengen-bg), rgba(230, 238, 230, 0.25));
+  border-left: 5px solid var(--color-sengen);
   font-size: var(--font-size-xl);
 }
 
@@ -764,7 +791,7 @@ body {
   }
 
   /* 當前任務 */
-  .taskRow.gishiki.current .col-type {
+  .taskRow.gishiki.current .taskRow.sengen.current .col-type {
     font-size: var(--font-size-md);
     padding-left: var(--space-sm);
   }
