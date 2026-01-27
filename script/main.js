@@ -20,7 +20,7 @@ const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
 const dateRanges = {
   zh: {
     start: new Date('2026-01-21T04:00:00+08:00'), // 台灣
-    end: new Date('2026-01-28T05:59:59+08:00')
+    end: new Date('2026-01-28T03:59:59+08:00')
 
   },
   jp: {
