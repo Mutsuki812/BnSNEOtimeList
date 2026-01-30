@@ -52,21 +52,21 @@
       <div class="reportTitle"></div>
       <div class="reportForm">
         <div class="reportText"></div>
-        <select id="reportTaskType">
+        <select id="reportTaskType" aria-label="任務選擇">
           <option value="gishiki"></option>
           <option value="shirao"></option>
           <option value="sengentou"></option>
           <option value="other"></option>
         </select>
 
-        <select id="reportType">
+        <select id="reportType" aria-label="回報類型">
           <option value="date_report"></option>
           <option value="other"></option>
         </select>
-        <input type="text" id="reportComment" />
+        <input type="text" id="reportComment" aria-label="備註" placeholder="備註..." autocomplete="off" />
 
         <div class="reportContainer">
-          <div id="reportMessage"></div>
+          <div id="reportMessage" role="status" aria-live="polite"></div>
           <div class="reportButtons">
             <button id="submitReport"></button>
           </div>
@@ -83,7 +83,7 @@
     </section>
   </div>
 
-  <script src="./script/main.js"></script>
+  <script src="./script/main.js" type="module"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
   <script>
