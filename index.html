@@ -29,16 +29,13 @@
 
     <!-- 說明公告 -->
     <div id="notice" class="notice"></div>
+    <!-- 新一季的第一周 公告 -->
+    <div id="firstWeek" class="firstWeek"></div>
     <div class="dateInfo" style="text-align: right; font-size:0.9rem; padding-right: 20px;">※資料來源：<a
         href="https://forum.gamer.com.tw/C.php?bsn=12980&snA=79447" target="_blank">巴哈姆特</a></div>
 
-    <!-- 特別活動 -->
-    <div id="event" class="mainCard" style="display: none"></div>
-
     <!-- 整個任務區 -->
     <section id="mainCard" class="mainCard">
-      <!-- 新一季的第一周 公告 -->
-      <div id="firstWeek" class="firstWeek"></div>
       <!-- 任務列表 -->
       <div id="taskContainer" class="taskContainer"></div>
     </section>
@@ -48,39 +45,7 @@
     </div>
 
     <!-- 回報區 -->
-    <!-- <section id="reportSection" class="reportSection">
-      <div class="reportTitle"></div>
-      <div class="reportForm">
-        <div class="reportText"></div>
-        <select id="reportTaskType" aria-label="任務選擇">
-          <option value="gishiki"></option>
-          <option value="shirao"></option>
-          <option value="sengentou"></option>
-          <option value="other"></option>
-        </select>
-
-        <select id="reportType" aria-label="回報類型">
-          <option value="date_report"></option>
-          <option value="other"></option>
-        </select>
-        <input type="text" id="reportComment" aria-label="備註" placeholder="備註..." autocomplete="off" />
-
-        <div class="reportContainer">
-          <div id="reportMessage" role="status" aria-live="polite"></div>
-          <div class="reportButtons">
-            <button id="submitReport"></button>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- 回報紀錄 -->
-      <!-- <div class="reportLog">
-        <div id="reportList" class="reportList"></div>
-        <div id="reportDel">
-          <button id="clearReports" style="display: none"></button>
-        </div>
-      </div>
-    </section> -->
+    <div id="reportRoot"></div>
   </div>
 
   <script src="./script/main.js" type="module"></script>

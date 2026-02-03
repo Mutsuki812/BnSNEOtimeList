@@ -43,7 +43,6 @@ class TaskScheduleApp {
 
     this.reportManager.updateAll();
     this.reportManager.loadReports();
-    this.setupAdminKey();
     this.startTimers();
   }
 
@@ -270,21 +269,6 @@ class TaskScheduleApp {
     group.appendChild(wrapper);
 
     return group;
-  }
-
-  /**
-   * 管理者キーのチェック
-   */
-  setupAdminKey() {
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get("key");
-
-    if (key === CONFIG.ADMIN_KEY) {
-      const clearBtn = document.getElementById("clearReports");
-      if (clearBtn) {
-        clearBtn.style.display = "inline-block";
-      }
-    }
   }
 
   /**

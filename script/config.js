@@ -17,22 +17,11 @@ export const TASK_TYPES = [
   { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB", color: "#B08F3E", offsetMin: 5 },
 ];
 
-export const REPORTTASK_TYPES = [
-  { key: "gishiki", labelZh: "可疑的儀式", labelJp: "怪しい儀式" },
-  { key: "mizuki", labelZh: "水月野王", labelJp: "水月FB" },
-  { key: "shirao", labelZh: "白青野王", labelJp: "白青FB" },
-  { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB" },
-  { key: "other", labelZh: "其他", labelJp: "その他" },
-];
+export const REPORTTASK_TYPES = ["可疑的儀式","白青野王","仙幻島野王","其他"];
 
 export const REPORT_TYPES = {
-  default: [
-    { value: "date_report", labelZh: "時間回報", labelJp: "時間報告" },
-    { value: "other", labelZh: "其他", labelJp: "その他" },
-  ],
-  otherOnly: [
-    { value: "other", labelZh: "其他", labelJp: "その他" },
-  ]
+  default: ["數據提供","時間修正","地點修正"],
+  otherOnly: ["其他"]
 };
 
 export const DATE_RANGES = {
@@ -54,30 +43,27 @@ export const WEEKDAYS = {
 };
 
 export const TEXTS = {
-  firstWeek: {
-    zh: "新的賽季的第一周 暫時沒有數據<br>請各位大俠幫幫忙 辛苦各位了",
-    jp: "新シーズンが始まったばかりのため、まだデータがありません。<br>情報提供のご協力をよろしくお願いします！"
-  },
   notice: {
     zh: "<b>仙幻島第１賽季　2026.01.21 - 2026.02.25</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
       "・儀式：出字提示後３分鐘Boss登場、30分鐘後消失<br>" +
-      "・白青/仙幻島野王：出字提示後５分鐘Boss登場。<br>" +
-      "<spen style=\"color:red\">" +
-      "　因1/23(五)伺服器臨時維護、所以時間被重製了<br>" + 
-      "　1/30(五)開始可能會有數據、也有可能要到下周三才有" +
-      "</spen><br>",
+      "・白青/仙幻島野王：出字提示後５分鐘Boss登場。<br>",
+
     jp: "<b>ソウルパス白青シーズン4　2025.12.17 - </b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示した時間<br>" +
       "・儀式：予兆後、３分でボスが出現します。<br>" +
       "・水月/白青島FB：予兆後、５分でボスが出現します。<br>" +
-      "<spen style=\"color:red\">　2026/03/11 AM11:00 にサービス終了となるため、<br>" + 
-      "　このスケジュールは2025/12/24以降更新されません。</spen>",
+      "<spen style=\"color:red\">" +
+      "　2026/03/11 AM11:00 にサービス終了となるため、<br>" + 
+      "　このスケジュールは2025/12/24以降更新されません。" +
+      "</spen><br>",
   },
-  reportHelp: {
-    zh: "請幫忙填寫儀式或是白青野王的系統提示時間<br>有你的幫忙 能讓數據更完善 感謝",
-    jp: "儀式またはフィールドボスの予兆時間を記入していただけると助かります。<br>皆さんのご協力で、データをより正確にすることができます。<br>ありがとうございます！"
+  
+  firstWeek:{
+    zh: "",
+    jp: "",
   },
+
   previousHourHint: {
     zh: "可能還沒死,可以找找看",
     jp: "未クリアの可能性もあり、<br>探してみよう"
