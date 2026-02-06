@@ -68,7 +68,7 @@ export class UIRenderer {
 
     const taskRow = DOMHelper.createElement("div", "previoushour");
     const timeText = item.time || "--:--";
-    const questionMark = item.hasQuestionMark ? '[?]' : "";
+    const questionMark = item.hasQuestionMark ? ' [?]' : "";
     const hintText = TEXTS.previousHourHint[this.languageManager.current];
 
     taskRow.innerHTML = `
@@ -81,8 +81,9 @@ export class UIRenderer {
     return taskRow;
   }
 
-  //　當前時間
+  // 當前時間
   createCurrentTaskRow(type, item) {
+    console.log('當前時間>>>');
     const row = DOMHelper.createElement("div", `taskRow ${type.key} current`);
     const content = item ? this.taskUtils.getTaskContent(item) : "-------";
     const isMaintenance = item && this.taskUtils.isMaintenanceTask(item);
@@ -92,7 +93,7 @@ export class UIRenderer {
 
     if (!isMaintenance) {
       if (item) {
-        questionMark = item.hasQuestionMark ? '[?]' : '';
+        questionMark = item.hasQuestionMark ? ' [?]' : '';
         timeText = item.time || "--:--";
       } else {
         timeText = "--:--";
@@ -132,6 +133,7 @@ export class UIRenderer {
 
   // 接下來兩小時 + 剩餘時間
   createTaskRow(item, isRemaining = false) {
+    console.log('接下來兩小時 + 剩餘時間>>>');
     const content = this.taskUtils.getTaskContent(item);
 
     if (!content || content.trim() === "") {
@@ -146,7 +148,7 @@ export class UIRenderer {
     let questionMark = "";
 
     if (!isMaintenance && item) {
-      questionMark = item.hasQuestionMark ? '[?]' : '';
+      questionMark = item.hasQuestionMark ? ' [?]' : '';
       timeText = item.time || "--:--";
     }
 
