@@ -23,10 +23,10 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 - Updates every second
 - Shows full date and weekday information
 
-### 📊 Task Timetable (Excel-Driven)
+### 📊 Task Timetable
 - All data is sourced from timeList.xlsx
 - Automatically displays by weekday:
-  - Tasks from the previous hour (Japan server only)
+  - Tasks from the previous hour（Shown only under certain conditions.）
   - Current tasks
   - Upcoming 2 hours
   - Other time slots (expandable / collapsible)
@@ -45,7 +45,7 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 ### 🎯 Boss Spawn Time Reference
 - Displayed times represent the system message timestamp
 - Estimated actual spawn times:
-  - Rituals: approximately +3 minutes
+  - Rituals: approximately +3 minutes（Removed automatically if not eliminated within 30 minutes.）
   - Moonwater / White Blue field bosses: approximately +5 minutes
 - Past events are automatically greyed out
 
@@ -54,16 +54,22 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
   - Task type
   - Report category (time / other)
   - Free notes (time, location, etc.)
-- All data is stored locally in the user’s browser (no backend)
 
 ### 📁 Project Structure
 >/<br>
->├─ index.html<br>
->├─ main.js<br>
->├─ style.css<br>
 >├─ files/<br>
 >│  └─ timeList.xlsx<br>
->└─ images/
+>├─ images/<br>
+>├─ script/<br>
+>│  ├─ config.js
+>│  ├─ main.js
+>│  ├─ reportManager.js
+>│  ├─ taskProcessor.js
+>│  ├─ uiRenderer.js
+>│  └─ utils.js
+>├─ style/<br>
+>│  └─ style.css<br>
+>└─ index.html<br> 
 
 ### 📄 Excel Format Specification
 **Sheet Names**
@@ -75,8 +81,9 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 | :-- | :-- |
 | Week-zh | Day of the week (Sun, Mon, Tue…) |
 | gishiki-time / zh / jp | Ritual |
-| mizuki-time / zh / jp | Moonwater Field Boss  `（2026/01/21 Field Boss Removed）` |
+| mizuki-time / jp | Moonwater Field Boss`（2026/01/21 Field Boss Removed）` |
 | shirao-time / zh / jp | White Blue Field Boss |
+| sengen-time / zh | Fantasy Isle Field Boss`（2026/01/21 Field Boss Add）` |
 
 **Notes**
 - Time can be specified as HH:MM or Excel time format

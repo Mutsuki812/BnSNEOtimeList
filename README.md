@@ -26,9 +26,10 @@
 - 每秒更新
 - 顯示完整日期與星期
 
-### 📊 任務時間表（Excel 驅動）
+### 📊 任務時間表
 - 所有資料來自 timeList.xlsx
 - 依星期自動顯示：
+  - 前一小時任務（條件顯示）
   - 當前任務
   - 接下來 2 小時
   - 其他時間（可展開 / 收合）
@@ -47,7 +48,7 @@
 ### 🎯 Boss 出現時間判定
 - 顯示的是「系統出字時間」
 - 實際 Boss 出現時間約為：
-  - 儀式：+3 分鐘
+  - 儀式：+3 分鐘（30分鐘內沒人消滅 會自動消失）
   - 水月 / 白青野王：+5 分鐘
 - 超過時間後會自動顯示為灰色
 
@@ -56,16 +57,22 @@
   - 任務類型
   - 回報種類（時間 / 其他）
   - 自由備註（時間、地點）
-- 所有資料僅儲存在使用者瀏覽器（無後端）
 
 ### 📁 專案結構
 >/<br>
->├─ index.html<br>
->├─ main.js<br>
->├─ style.css<br>
 >├─ files/<br>
 >│  └─ timeList.xlsx<br>
->└─ images/<br>
+>├─ images/<br>
+>├─ script/<br>
+>│  ├─ config.js
+>│  ├─ main.js
+>│  ├─ reportManager.js
+>│  ├─ taskProcessor.js
+>│  ├─ uiRenderer.js
+>│  └─ utils.js
+>├─ style/<br>
+>│  └─ style.css<br>
+>└─ index.html<br> 
 
 ### 📄 Excel 格式說明
 **Sheet 名稱**
@@ -77,8 +84,9 @@
 | :-- | :-- |
 | Week-zh | 星期（日、一、二…） |
 | gishiki-time / zh / jp | 儀式 |
-| mizuki-time / zh / jp | 水月野王 `（2026/01/21 刪除區域首領）` |
+| mizuki-time / jp | 水月野王`（2026/01/21 台灣伺服器刪除）` |
 | shirao-time / zh / jp | 白青野王 |
+| mizuki-time / zh | 水月野王`（2026/01/21 台灣伺服器追加）` |
 
 **補充規則**
 - 時間可使用 HH:MM 或 Excel 時間格式
