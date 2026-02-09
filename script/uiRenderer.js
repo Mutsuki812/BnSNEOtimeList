@@ -37,15 +37,15 @@ export class UIRenderer {
     DOMHelper.updateElement("notice", text, "block");
   }
 
-  // シリーズの第一週目
+  // 限定公告
   updateFirstWeekText() {
-    console.log('シリーズの第一週目>>>');
+    console.log('限定公告>>>');
     const text = TEXTS.firstWeek[this.languageManager.current];
     DOMHelper.updateElement("firstWeek", text);
   }
 
   // 前一小時
-  createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute) {
+  createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute, type) {
     console.log('前一小時>>>');
     if (!item) {
       return document.createDocumentFragment();
@@ -69,7 +69,15 @@ export class UIRenderer {
     const taskRow = DOMHelper.createElement("div", "previoushour");
     const timeText = item.time || "--:--";
     const questionMark = item.hasQuestionMark ? ' [?]' : "";
-    const hintText = TEXTS.previousHourHint[this.languageManager.current];
+
+    let hintText;
+    const hints = TEXTS.previousHourHint[this.languageManager.current];
+
+    if (this.languageManager.current === 'zh' && typeof hints === 'object' && type) {
+      hintText = hints[type.key] || hints.default;
+    } else {
+      hintText = hints;
+    }
 
     taskRow.innerHTML = `
       <span class="previoushour_placeholder">${hintText}</span>

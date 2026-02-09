@@ -69,11 +69,10 @@ export class TimeUtils {
   }
 
   timeToMinutes(timeStr) {
-    console.log('timeStr>>>' + timeStr);
-        // Check if timeString is a string and not empty before trying to split
+        // 時間が文字列か空か
     if (typeof timeStr !== 'string' || timeStr.trim() === '') {
-        console.warn("Invalid time string provided to timeToMinutes:", timeStr);
-        return 0; // Or handle as an error, throw, or return a default value
+        console.warn("渡された時間文字列が無効です:", timeStr);
+        return 0; // エラーとして処理
     }
     const [hours, minutes] = timeStr.split(":").map(Number);
     return hours * 60 + (minutes || 0);
@@ -193,7 +192,7 @@ export class StorageHelper {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (e) {
-      console.error('Storage get error:', e);
+      console.error('ストレージ取得エラー:', e);
       return defaultValue;
     }
   }
@@ -203,7 +202,7 @@ export class StorageHelper {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (e) {
-      console.error('Storage set error:', e);
+      console.error('ストレージ設定エラー:', e);
       return false;
     }
   }

@@ -68,7 +68,10 @@ export const TEXTS = {
   },
 
   previousHourHint: {
-    zh: "可能還沒死,可以找找看",
+    zh: {
+      gishiki: "可能還沒死，可以找找看",
+      default: "跑圖快的，還不快飛"
+    },
     jp: "未クリアの可能性もあり、<br>探してみよう"
   }
 };

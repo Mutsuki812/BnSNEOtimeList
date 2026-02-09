@@ -248,7 +248,8 @@ class TaskScheduleApp {
         previousItem,
         currentItem,
         currentHour,
-        currentMinute
+        currentMinute,
+        type
       );
       group.appendChild(previousRow);
     }
