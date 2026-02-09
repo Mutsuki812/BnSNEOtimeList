@@ -228,7 +228,22 @@ class TaskScheduleApp {
 
     // 前の時間のタスク
     const lang = this.languageManager.current;
-    if (lang === "jp" || (lang === "zh" && type.key === "gishiki")) {
+    let showPrevious = false;
+
+    if (lang === "jp") {
+      showPrevious = true;
+    } else if (lang === "zh") {
+      if (type.key === "gishiki") {
+        showPrevious = true;
+      } else if ((type.key === "shirao" || type.key === "sengen") && previousItem) {
+        const prevMin = parseInt(previousItem.time.split(":")[1], 10);
+        if (prevMin >= 55 && currentMinute <= 5) {
+          showPrevious = true;
+        }
+      }
+    }
+
+    if (showPrevious) {
       const previousRow = this.uiRenderer.createPreviousHourTaskRow(
         previousItem,
         currentItem,
