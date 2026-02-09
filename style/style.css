@@ -557,7 +557,7 @@ body {
   margin-left: var(--space-md);
 }
 
-.reportText {
+.reportText, .reportItem {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-md);
@@ -628,26 +628,7 @@ body {
   border-radius: var(--radius-sm);
 }
 
-#reportDel {
-  text-align: left;
-  margin-top: var(--space-md);
-}
 
-#clearReports {
-  background-color: var(--color-text-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-md) var(--space-lg);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-#clearReports:hover {
-  background-color: #222;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
 
 
 /* ====================================================================
@@ -884,12 +865,6 @@ body {
     padding: var(--space-xs);
     margin-top: var(--space-sm);
     max-height: 200px;
-  }
-
-  #clearReports {
-    width: 100%;
-    padding: var(--space-md);
-    font-size: var(--font-size-sm);
   }
 }
 

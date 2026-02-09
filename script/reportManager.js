@@ -11,8 +11,7 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwI2_v_FA17GVDy
  * レポートマネージャー
  */
 export class ReportManager {
-  constructor(languageManager) {
-    this.languageManager = languageManager;
+  constructor() {
     this.render();
     this.updateAll();
     this.loadReports();
@@ -22,6 +21,8 @@ export class ReportManager {
   render() {
     const root = document.getElementById("reportRoot");
     if (!root) return;
+
+    root.style.display = "block";
 
     root.innerHTML = `
       <section id="reportSection" class="reportSection">
@@ -128,8 +129,7 @@ export class ReportManager {
     const payload = {
       taskType,
       reportType,
-      comment,
-      timestamp: new Date().toLocaleString(this.languageManager.current === "zh" ? "zh-TW" : "ja-JP")
+      comment
     };
 
     try {
@@ -166,8 +166,6 @@ export class ReportManager {
   }
 
   async loadReports() {
-    if (this.languageManager.current !== "zh") return;
-
     if (!this.reportListEl) return;
     
     if (GAS_WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
@@ -195,10 +193,16 @@ export class ReportManager {
 
       reports.forEach((r) => {
         const div = DOMHelper.createElement("div", "reportItem");
-        const taskLabel = this.getTaskTypeLabelSingle(r.taskType);
-        const reportLabel = this.getReportTypeLabelSingle(r.reportType, r.taskType);
+        const formatDate = r.Timestamp.substring(0, 10);
+        let respond = '';
 
-        div.innerHTML = `[${r.timestamp}] ${taskLabel} ${reportLabel} ${r.comment}`;
+        const isResponded = r.Respond === true || r.Respond === "TRUE";
+        if (isResponded) {
+          respond = '<img src="./images/thanks24.png" alt="thx!!">';
+        }
+
+        div.innerHTML = `[${formatDate}][${r.TaskType} ${r.ReportType}] ${r.Comment} ${respond}`;
+
         this.reportListEl.appendChild(div);
       });
     } catch (error) {
@@ -207,46 +211,10 @@ export class ReportManager {
     }
   }
 
-  getTaskTypeLabelSingle(key) {
-    const task = REPORTTASK_TYPES.find(t => t.key === key);
-    return task ? (this.languageManager.current === "zh" ? task.labelZh : task.labelJp) : key;
-  }
-
-  getReportTypeLabelSingle(value, taskKey) {
-    const types = ["gishiki", "shirao", "sengentou"].includes(taskKey)
-      ? REPORT_TYPES.default
-      : REPORT_TYPES.otherOnly;
-    const type = types.find(t => t.value === value) || { labelZh: value, labelJp: value };
-    return this.languageManager.current === "zh" ? type.labelZh : type.labelJp;
-  }
-
-  formatTimestamp(date) {
-    const pad = (n) => String(n).padStart(2, '0');
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    // 格式範例: 01/23 14:30
-    return `${month}/${day} ${hours}:${minutes}`;
-  }
-
   updateAll() {
-    this.updateVisibility();
     this.updateReportText();
     this.updateReportTaskOptions();
     this.updateReportTypeOptions();
     this.updateReportCommentPlaceholder();
-  }
-
-  updateVisibility() {
-    const root = document.getElementById("reportRoot");
-    if (!root) return;
-
-    if (this.languageManager.current === "zh") {
-      root.style.display = "block";
-      this.loadReports();
-    } else {
-      root.style.display = "none";
-    }
   }
 }
