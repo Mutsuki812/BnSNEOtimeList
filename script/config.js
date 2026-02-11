@@ -17,22 +17,11 @@ export const TASK_TYPES = [
   { key: "sengen", labelZh: "仙幻島野王", labelJp: "仙幻島FB", color: "#B08F3E", offsetMin: 5 },
 ];
 
-export const REPORTTASK_TYPES = ["可疑的儀式","白青野王","仙幻島野王","其他"];
+export const REPORT_TASK = ["可疑的儀式","白青野王","仙幻島野王","其他"];
 
 export const REPORT_TYPES = {
   default: ["數據提供","時間修正","地點修正"],
   otherOnly: ["其他"]
-};
-
-export const DATE_RANGES = {
-  zh: {
-    start: new Date('2026-01-21T04:00:00+08:00'),
-    end: new Date('2026-01-28T03:59:59+08:00')
-  },
-  jp: {
-    start: new Date('2025-12-17T06:00:00+09:00'),
-    end: new Date('2025-12-24T05:59:59+09:00')
-  }
 };
 
 export const MAINTENANCE_PATTERN = /例行維護中|定期メンテナンス中/;
@@ -42,14 +31,24 @@ export const WEEKDAYS = {
   jp: ["日", "月", "火", "水", "木", "金", "土"]
 };
 
+export const DATE_RANGES = {
+  zh: {
+    start: new Date('2026-02-11T11:00:00+08:00'),
+    end: new Date('2026-02-18T05:59:59+08:00')
+  },
+  jp: {
+    start: new Date('2025-12-17T06:00:00+09:00'),
+    end: new Date('2025-12-24T05:59:59+09:00')
+  }
+};
+
 export const TEXTS = {
-  notice: {
+  regularNotice: {
     zh: "<b>仙幻島第１賽季　2026.01.21 - 2026.02.25</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
-      "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失<br>" +
+      "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
       "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" + 
-      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>" +
-      "　",
+      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>",
 
     jp: "<b>ソウルパス白青シーズン4　2025.12.17 - </b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示する時間<br>" +
@@ -59,11 +58,14 @@ export const TEXTS = {
       "<spen style=\"color:red\">" +
       "　2026/03/11 AM11:00 にサービス終了となるため、<br>" + 
       "　このスケジュールは2025/12/24以降更新されません。" +
-      "</spen><br>",
+      "</spen>",
   },
   
-  firstWeek:{
-    zh: "",
+  temporaryNotice:{
+    zh: "<spen style=\"color:red\">" +
+      "　蒼龍箱下架、遊戲有更新...<br>" +
+      "　野王時間又又又被重置了(本賽季第三回)" +
+      "</spen>",
     jp: "",
   },
 

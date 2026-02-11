@@ -2,7 +2,7 @@
    ==== レポート機能 ====
    ========================== */
 
-import { CONFIG, REPORTTASK_TYPES, REPORT_TYPES, TEXTS } from "./config.js";
+import { CONFIG, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
 import { StorageHelper, DOMHelper } from "./utils.js";
 
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwI2_v_FA17GVDyDOJqYRkHWGBNrhKuQ4BQ3mvcQUzEtaVRuBFJ9JKN20yCym0-J36rlQ/exec";
@@ -66,7 +66,7 @@ export class ReportManager {
     if (!this.reportTaskTypeEl) return;
     
     this.reportTaskTypeEl.innerHTML = "";
-    REPORTTASK_TYPES.forEach(task => {
+    REPORT_TASK.forEach(task => {
       const opt = document.createElement("option");
       // opt.value = task;
       opt.textContent = task;

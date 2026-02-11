@@ -64,12 +64,12 @@
 >│  └─ timeList.xlsx<br>
 >├─ images/<br>
 >├─ script/<br>
->│  ├─ config.js
->│  ├─ main.js
->│  ├─ reportManager.js
->│  ├─ taskProcessor.js
->│  ├─ uiRenderer.js
->│  └─ utils.js
+>│  ├─ config.js<br>
+>│  ├─ main.js<br>
+>│  ├─ reportManager.js<br>
+>│  ├─ taskProcessor.js<br>
+>│  ├─ uiRenderer.js<br>
+>│  └─ utils.js<br>
 >├─ style/<br>
 >│  └─ style.css<br>
 >└─ index.html<br> 

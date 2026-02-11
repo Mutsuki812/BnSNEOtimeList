@@ -94,15 +94,20 @@ class TaskScheduleApp {
   /**
    * 共通初期化処理
    */
-  initCommon({ showFirstWeek }) {
-    this.uiRenderer.updateNotice();
+  initCommon({ showTemporaryNotice }) {
+    this.uiRenderer.updateRegularNotice();
 
-    // シリーズの第一週目
-    const firstWeekDiv = document.getElementById("firstWeek");
-    if (firstWeekDiv) {
-      firstWeekDiv.style.display = showFirstWeek ? "block" : "none";
-      if (showFirstWeek) {
-        this.uiRenderer.updateFirstWeekText();
+    // 限時公告
+    const temporaryNoticeDiv = document.getElementById("temporaryNotice");
+    if (temporaryNoticeDiv) {
+      //　中文のみ
+      const isZh = this.languageManager.current === "zh";
+      const shouldShow = showTemporaryNotice && isZh;
+      
+      temporaryNoticeDiv.style.display = shouldShow ? "block" : "none";
+
+      if (shouldShow) {
+        this.uiRenderer.updateTemporaryNoticeText();
       }
     }
 
@@ -124,14 +129,14 @@ class TaskScheduleApp {
    * 期間外の初期化
    */
   initOutDateRange() {
-    this.initCommon({ showFirstWeek: false });
+    this.initCommon({ showTemporaryNotice: false });
   }
 
   /**
    * 期間内の初期化
    */
   initInDateRange() {
-    this.initCommon({ showFirstWeek: true });
+    this.initCommon({ showTemporaryNotice: true });
   }
 
   /**

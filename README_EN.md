@@ -61,12 +61,12 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 >│  └─ timeList.xlsx<br>
 >├─ images/<br>
 >├─ script/<br>
->│  ├─ config.js
->│  ├─ main.js
->│  ├─ reportManager.js
->│  ├─ taskProcessor.js
->│  ├─ uiRenderer.js
->│  └─ utils.js
+>│  ├─ config.js<br>
+>│  ├─ main.js<br>
+>│  ├─ reportManager.js<br>
+>│  ├─ taskProcessor.js<br>
+>│  ├─ uiRenderer.js<br>
+>│  └─ utils.js<br>
 >├─ style/<br>
 >│  └─ style.css<br>
 >└─ index.html<br> 
@@ -98,7 +98,7 @@ Japan Server: <https://x.gd/rkSjt>　`2026/03/11 Service Termination`
 - Special thanks to [**不起眼的路人**](https://home.gamer.com.tw/profile/index.php?&owner=nobody9999) for providing detailed time and location compilations
 - Thanks to all Bahamut community members who shared their findings and made this tool possible
 
-If you notice any inaccuracies or have more precise data, please use the in-page reporting feature to help improve the information.
+If you regularNotice any inaccuracies or have more precise data, please use the in-page reporting feature to help improve the information.
 
 ### ⚠️ Disclaimer
 - This is an unofficial tool

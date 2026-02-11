@@ -30,18 +30,18 @@ export class UIRenderer {
     `);
   }
 
-  // 説明公告
-  updateNotice() {
-    console.log('説明公告>>>');
-    const text = TEXTS.notice[this.languageManager.current];
-    DOMHelper.updateElement("notice", text, "block");
+  // 常態公告
+  updateRegularNotice() {
+    console.log('常態公告>>>');
+    const text = TEXTS.regularNotice[this.languageManager.current];
+    DOMHelper.updateElement("regularNotice", text, "block");
   }
 
-  // 限定公告
-  updateFirstWeekText() {
-    console.log('限定公告>>>');
-    const text = TEXTS.firstWeek[this.languageManager.current];
-    DOMHelper.updateElement("firstWeek", text);
+  // 限時公告
+  updateTemporaryNoticeText() {
+    console.log('限時公告>>>');
+    const text = TEXTS.temporaryNotice[this.languageManager.current];
+    DOMHelper.updateElement("temporaryNotice", text);
   }
 
   // 前一小時
