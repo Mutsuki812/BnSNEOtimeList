@@ -11,7 +11,8 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwI2_v_FA17GVDy
  * レポートマネージャー
  */
 export class ReportManager {
-  constructor() {
+  constructor(languageManager) {
+    this.languageManager = languageManager;
     this.render();
     this.updateAll();
     this.loadReports();
@@ -22,7 +23,7 @@ export class ReportManager {
     const root = document.getElementById("reportRoot");
     if (!root) return;
 
-    root.style.display = "block";
+    root.style.display = this.languageManager.current === "zh" ? "block" : "none";
 
     root.innerHTML = `
       <section id="reportSection" class="reportSection">
@@ -212,6 +213,11 @@ export class ReportManager {
   }
 
   updateAll() {
+    const root = document.getElementById("reportRoot");
+    if (root) {
+      root.style.display = this.languageManager.current === "zh" ? "block" : "none";
+    }
+
     this.updateReportText();
     this.updateReportTaskOptions();
     this.updateReportTypeOptions();
