@@ -7,6 +7,7 @@ import { LanguageManager, TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
 import { ReportManager } from './reportManager.js';
+import { OnlinePredictionManager } from './onlinePrediction.js';
 
 /**
  * メインアプリケーションクラス
@@ -17,10 +18,11 @@ class TaskScheduleApp {
     this.languageManager = new LanguageManager();
     this.timeUtils = new TimeUtils(this.languageManager);
     this.taskUtils = new TaskUtils(this.languageManager);
-    this.excelLoader = new ExcelDataLoader(this.languageManager);
+    this.excelLoader = new ExcelDataLoader(this.languageManager, this.timeUtils);
     this.taskProcessor = new TaskDataProcessor(this.languageManager, this.timeUtils, this.taskUtils);
     this.uiRenderer = new UIRenderer(this.languageManager, this.timeUtils, this.taskUtils);
     this.reportManager = new ReportManager(this.languageManager);
+    this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
 
     // データキャッシュ
     this.cachedExcelRows = null;
@@ -33,7 +35,9 @@ class TaskScheduleApp {
   async init() {
     this.languageManager.detect();
     this.setupLanguageToggle();
+    this.setupViewDailyButton();
     this.uiRenderer.updateTopTime();
+    this.uiRenderer.updateViewDailyButtonVisibility();
 
     if (this.isInDateRange()) {
       this.initInDateRange();
@@ -59,6 +63,7 @@ class TaskScheduleApp {
       this.languageManager.toggle();
       this.updateLangButtonText();
       this.uiRenderer.updateTopTime();
+      this.uiRenderer.updateViewDailyButtonVisibility();
 
       if (this.isInDateRange()) {
         this.initInDateRange();
@@ -68,6 +73,19 @@ class TaskScheduleApp {
 
       this.reportManager.updateAll();
     });
+  }
+
+  /**
+   * 整日任務按鈕設定
+   */
+  setupViewDailyButton() {
+    const btn = document.getElementById("viewDailyBtn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        // 跳轉到 dailyQuest.html
+        window.location.href = "dailyQuest.html";
+      });
+    }
   }
 
   /**
@@ -137,13 +155,24 @@ class TaskScheduleApp {
    */
   initInDateRange() {
     this.initCommon({ showTemporaryNotice: true });
+    // onlinePredictionManager 的初始化已移至 loadTasksAndRender 中處理，
+    // 以防止在數據加載完成前渲染舊的 UI，從而避免畫面閃爍。
   }
 
   /**
    * タスクデータのロードとレンダリング
    */
   async loadTasksAndRender() {
-    const rows = await this.excelLoader.loadExcel();
+    const loadPromises = [this.excelLoader.loadExcel()];
+
+    // 如果在特殊活動期間，則同時初始化線上預測系統
+    if (this.isInDateRange()) {
+      loadPromises.push(this.onlinePredictionManager.init());
+    }
+
+    // 等待所有必要的數據都加載完成
+    const [rows] = await Promise.all(loadPromises);
+
     this.cachedExcelRows = rows;
     this.renderAllGroups(rows);
   }
@@ -166,7 +195,7 @@ class TaskScheduleApp {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentDay = now.getDay();
-
+    
     const WEEKDAYS_ZH = ["日", "一", "二", "三", "四", "五", "六"];
     const todayWeekZh = WEEKDAYS_ZH[currentDay];
     const tomorrowWeekZh = WEEKDAYS_ZH[(currentDay + 1) % 7];
@@ -183,6 +212,9 @@ class TaskScheduleApp {
       );
       container.appendChild(group);
     });
+
+    // 渲染完成後，注入線上預測與回報 UI
+    this.onlinePredictionManager.updateView();
   }
 
   /**
@@ -263,9 +295,12 @@ class TaskScheduleApp {
     const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem);
     group.appendChild(curRow);
 
-    // タスクラッパー
+    // 期間外に表示される従来のタスクラッパー
     const wrapper = DOMHelper.createElement("div", "taskWrapper");
+    // 期間内に表示されるオンライン回報システム用のラッパー
+    const onlineWrapper = DOMHelper.createElement("div", "onlineWrapper");
 
+    // 従来のラッパーにコンテンツを常に追加
     // 次の2時間のタスク
     nextItems.forEach(item => {
       wrapper.appendChild(this.uiRenderer.createTaskRow(item, false));
@@ -276,11 +311,9 @@ class TaskScheduleApp {
     if (openStates[type.key]) {
       remWrapper.classList.add('open');
     }
-
     remainingItems.forEach(item => {
       remWrapper.appendChild(this.uiRenderer.createTaskRow(item, true));
     });
-
     wrapper.appendChild(remWrapper);
 
     // フッターとボタン
@@ -288,6 +321,14 @@ class TaskScheduleApp {
     wrapper.appendChild(footer);
 
     group.appendChild(wrapper);
+    group.appendChild(onlineWrapper);
+
+    // isInitialized の状態に基づいて表示を切り替える
+    if (!this.onlinePredictionManager.isInitialized) {
+      onlineWrapper.style.display = 'none';
+    } else {
+      wrapper.style.display = 'none';
+    }
 
     return group;
   }

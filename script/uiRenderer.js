@@ -44,6 +44,14 @@ export class UIRenderer {
     DOMHelper.updateElement("temporaryNotice", text);
   }
 
+  // 中文語系才顯示整日ボタン
+  updateViewDailyButtonVisibility() {
+    const viewDailyBtn = document.getElementById("viewDailyBtn");
+    if (viewDailyBtn) {
+      viewDailyBtn.style.display = this.languageManager.current === "zh" ? "none" : "none";
+    }
+  }
+
   // 前一小時
   createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute, type) {
     console.log('前一小時>>>');

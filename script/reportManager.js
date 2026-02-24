@@ -93,7 +93,7 @@ export class ReportManager {
 
   updateReportCommentPlaceholder() {
     if (this.reportCommentEl) {
-      this.reportCommentEl.placeholder = "10/15 09:26 地點 / 地點";
+      this.reportCommentEl.placeholder = "五 09:26 地點 / 地點";
     }
     
     if (this.submitReportBtn) {

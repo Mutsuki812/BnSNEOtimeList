@@ -2,28 +2,116 @@
    === Excelデータ処理 ===
    ========================== */
 
-import { CONFIG, TASK_TYPES } from './config.js';
+import { CONFIG, DATE_RANGES, TASK_TYPES } from './config.js';
 import { TimeUtils, TaskUtils } from './utils.js';
 
 /**
  * Excelデータローダー
  */
 export class ExcelDataLoader {
-  constructor(languageManager) {
+  constructor(languageManager, timeUtils) {
     this.languageManager = languageManager;
+    this.timeUtils = timeUtils;
+  }
+
+  _isInDateRange() {
+    if (!this.timeUtils) return false;
+    const now = this.timeUtils.getNowBySVR();
+    const range = DATE_RANGES[this.languageManager.current];
+    if (!range) return false;
+    return now >= range.start && now <= range.end;
+  }
+
+  _loadXLSXLib() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = CONFIG.XLSX_CDN;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("XLSX library failed to load"));
+      document.head.appendChild(script);
+    });
   }
 
   async loadExcel() {
     try {
-      const sheetName = this.languageManager.current === "zh" ? "timeList" : "timeList_JP";
+      const isChinese = this.languageManager.current === "zh";
+      // 中文語系、在特定期間內且設定了 GAS URL 時，改用 fetch 讀取 JSON
+      if (isChinese && CONFIG.GAS_DATA_URL && this._isInDateRange()) {
+        // 1. 嘗試讀取快取
+        const cachedData = this.getFromCache();
+        if (cachedData) {
+          return cachedData;
+        }
+
+        const response = await fetch(`${CONFIG.GAS_DATA_URL}?t=${new Date().getTime()}`);
+        const json = await response.json();
+        // 假設 GAS 回傳的格式是 { status: 'success', data: [...] } 或直接是陣列
+        // 這裡預設回傳結構與 sheet_to_json 結果一致
+        const data = Array.isArray(json) ? json : (json.data || []);
+
+        // 2. 寫入快取
+        this.saveToCache(data);
+        return data;
+      }
+
+      // 檢查是否已載入 XLSX，若無則動態載入
+      if (typeof XLSX === 'undefined') {
+        await this._loadXLSXLib();
+      }
+
+      // 其他情況（日文語系、或中文語系但不在期間內、或未設定 GAS URL），維持原狀讀取 Excel
+      const sheetName = isChinese ? "timeList" : "timeList_JP";
       const response = await fetch(CONFIG.EXCEL_URL);
       const buffer = await response.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[sheetName] || workbook.Sheets[workbook.SheetNames[0]];
-      return XLSX.utils.sheet_to_json(sheet);
+      
+      const rawData = XLSX.utils.sheet_to_json(sheet);
+
+      // データの正規化：ヘッダーと値の空白を除去 (去除表頭與內容的前後空白)
+      return rawData.map(row => {
+        const newRow = {};
+        Object.keys(row).forEach(key => {
+          const cleanKey = key.trim(); // 去除欄位名稱空白
+          let value = row[key];
+          if (typeof value === 'string') {
+            value = value.trim(); // 去除內容空白
+          }
+          newRow[cleanKey] = value;
+        });
+        return newRow;
+      });
     } catch (err) {
-      console.error("Excel読み込みエラー：", err);
+      console.error("Excel/GAS 読み込みエラー：", err);
       return [];
+    }
+  }
+
+  getFromCache() {
+    try {
+      const item = sessionStorage.getItem(CONFIG.CACHE_KEY);
+      if (!item) return null;
+      const parsed = JSON.parse(item);
+      // 檢查是否過期
+      if (Date.now() > parsed.expiry) {
+        sessionStorage.removeItem(CONFIG.CACHE_KEY);
+        return null;
+      }
+      return parsed.data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  saveToCache(data) {
+    try {
+      const item = {
+        data: data,
+        expiry: Date.now() + CONFIG.CACHE_DURATION
+      };
+      sessionStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(item));
+    } catch (e) {
+      console.warn("Cache save failed", e);
     }
   }
 }

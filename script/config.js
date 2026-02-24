@@ -4,10 +4,14 @@
 
 export const CONFIG = {
   EXCEL_URL: "./files/timeList.xlsx",
+  GAS_DATA_URL: "https://script.google.com/macros/s/AKfycbzrg0szQBpHlzMyEpel1_CvXYey-Ps1rCKUyDsRmIBeiImsKs_jbueA-lQjTaH8O47bZg/exec",
   REPORT_STORAGE_KEY: "myReports",
   ADMIN_KEY: "tp6ao354",
   REFRESH_INTERVAL: 60000, // 1分
   HOUR_INTERVAL: 3600000, // 1時間
+  CACHE_KEY: "dailyQuestData_zh",
+  CACHE_DURATION: 5 * 60 * 1000, // 5分鐘快取
+  XLSX_CDN: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
 };
 
 export const TASK_TYPES = [
@@ -33,8 +37,8 @@ export const WEEKDAYS = {
 
 export const DATE_RANGES = {
   zh: {
-    start: new Date('2026-02-11T11:00:00+08:00'),
-    end: new Date('2026-02-18T05:59:59+08:00')
+    start: new Date('2026-02-25T11:00:00+08:00'),
+    end: new Date('2026-03-04T05:59:59+08:00')
   },
   jp: {
     start: new Date('2025-12-17T06:00:00+09:00'),
@@ -44,11 +48,11 @@ export const DATE_RANGES = {
 
 export const TEXTS = {
   regularNotice: {
-    zh: "<b>仙幻島第１賽季　2026.01.21 - 2026.02.25</b><br>" +
+    zh: "<b>仙幻島第２賽季　2026.02.25 - 2026.03.25</b><br>" +
       "・表記時間 = 系統出字時間<br>" +
       "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
-      "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" + 
-      "・時間有[?]，是路上不小心遇到，不是系統出字時間。<br>",
+      "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。",
+      //"・時間有[?]，是路上不小心遇到，不是系統出字時間。",
 
     jp: "<b>ソウルパス白青シーズン4　2025.12.17 - </b><br>" +
       "・表の時間 ＝ システムが予兆文字を表示する時間<br>" +
@@ -63,8 +67,8 @@ export const TEXTS = {
   
   temporaryNotice:{
     zh: "<spen style=\"color:red\">" +
-      "　蒼龍箱下架、遊戲有更新...<br>" +
-      "　野王時間又又又被重置了(本賽季第三回)" +
+      "　新賽季開始的第一周 暫無數據<br>" +
+      "　即時回報系統測試使用中" +
       "</spen>",
     jp: "",
   },
