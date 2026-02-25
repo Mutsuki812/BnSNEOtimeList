@@ -30,9 +30,14 @@ export class OnlinePredictionManager {
   isInDateRange() {
     if (this.languageManager.current !== 'zh') return false;
     
+    // const now = this.timeUtils.getNowBySVR();
+    // const range = DATE_RANGES.zh;
+    // return now >= range.start && now <= range.end;
     const now = this.timeUtils.getNowBySVR();
     const range = DATE_RANGES.zh;
-    return now >= range.start && now <= range.end;
+    const start = this.timeUtils.getShiftedDate(range.start);
+    const end = this.timeUtils.getShiftedDate(range.end);
+    return now >= start && now <= end;
   }
 
   /**

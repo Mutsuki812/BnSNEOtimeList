@@ -46,13 +46,22 @@ export class TimeUtils {
     this.languageManager = languageManager;
   }
 
-  getNowBySVR() {
-    const now = new Date();
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  // getNowBySVR() {
+  //   const now = new Date();
+  //   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  //   const offset = (this.languageManager.current === "zh" ? 8 : 9) * 60 * 60000;
+  //   return new Date(utc + offset);
+  // }
+  getShiftedDate(date) {
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     const offset = (this.languageManager.current === "zh" ? 8 : 9) * 60 * 60000;
     return new Date(utc + offset);
   }
 
+  getNowBySVR() {
+    return this.getShiftedDate(new Date());
+  }
+  
   formatDateLabel(date) {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;

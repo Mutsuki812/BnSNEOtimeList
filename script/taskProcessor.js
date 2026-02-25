@@ -16,10 +16,17 @@ export class ExcelDataLoader {
 
   _isInDateRange() {
     if (!this.timeUtils) return false;
+
+    // const now = this.timeUtils.getNowBySVR();
+    // const range = DATE_RANGES[this.languageManager.current];
+    // if (!range) return false;
+    // return now >= range.start && now <= range.end;
     const now = this.timeUtils.getNowBySVR();
     const range = DATE_RANGES[this.languageManager.current];
     if (!range) return false;
-    return now >= range.start && now <= range.end;
+    const start = this.timeUtils.getShiftedDate(range.start);
+    const end = this.timeUtils.getShiftedDate(range.end);
+    return now >= start && now <= end;
   }
 
   _loadXLSXLib() {
