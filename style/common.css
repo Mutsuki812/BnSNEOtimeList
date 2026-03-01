@@ -476,8 +476,14 @@ body {
 
 /* 灰色狀態（已過時間） */
 .taskRow.current .col-time.gray,
-.taskRow.current .col-content.gray {
+.taskRow.current .col-content.gray
+{
   color: var(--color-text-tertiary);
+}
+.taskRow.current .col-time.gray{
+  font-family: var(--font-family-time);
+}
+.taskRow.current .col-content.gray {
   font-family: var(--font-family-content);
 }
 

@@ -4,6 +4,7 @@
 
 export const CONFIG = {
   EXCEL_URL: "./files/timeList.xlsx",
+  EXCEL_JP_JSON_URL: "./files/timeList_JP.json", // 日文版專用的靜態 JSON 數據
   GAS_DATA_URL: "https://script.google.com/macros/s/AKfycbzrg0szQBpHlzMyEpel1_CvXYey-Ps1rCKUyDsRmIBeiImsKs_jbueA-lQjTaH8O47bZg/exec",
   REPORT_STORAGE_KEY: "myReports",
   ADMIN_KEY: "tp6ao354",
