@@ -45,28 +45,38 @@ export class ExcelDataLoader {
         return cachedData;
       }
 
-      let data;
+      let data = null;
 
       // 2. 根據語言和條件從遠端獲取數據
-      if (lang === 'jp') {
-        // 日文語系：讀取預先轉換好的靜態 JSON，因為數據是固定的，這樣能大幅提昇速度
-        const response = await fetch(CONFIG.EXCEL_JP_JSON_URL);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch JP JSON: ${response.statusText}`);
+      if (lang === 'jp') { // 日文語系：只讀取靜態 JSON
+        try {
+          const response = await fetch(CONFIG.EXCEL_JP_JSON_URL);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch JP JSON: ${response.statusText}`);
+          }
+          data = await response.json();
+        } catch (e) {
+          console.error("Failed to load JP JSON data. No fallback available.", e);
+          data = []; // 失敗時返回空陣列，不使用 Excel 作為備用
         }
-        data = await response.json();
-      } else { // lang === 'zh'
+      } else { // lang === 'zh' (中文語系邏輯不變)
         if (CONFIG.GAS_DATA_URL && this._isInDateRange()) {
           // 中文語系（活動期間）：從 GAS 讀取 JSON
-          const response = await fetch(`${CONFIG.GAS_DATA_URL}?t=${new Date().getTime()}`);
-          const json = await response.json();
-          data = Array.isArray(json) ? json : (json.data || []);
-        } else {
-          // 中文語系（非活動期間）或備用方案：讀取 Excel
+          try {
+            const response = await fetch(`${CONFIG.GAS_DATA_URL}?t=${new Date().getTime()}`);
+            const json = await response.json();
+            data = Array.isArray(json) ? json : (json.data || []);
+          } catch (e) {
+            console.warn("GAS data load failed, falling back to Excel", e);
+          }
+        }
+
+        // 如果尚未獲取數據（ZH 非活動期、或 GAS 失敗），則讀取 Excel
+        if (!data) {
           if (typeof XLSX === 'undefined') {
             await this._loadXLSXLib();
           }
-          const sheetName = "timeList";
+          const sheetName = "timeList_ZH"; // 中文版固定讀取 _ZH sheet
           const response = await fetch(CONFIG.EXCEL_URL);
           const buffer = await response.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: "array" });
@@ -89,9 +99,11 @@ export class ExcelDataLoader {
         }
       }
 
-      // 3. 寫入快取
-      this.saveToCache(data, lang);
-      return data;
+      // 4. 寫入快取
+      if (data) {
+        this.saveToCache(data, lang);
+      }
+      return data || [];
 
     } catch (err) {
       console.error("Data loading error:", err);
@@ -149,8 +161,25 @@ export class TaskDataProcessor {
   }
 
   getTaskListForWeek(rows, type, weekZh) {
+    // 曜日判定の強化（日文データ対応）
+    const zhDays = ["日", "一", "二", "三", "四", "五", "六"];
+    const jpDays = ["日", "月", "火", "水", "木", "金", "土"];
+    const dayIndex = zhDays.indexOf(weekZh);
+    const weekJp = dayIndex !== -1 ? jpDays[dayIndex] : null;
+
     return rows
-      .filter(r => r["Week-zh"] === weekZh && r[`${type.key}-time`])
+      .filter(r => {
+        // 1. Week-zh での一致確認（標準）
+        if (r["Week-zh"] === weekZh) return true;
+        // 2. Week-jp での一致確認（日文データ用）
+        if (weekJp && r["Week-jp"] === weekJp) return true;
+        // 3. Week-zh に日文曜日が入っている場合の確認
+        if (weekJp && r["Week-zh"] === weekJp) return true;
+        // 4. 汎用的な "Week" カラムの確認
+        if (r["Week"] && (r["Week"] === weekZh || (weekJp && r["Week"] === weekJp))) return true;
+        return false;
+      })
+      .filter(r => r[`${type.key}-time`])
       .map(r => {
         const timeResult = this.timeUtils.normalizeExcelTime(r[`${type.key}-time`]);
         

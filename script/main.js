@@ -27,6 +27,7 @@ class TaskScheduleApp {
     // データキャッシュ
     this.cachedExcelRows = null;
     this.minuteRefreshIntervalId = null;
+    this.loadToken = 0; // ロード操作の世代を管理するトークン
   }
 
   /**
@@ -62,6 +63,13 @@ class TaskScheduleApp {
     langBtn.addEventListener("click", () => {
       this.languageManager.toggle();
       this.updateLangButtonText();
+
+      // 重新建立 onlinePredictionManager 以拋棄舊語言環境的狀態。
+      // 這可以防止一個競態條件：從使用線上系統的中文模式切換到日文模式後，
+      // 一個來自中文模式的非同步操作（仍在背景執行）錯誤地將 isInitialized 設為 true，
+      // 導致日文模式的畫面渲染不正確。
+      this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
+
       this.uiRenderer.updateTopTime();
       this.uiRenderer.updateViewDailyButtonVisibility();
 
@@ -168,6 +176,9 @@ class TaskScheduleApp {
    * タスクデータのロードとレンダリング
    */
   async loadTasksAndRender() {
+    this.loadToken++; // 新しいロードリクエストごとにトークンをインクリメント
+    const currentToken = this.loadToken;
+
     const loadPromises = [this.excelLoader.loadExcel()];
 
     // 如果在特殊活動期間，則同時初始化線上預測系統
@@ -179,6 +190,12 @@ class TaskScheduleApp {
 
     // 等待所有必要的數據都加載完成
     const [rows] = await Promise.all(loadPromises);
+
+    // awaitの後に、新しいロードが開始されていないか確認します。もしそうなら、レンダリングを中止します。
+    if (currentToken !== this.loadToken) {
+      console.log(`Render aborted for token ${currentToken}, current is ${this.loadToken}.`);
+      return;
+    }
 
     this.cachedExcelRows = rows;
     this.renderAllGroups(rows);

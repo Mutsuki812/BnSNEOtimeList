@@ -366,11 +366,19 @@ export class OnlinePredictionManager {
    * 切換顯示歷史紀錄
    */
   async toggleHistory(typeKey, listDiv) {
-    // 檢查列表是否為隱藏狀態
-    const isHidden = listDiv.style.display === 'none' || !listDiv.style.display;
+    // 檢查被點擊的列表目前是否為隱藏狀態
+    const isCurrentlyHidden = listDiv.style.display === 'none' || !listDiv.style.display;
 
-    if (isHidden) {
-      listDiv.style.display = 'block'; // 顯示列表並載入資料
+    // 關閉所有其他的歷史紀錄列表
+    document.querySelectorAll('.report-history-list').forEach(otherList => {
+      if (otherList !== listDiv) {
+        otherList.style.display = 'none';
+      }
+    });
+
+    // 如果原本是隱藏的，就打開它並載入資料
+    if (isCurrentlyHidden) {
+      listDiv.style.display = 'block';
       listDiv.innerHTML = '載入中...';
 
       try {
@@ -383,8 +391,18 @@ export class OnlinePredictionManager {
           json.data.forEach(item => {
             const row = document.createElement('div');
             row.className = 'report-history-item';
+            
+            // 格式化時間，確保小時和分鐘都是兩位數
+            let formattedTime = item.time;
+            if (item.time && item.time.includes(':')) {
+              const parts = item.time.split(':');
+              const h = parts[0];
+              const m = parts[1] || '00';
+              formattedTime = `${String(h).padStart(2, ' ')}:${String(m).padStart(2, '0')}`;
+            }
+
             // 假設回報資料包含 time, method, location 等欄位
-            let text = `[${item.time}] `;
+            let text = `[${formattedTime}] `;
             if (item.method && item.method !== '不確定') text += `${item.method} `;
             if (item.location) text += `${item.location}`;
             if (item.gishikiA) text += `${item.gishikiA} / ${item.gishikiB}`;
@@ -400,7 +418,7 @@ export class OnlinePredictionManager {
         listDiv.innerHTML = '載入失敗';
       }
     } else {
-      // 如果列表是可見的，則將其隱藏
+      // 如果原本是可見的，就將其隱藏
       listDiv.style.display = 'none';
     }
   }
