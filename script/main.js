@@ -173,6 +173,8 @@ class TaskScheduleApp {
     // 如果在特殊活動期間，則同時初始化線上預測系統
     if (this.isInDateRange()) {
       loadPromises.push(this.onlinePredictionManager.init());
+    } else {
+      this.onlinePredictionManager.isInitialized = false;
     }
 
     // 等待所有必要的數據都加載完成
