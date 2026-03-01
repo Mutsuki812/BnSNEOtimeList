@@ -1,0 +1,198 @@
+/* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\mobile.css */
+
+/* ====================================================================
+   📱 手機版樣式 | Mobile Styles
+   適用於 431px 以下的裝置
+==================================================================== */
+
+/* ─── CSS 變數覆寫（手機版） ─── */
+:root {
+  /* 調整字體大小 */
+  --font-size-xs: 0.7rem;
+  /* 11px */
+  --font-size-sm: 0.8rem;
+  /* 13px */
+  --font-size-base: 0.9rem;
+  /* 14px */
+  --font-size-md: 1rem;
+  /* 16px */
+  --font-size-lg: 1.1rem;
+  /* 18px */
+  --font-size-xl: 1.3rem;
+  /* 21px */
+  --font-size-2xl: 1.6rem;
+  /* 26px */
+  --font-size-3xl: 2rem;
+  /* 32px */
+  --font-size-4xl: 2.2rem;
+  /* 35px */
+
+  /* 調整間距 */
+  --space-xs: 3px;
+  --space-sm: 6px;
+  --space-md: 10px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-2xl: 20px;
+
+  /* 調整佈局 */
+  --layout-padding: var(--space-sm);
+}
+
+/* ─── 主容器 ─── */
+#app {
+  margin: var(--space-sm) auto;
+  padding: var(--space-sm);
+  gap: var(--space-md);
+}
+
+/* ─── 上方工具列 ─── */
+#topBar {
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+#topLeft {
+  width: 100%;
+  align-items: stretch;
+}
+
+/* 日期 星期 */
+#dateLabel {
+  justify-content: center;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  padding-left: 70px;
+}
+
+/* 時間區塊 */
+.timeBox {
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+/* 語言按鈕 */
+#topRight {
+  width: 100%;
+  justify-content: center;
+}
+
+.langBtn {
+  width: 100%;
+  max-width: 200px;
+}
+
+/* ─── 主卡片 ─── */
+.mainCard {
+  padding: var(--space-md);
+  gap: var(--space-md);
+}
+
+.taskContainer {
+  gap: var(--space-md);
+  padding-right: 0;
+}
+
+/* ─── 任務列 ─── */
+.taskRow {
+  grid-template-columns: 100px 55px 12px 1fr;
+  min-height: 44px;
+  gap: var(--space-xs);
+}
+
+/* 當前任務 */
+.taskRow.gishiki.current .taskRow.sengen.current .col-type {
+  font-size: var(--font-size-md);
+  padding-left: var(--space-sm);
+}
+
+.col-type {
+  font-size: var(--font-size-lg);
+}
+
+.taskRow.current .col-time,
+.taskRow.current .col-content {
+  font-size: var(--font-size-lg);
+}
+
+/* 接下來任務 */
+.taskWrapper .col-time,
+.taskWrapper .col-content,
+.remainingContainer .col-time,
+.remainingContainer .col-content {
+  font-size: var(--font-size-md);
+}
+
+.taskRow:has(.col-time.maintenance) {
+  grid-template-columns: 85px 0px 0px 1fr;
+  padding: var(--space-xs);
+}
+
+/* ─── 維修狀態調整 ─── */
+.taskRow .col-content.maintenance {
+  font-size: var(--font-size-md);
+  padding: var(--space-xs);
+  width: 1fr;
+}
+
+/* ─── 收合區塊 ─── */
+.remainingContainer.open {
+  max-height: 1500px;
+}
+
+/* 群組 */
+.group {
+  padding: var(--space-sm);
+  gap: var(--space-xs);
+}
+
+/* 按鈕 */
+.showBtn {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-xs);
+}
+
+/* ─── 回報區塊 ─── */
+.reportSection {
+  margin-top: var(--space-lg);
+  margin-left: var(--space-sm);
+}
+
+.reportText {
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.reportForm input,
+.reportForm select,
+.reportForm button {
+  padding: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.reportContainer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+}
+
+.reportButtons {
+  width: 100%;
+}
+
+.reportButtons button {
+  width: 100%;
+  padding: var(--space-md);
+}
+
+#reportMessage {
+  text-align: center;
+  font-size: var(--font-size-xs);
+}
+
+.reportList {
+  padding: var(--space-xs);
+  margin-top: var(--space-sm);
+  max-height: 200px;
+}

@@ -1,0 +1,1081 @@
+/* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\common.css */
+
+/* ====================================================================
+   🎨 CSS 變數系統 | CSS Variables System
+   集中管理所有設計 token - 顏色、間距、字體、陰影等
+==================================================================== */
+
+:root {
+  /* ━━━ 色彩系統 | Color Palette ━━━ */
+
+  /* 主背景色 - Wabi-Sabi 風格溫暖米色 */
+  --color-bg-primary: #F5F1E8;
+  /* 骨白 Bone White */
+  --color-bg-secondary: #FFFDF7;
+  /* 淺米黃 Light Cream */
+  --color-bg-card: #FFFFFF;
+  /* 純白卡片 */
+
+  /* 文字顏色 */
+  --color-text-primary: #3A3533;
+  /* 木炭黑 Charcoal */
+  --color-text-secondary: #777777;
+  /* 中性灰 Medium Grey */
+  --color-text-tertiary: #8B8B8B;
+  /* 淺灰 Light Grey */
+  --color-text-disabled: #B3AFA8;
+  /* 霧灰 Ash Grey */
+
+  /* =========================
+   儀式（紫系）
+   ========================= */
+  /* 藤紫鼠 / Wisteria Nezumi（暗紫灰調） */
+  --color-gishiki: #7A4171;
+  /* 藤鼠 / Light Wisteria Nezumi（淡紫灰） */
+  --color-gishiki-light: #B89FB4;
+  /* 紫系儀式背景（藤紫鼠 15%） */
+  --color-gishiki-bg: rgba(184, 159, 180, 0.25);
+
+  /* =========================
+   水月野王（藍系）
+   ========================= */
+  /* 錫色 / Tin Blue（低飽和灰藍） */
+  --color-mizuki: #507EA4;
+  /* 藍白橡 / Light Blue Ash（淡灰藍） */
+  --color-mizuki-light: #A7BBC6;
+  /* 藍系野王背景（錫色 15%） */
+  --color-mizuki-bg: rgba(167, 187, 198, 0.25);
+
+  /* =========================
+   白青野王（綠系）
+   ========================= */
+  /* 青磁鼠 / Celadon Nezumi（青綠灰） */
+  --color-shirao: #65A48D;
+  /* 青鈍 / Dull Celadon（淡青灰綠） */
+  --color-shirao-light: #A4B4A4;
+  /* 綠系野王背景（青磁鼠 15%） */
+  --color-shirao-bg: rgba(164, 180, 164, 0.25);
+
+  /* =========================
+   仙幻島野王（金系）
+   ========================= */
+  /* 仙幻金 / Muted Japanese Gold（沉穩金） */
+  --color-sengen: #B08F3E;
+  /* 淡金 / Soft Gold（低對比高級金） */
+  --color-sengen-light: #D6C48F;
+  /* 金系野王背景（仙幻金 14%） */
+  --color-sengen-bg: rgba(176, 143, 62, 0.15);
+
+  /* 功能色 */
+  --color-accent: #C4A888;
+  /* 溫暖陶土 Warm Clay */
+  --color-border: #E0DDD8;
+  /* 邊框灰 Border Grey */
+  --color-hover: rgba(0, 0, 0, 0.08);
+  /* 懸停效果 */
+  --color-maintenance: #8B8B8B;
+  /* 維修灰 */
+  --color-success: #9FB1A5;
+  /* 龜甲青綠 Kamenozoki */
+
+  /* ━━━ 間距系統 | Spacing System ━━━ */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* ━━━ 字體系統 | Typography ━━━ */
+  --font-family-time: "M PLUS 1p", sans-serif;
+  --font-family-content: "Kosugi Maru", sans-serif;
+
+  /* 字體大小 - 桌面版 */
+  --font-size-2xs: 0.5rem;
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-base: 1rem;
+  /* 16px */
+  --font-size-md: 1.125rem;
+  /* 18px */
+  --font-size-lg: 1.25rem;
+  /* 20px */
+  --font-size-xl: 1.5rem;
+  /* 24px */
+  --font-size-2xl: 2rem;
+  /* 32px */
+  --font-size-3xl: 2.5rem;
+  /* 40px */
+  --font-size-4xl: 3rem;
+  /* 48px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* ━━━ 陰影系統 | Shadow System ━━━ */
+  --shadow-xs: 0 1px 3px rgba(58, 53, 51, 0.04);
+  --shadow-sm: 0 2px 8px rgba(58, 53, 51, 0.06);
+  --shadow-md: 0 4px 16px rgba(58, 53, 51, 0.08);
+  --shadow-lg: 0 8px 28px rgba(58, 53, 51, 0.1);
+  /* 當前任務發光效果 */
+  --shadow-glow: 0 0 12px rgba(0, 0, 0, 0.12);
+
+  /* ━━━ 圓角系統 | Border Radius ━━━ */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  /* ━━━ 過渡動畫 | Transitions ━━━ */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* ━━━ 佈局寬度 | Layout Widths ━━━ */
+  --layout-max-width: 550px;
+  --layout-padding: var(--space-md);
+}
+
+
+/* ====================================================================
+   🔧 全局重置與基礎樣式 | Global Reset & Base Styles
+==================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  overflow-x: hidden;
+  font-family: var(--font-family-content);
+}
+
+/* ====================================================================
+   📦 主容器佈局 | Main Container Layout
+==================================================================== */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  max-width: var(--layout-max-width);
+  margin: var(--space-md) auto;
+  padding: var(--layout-padding);
+  gap: var(--space-lg);
+  transition: max-width 0.3s ease;
+}
+
+/* 當每日任務選擇"全部"時，給予更寬的視圖 */
+#app.daily-wide-view {
+  max-width: 600px;
+}
+
+/* ====================================================================
+   🎯 上方工具列 | Top Bar Section
+   包含：日期顯示、時間顯示、語言切換按鈕
+==================================================================== */
+
+#topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── 左側：日期與時間容器 ─── */
+#topLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  gap: var(--space-sm);
+}
+
+/* 日期標籤 */
+#dateLabel {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  padding-left: 80px;
+}
+
+.dateLabel {
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xl);
+  letter-spacing: 0.02em;
+}
+
+/* 時間顯示容器 */
+.timeBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+/* 直書時間標籤（現在時間） */
+.timeBox .timeLabel {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  background: linear-gradient(135deg, #666666, #4a4a4a);
+  color: #FFFFFF;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 大型時間數字 */
+.timeBox .timeValue {
+  color: var(--color-text-primary);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12));
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-black);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-lg);
+  box-shadow: var(--shadow-md);
+  letter-spacing: -0.02em;
+  backdrop-filter: blur(10px);
+}
+
+/* ─── 右側：語言切換按鈕 ─── */
+#topRight {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.langBtn {
+  background: linear-gradient(135deg, var(--color-mizuki), #4a6d8e);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-sm) var(--space-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.langBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.langBtn:active {
+  transform: translateY(0);
+}
+
+.langText {
+  font-size: var(--font-size-base);
+  padding-bottom: var(--space-base);
+}
+
+/* ─── 資訊列 (查看整日按鈕 + 資料來源) ─── */
+.infoBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 0.9rem;
+}
+
+.viewDailyBtn {
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--color-mizuki);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  border: 1px solid var(--color-mizuki);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.viewDailyBtn:hover {
+  background-color: var(--color-mizuki);
+  color: white;
+}
+
+.dateInfo {
+  text-align: right;
+  margin-left: auto;
+}
+
+/* ====================================================================
+   🗂️ 主卡片與任務 | Main Card & Task Container
+==================================================================== */
+
+.mainCard {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #FFFDF7 0%, #FFF8EE 100%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-lg);
+  gap: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+.taskContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ====================================================================
+   📋 任務群組樣式 | Task Group Styles
+   包含：前一小時任務、當前任務、接下來任務、剩餘任務
+==================================================================== */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+/* ─── 任務列共通樣式 ─── */
+.taskRow {
+  display: grid;
+  grid-template-columns: 1fr 80px 17px 1.5fr;
+  align-items: center;
+  min-height: 48px;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+/* ====================================================================
+   ⭐ 前一小時任務 | PreviousHour Task Styles
+==================================================================== */
+/* 前一小時任務（樣式與剩餘任務相同，文字灰色） */
+.previoushour {
+  display: grid;
+  grid-template-columns: 1fr 80px 17px 1.5fr;
+  align-items: center;
+  min-height: 48px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  background-color: #c0c6c9;
+  background: linear-gradient(90deg, rgba(192, 198, 201, 0.3), rgba(210, 210, 220, 0.2));
+}
+
+.previoushour .col-time,
+.previoushour .col-content,
+.previoushour .col-questionMark {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-base);
+}
+
+.previoushour .previoushour_placeholder {
+  font-size: var(--font-size-xs);
+}
+
+.previoushour .col-content {
+}
+
+.previoushour .col-time {
+  text-align: right;
+}
+
+/* ====================================================================
+   ⭐ 當前任務樣式 | Current Task Styles
+   三種類型：儀式 (gishiki)、水月 (mizuki)、白青 (shirao)、仙幻島（sengen）
+==================================================================== */
+
+.current {
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+/* 當前儀式 - 紫藤色系 */
+.taskRow.gishiki.current {
+  background: linear-gradient(90deg, var(--color-gishiki-bg), rgba(235, 230, 240, 0.35));
+  border-left: 5px solid var(--color-gishiki);
+  font-size: var(--font-size-xl);
+}
+
+/* 當前水月 - 藍灰色系 */
+.taskRow.mizuki.current {
+  background: linear-gradient(90deg, var(--color-mizuki-bg), rgba(230, 240, 245, 0.35));
+  border-left: 5px solid var(--color-mizuki);
+  font-size: var(--font-size-xl);
+}
+
+/* 當前白青 - 青綠色系 */
+.taskRow.shirao.current {
+  background: linear-gradient(90deg, var(--color-shirao-bg), rgba(230, 238, 230, 0.35));
+  border-left: 5px solid var(--color-shirao);
+  font-size: var(--font-size-xl);
+}
+
+/* 當前仙幻島 - 金色系 */
+.taskRow.sengen.current {
+  background: linear-gradient(90deg, var(--color-sengen-bg), rgba(245, 240, 230, 0.35));
+  border-left: 5px solid var(--color-sengen);
+  font-size: var(--font-size-xl);
+}
+
+/* 當前任務的時間與內容 */
+.taskRow.current .col-time {
+  text-align: right;
+}
+
+.taskRow.current .col-time,
+.taskRow.current .col-content {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-lg);
+}
+
+.taskRow.current .col-content {
+}
+
+.col-content.long13,
+.col-content.gray.long13 {
+  font-size: var(--font-size-md);
+}
+
+/* 灰色狀態（已過時間） */
+.taskRow.current .col-time.gray,
+.taskRow.current .col-content.gray {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family-content);
+}
+
+
+/* ====================================================================
+   📅 接下來任務與剩餘任務 | Upcoming & Remaining Tasks
+==================================================================== */
+
+.taskWrapper {
+  border-radius: var(--radius-md);
+  border-left: 5px solid var(--color-border);
+  margin-top: 5px;
+}
+
+.taskWrapper,
+.remainingContainer .taskRow {
+  background: linear-gradient(90deg, rgba(230, 230, 230, 0.3), rgba(250, 250, 250, 0.2));
+  color: var(--color-text-primary);
+}
+
+.placeholder,
+.taskWrapper .col-time,
+.remainingContainer .col-time {
+  text-align: right;
+}
+
+.tomorrow {
+  font-size: var(--font-size-xs);
+}
+
+.taskWrapper .col-time,
+.remainingContainer .col-time,
+.taskWrapper .col-content,
+.remainingContainer .col-content {
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.taskWrapper .col-content,
+.remainingContainer .col-content {
+}
+
+/* 維修中狀態 */
+.taskRow:has(.col-time.maintenance) {
+  grid-template-columns: 1fr 50px 0px 1.5fr;
+  padding: var(--space-xs);
+}
+
+.taskRow .col-content.maintenance {
+  background-color: var(--color-maintenance);
+  color: #D6D5D5;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-md);
+}
+
+.col-content.long13 {
+  font-size: var(--font-size-md);
+}
+
+/* [?] 標記樣式：小字、灰色 */
+.col-questionMark {
+  font-size: var(--font-size-xs);
+  color: #999;
+}
+
+/* ====================================================================
+   🔽 可收合區塊 | Collapsible Section
+==================================================================== */
+
+.remainingContainer {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--transition-slow), opacity var(--transition-base);
+}
+
+.remainingContainer.open {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* 群組底部按鈕區 */
+.groupFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+}
+
+.showBtn {
+  background: rgba(146, 138, 133, 0.1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) var(--space-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.showBtn:hover {
+  background: rgba(146, 138, 133, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ====================================================================
+   🔮 線上預測與回報 | Online Prediction & Reporting
+==================================================================== */
+
+.online-report-box {
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: all var(--transition-base);
+}
+
+.online-report-box:hover {
+  border-color: var(--color-mizuki);
+  background: #fff;
+}
+
+.report-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.report-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
+}
+
+.report-time-input,
+.report-select {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: var(--font-family-content);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.report-time-input:focus,
+.report-select:focus {
+  outline: none;
+  border-color: var(--color-mizuki);
+  box-shadow: 0 0 0 2px var(--color-mizuki-bg);
+}
+
+.report-now-btn {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-right: 20px;
+}
+
+.report-now-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-tertiary);
+}
+
+.report-history-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-xs);
+  margin-left: auto; /* 將按鈕推至右側 */
+  margin-right: var(--space-sm);
+  transition: transform var(--transition-fast);
+  line-height: 0; /* 避免圖片下方產生多餘空間 */
+}
+
+.report-history-btn img {
+  width: 24px; /* 可根據圖片大小調整 */
+  height: 24px;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.report-history-btn:hover {
+  transform: scale(1.1);
+}
+
+.report-history-btn:hover img {
+  opacity: 1;
+}
+
+.report-submit-btn {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  margin-left: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.report-submit-btn:hover {
+  background: #B89978;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.report-submit-btn:disabled {
+  background: var(--color-text-disabled);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.report-msg {
+  font-size: var(--font-size-xs);
+  min-height: 1.5em;
+  margin-top: var(--space-xs);
+}
+
+/* Radio Button Group */
+.report-radio-container {
+  display: flex;
+  align-items:start;
+  column-gap: 20px;
+}
+
+.report-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/* History List */
+.report-history-list {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  max-height: 150px;
+  overflow-y: auto;
+  display: none; /* 預設隱藏 */
+}
+.report-history-item {
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(0,0,0,0.1);
+}
+
+/* Prediction Highlight */
+.taskRow.current .col-time.prediction-highlight {
+  color: #D84315; /* Deep Orange */
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+.taskRow.current .col-content.prediction-highlight {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent);
+  border-radius: var(--radius-base);
+  padding: 0 var(--space-xs);
+}
+
+/* Prediction Label (上次出現 / 推算時間 in no-data state) */
+.taskRow.current .col-time.prediction-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+}
+
+/* Prediction Multi-row Layout (Online Prediction) */
+.pred-row-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.pred-row-value {
+  font-size: var(--font-size-sm);
+  color: #D84315;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.5;
+}
+
+.pred-row-info {
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+
+.pred-row-time {
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent);
+  border-radius: var(--radius-sm);
+  padding-left: 4px;
+}
+
+/* ====================================================================
+   📝 回報區塊 | Report Section
+==================================================================== */
+
+.reportSection {
+  margin-top: var(--space-xl);
+  margin-left: var(--space-md);
+}
+
+.reportText, .reportItem {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+  line-height: 1.6;
+}
+
+/* 表單元素 */
+.reportForm input,
+.reportForm select,
+.reportForm button {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-family: var(--font-family-content);
+  transition: all var(--transition-base);
+}
+
+.reportForm input:focus,
+.reportForm select:focus {
+  outline: none;
+  border-color: var(--color-mizuki);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px var(--color-mizuki-bg);
+}
+
+/* 回報容器 */
+.reportContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+#reportMessage {
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.reportButtons button {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.reportButtons button:hover {
+  background: #B89978;
+  transform: translateY(-1px);
+}
+
+/* 回報列表 */
+.reportLog {
+  margin: 0;
+  padding: 0;
+}
+
+.reportList {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: var(--space-sm);
+  margin-top: var(--space-md);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+}
+
+/* ====================================================================
+   📅 整日任務 | Daily Quest（單一任務）
+==================================================================== */
+.dailyNav {
+  margin-bottom: var(--space-md);
+}
+
+.dailyBackBtn {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+}
+
+.dailyFilter {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+}
+
+/* 預設隱藏"全部"選項 */
+.filterLabel:has(input[value="all"]) {
+  display: none;
+}
+
+.dailyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.dailyItem {
+  display: grid;
+  grid-template-columns: 40% 60% 1fr;
+  padding: var(--space-sm);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  align-items: center;
+}
+
+.dailyItem .time {
+  font-family: var(--font-family-time);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.dailyItem .edit {
+  font-family: var(--font-family-content);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+/* 當前時間高亮 */
+.dailyItem.active {
+  background: #fffbe6; /* 淡黃色背景 */
+  border-color: var(--color-sengen);
+  box-shadow: 0 0 5px rgba(176, 143, 62, 0.3);
+}
+
+/* ====================================================================
+   📊 整日任務 | Daily Quest（全部任務）
+==================================================================== */
+.table-scroll-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.dailyTable {
+  width: 100%; /* 指定寬度 */
+  border-collapse: collapse;
+  background-color: rgba(255, 255, 255, 0.95);
+  font-size: 0.85rem;
+  margin: 0 auto;
+}
+
+.dailyTable th, .dailyTable td {
+  border: 1px solid var(--color-border);
+  padding: 4px 2px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+.dailyTable th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  font-family: var(--font-family-content);
+}
+
+/* 表格內由JS生成的div樣式 */
+.dailyTable td div {
+  padding: 1px 0;
+}
+/* 通用樣式：空白時間段 */
+.empty-time-slot {
+  color: #e9dfe5;
+  border-radius: var(--radius-sm);
+}
+
+/* 表頭顏色 */
+.th-gishiki { background-color: rgba(122, 65, 113, 0.15) !important; color: var(--color-gishiki); }
+.th-shirao { background-color: rgba(101, 164, 141, 0.15) !important; color: var(--color-shirao); }
+.th-sengen { background-color: rgba(176, 143, 62, 0.15) !important; color: var(--color-sengen); }
+
+/* 當前小時高亮 */
+.current-hour-row {
+  background-color: #fffbe6;
+  border: 2px solid var(--color-sengen);
+}
+
+/* ====================================================================
+   🎭 進階視覺效果 | Advanced Visual Effects
+   (選用，可依需求啟用)
+==================================================================== */
+
+/* 卡片懸停效果 */
+.group:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 任務列懸停效果 */
+.taskRow:not(.current):hover {
+  background: var(--color-hover);
+  transform: translateX(2px);
+}
+
+/* 平滑捲動 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 自定義滾動條 (僅 Webkit 瀏覽器) */
+.reportList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reportList::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.reportList::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.reportList::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-disabled);
+}
+
+
+/* ====================================================================
+   ♿ 無障礙輔助 | Accessibility Enhancements
+==================================================================== */
+
+/* 鍵盤焦點指示器 */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-mizuki);
+  outline-offset: 2px;
+}
+
+/* 減少動畫偏好設定 */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高對比模式支援 */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: #000000;
+    --color-text-secondary: #1a1a1a;
+    --color-border: #333333;
+  }
+}

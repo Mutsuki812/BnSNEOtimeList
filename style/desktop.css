@@ -1,0 +1,49 @@
+/* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\desktop.css */
+
+/* ====================================================================
+   🖥️ 桌面與平板響應式設計 | Desktop & Tablet Responsive Styles
+   適用於 432px 以上的裝置
+==================================================================== */
+
+@media (min-width: 450px) {
+  /* 螢幕大於450px時顯示"全部"選項 */
+  .filterLabel:has(input[value="all"]) { display: flex; }
+}
+
+@media (max-width: 560px) and (min-width: 431px) {
+
+  /* 文字大小調整 */
+  .col-content.long12 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 557px) and (min-width: 540px) {
+
+  /* 文字大小調整 */
+  .col-content.long13 {
+    font-size: 0.95rem;
+  }
+
+  .col-content.long12 {
+    font-size: 1rem
+  }
+}
+
+@media (max-width: 539px) and (min-width: 526px) {
+
+  /* 文字大小調整 */
+  .col-content.long11 {
+    font-size: 1.15rem;
+  }
+
+  .col-content.long13 {
+    font-size: 0.95rem;
+  }
+
+  .col-content.long12 {
+    font-size: 1rem
+  }
+}
+
+@media (max-width: 525px) and (min-width: 431px) {}

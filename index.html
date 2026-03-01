@@ -6,7 +6,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>B&S NEO 時間表</title>
 
-  <link rel="stylesheet" href="./style/style.css" />
+  <!-- 1. 載入共通樣式 (所有裝置) -->
+  <link rel="stylesheet" href="style/common.css">
+
+  <!-- 2. 載入桌面版樣式 (僅寬度 >= 432px) -->
+  <link rel="stylesheet" href="style/desktop.css" media="(min-width: 432px)">
+
+  <!-- 3. 載入手機版樣式 (僅寬度 <= 431px) -->
+  <link rel="stylesheet" href="style/mobile.css" media="(max-width: 431px)">
   <link
     href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@700;800;900&display=swap"
     rel="stylesheet">
