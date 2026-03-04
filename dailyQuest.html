@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>B&S NEO 當日任務</title>
+
+  <link rel="stylesheet" href="./style/style.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@700;800;900&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <!-- 導航區 -->
+    <div class="dailyNav">
+      <a href="./index.html" class="dailyBackBtn">回總表</a>
+    </div>
+
+    <!-- 篩選區 -->
+    <div class="dailyFilter">
+      <label class="filterLabel">
+        <input type="radio" name="taskType" value="all" checked> 全部
+      </label>
+      <label class="filterLabel">
+        <input type="radio" name="taskType" value="gishiki"> 儀式
+      </label>
+      <label class="filterLabel">
+        <input type="radio" name="taskType" value="shirao"> 白青
+      </label>
+      <label class="filterLabel">
+        <input type="radio" name="taskType" value="sengen"> 仙幻島
+      </label>
+    </div>
+
+    <!-- 列表區 -->
+    <section id="mainCard" class="mainCard">
+      <div id="dailyList" class="dailyList">
+        <!-- JS 動態生成 -->
+      </div>
+    </section>
+  </div>
+
+  <script src="./script/dailyQuestManager.js" type="module"></script>
+</body>
+</html>

@@ -800,7 +800,7 @@ body {
   font-size: var(--font-size-md);
   line-height: 1.5;
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent);
+  /* background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent); */
   border-radius: var(--radius-sm);
   padding-left: 4px;
 }
