@@ -55,6 +55,14 @@ class TaskScheduleApp {
     this.reportManager.updateAll();
     this.reportManager.loadReports();
     this.startTimers();
+
+    // 僅在中文環境下，延遲短時間後顯示音效解鎖提示，引導使用者互動
+    // 這樣可以確保音效功能正常運作
+    if (this.languageManager.current === 'zh') {
+      setTimeout(() => {
+        this.soundManager.showUnlockModal();
+      }, 500);
+    }
   }
 
   /**
@@ -254,6 +262,39 @@ class TaskScheduleApp {
   }
 
   /**
+   * 檢查並播放預告音效
+   */
+  checkPreAlerts() {
+    if (!this.cachedExcelRows) return;
+
+    const now = this.timeUtils.getNowBySVR();
+    const s = now.getSeconds();
+
+    // 仙幻島 (sengen) -10秒提示
+    if (s === 50) {
+      const targetTime = new Date(now.getTime() + 10000); // +10秒
+      const tHour = targetTime.getHours();
+      const tMinute = targetTime.getMinutes();
+      const tDay = targetTime.getDay();
+      
+      const WEEKDAYS_ZH = ["日", "一", "二", "三", "四", "五", "六"];
+      const weekZh = WEEKDAYS_ZH[tDay];
+
+      const type = { key: "sengen" };
+      const tasks = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, weekZh);
+
+      const hasTask = tasks.some(t => {
+        const [h, m] = t.time.split(":").map(Number);
+        return h === tHour && m === tMinute;
+      });
+
+      if (hasTask) {
+        this.soundManager.playSengenPreAlert();
+      }
+    }
+  }
+
+  /**
    * 檢查並播放世界王提示音
    */
   checkAndPlayWorldBossSound() {
@@ -428,7 +469,10 @@ class TaskScheduleApp {
     clearInterval(this.hourlyRefreshIntervalId);
 
     // 1秒ごとに時刻を更新
-    this.secondlyIntervalId = setInterval(() => this.uiRenderer.updateTopTime(), 1000);
+    this.secondlyIntervalId = setInterval(() => {
+      this.uiRenderer.updateTopTime();
+      this.checkPreAlerts();
+    }, 1000);
 
     // 毎分更新（分頭に同期）
     const minuteUpdate = () => {

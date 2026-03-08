@@ -45,6 +45,7 @@ export class SoundManager {
     this.settings = loadedSettings;
     this.saveSettings(); // 將更新後的設定存回，確保狀態同步
 
+    this.modalShown = false;
     this.isAudioUnlocked = false; // Flag to ensure unlock is only attempted once
     this.lastPlayed = {}; // 記錄每個任務類型最後播放的時間，防止重複播放
     // 用於解鎖瀏覽器自動播放限制的無聲 Audio 元素
@@ -52,8 +53,14 @@ export class SoundManager {
     this.silentAudio.volume = 0;
 
     // 監聽全域互動事件，一旦使用者與頁面互動（點擊、按鍵、觸控），就嘗試解鎖音訊
+    this.modalElement = null; // Reference to the unlock modal
     const unlockHandler = () => {
       this.unlockAudio();
+      // 如果互動時解鎖彈窗還在，就將其移除
+      if (this.modalElement && this.modalElement.parentNode) {
+        this.modalElement.parentNode.removeChild(this.modalElement);
+        this.modalElement = null;
+      }
       ['click', 'keydown', 'touchstart'].forEach(e => document.removeEventListener(e, unlockHandler));
     };
     ['click', 'keydown', 'touchstart'].forEach(e => document.addEventListener(e, unlockHandler));
@@ -92,6 +99,78 @@ export class SoundManager {
       // 在某些極端情況下，即使是互動後也可能解鎖失敗
       console.warn('[Sound] Silent audio play failed to unlock.', e);
     });
+  }
+
+  /**
+   * 顯示一個互動式彈窗，引導使用者點擊以解鎖音訊。
+   * 這是為了應對瀏覽器對自動播放的限制。
+   */
+  showUnlockModal() {
+    if (this.isAudioUnlocked || this.modalShown) {
+      return;
+    }
+    this.modalShown = true;
+
+    // 如果使用者手動關閉了所有音效，則不顯示彈窗
+    const allSoundsDisabled = Object.values(this.settings).every(v => v === false);
+    if (allSoundsDisabled) {
+      return;
+    }
+
+    // 創建彈窗元素
+    const overlay = document.createElement('div');
+    this.modalElement = overlay; // 保存對彈窗的引用
+    overlay.id = 'sound-unlock-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10000,
+      cursor: 'pointer',
+    });
+
+    const modal = document.createElement('div');
+    Object.assign(modal.style, {
+      backgroundColor: '#282c34',
+      color: '#e6e6e6',
+      padding: '25px 30px',
+      borderRadius: '12px',
+      textAlign: 'center',
+      maxWidth: '90%',
+      width: '380px',
+      border: '1px solid #444',
+      boxShadow: '0 5px 20px rgba(0,0,0,0.6)',
+      cursor: 'default',
+    });
+
+    modal.innerHTML = `
+      <h3 style="margin:0 0 15px; font-size:22px; color: #61dafb;">啟用音效提示</h3>
+      <p style="margin:0 0 25px; line-height:1.7; font-size: 16px;">
+        為了讓您能接收到即時的任務通知，<br>請點擊頁面任意處以啟用音效。
+      </p>
+      <div style="font-size: 13px; color: #999;">(這是瀏覽器的安全限制，需要您的互動來授權聲音播放)</div>
+    `;
+
+    // 點擊彈窗內的任何地方都會關閉它（因為全域的 unlockHandler 會觸發）
+    // 這樣可以讓互動更自然
+    modal.addEventListener('click', (e) => {
+      e.stopPropagation(); // 防止事件冒泡兩次
+      // 手動觸發一次解鎖流程，然後移除元素
+      this.unlockAudio();
+      if (this.modalElement && this.modalElement.parentNode) {
+        this.modalElement.parentNode.removeChild(this.modalElement);
+        this.modalElement = null;
+      }
+    });
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
   }
 
   /**
@@ -169,5 +248,21 @@ export class SoundManager {
         }
       });
     }
+  }
+
+  playSengenPreAlert() {
+    if (!this.isSoundEnabled('sengen')) return;
+
+    const now = new Date();
+    const timeTag = `${now.getHours()}:${now.getMinutes()}`;
+    
+    if (this.lastPlayed['sengen_pre'] === timeTag) return;
+    this.lastPlayed['sengen_pre'] = timeTag;
+
+    console.log('[Sound] Playing sengen pre-alert');
+    const audio = new Audio('./audio/sengen10.mp3');
+    audio.play().catch(e => {
+      console.warn('[Sound] Pre-alert play failed', e);
+    });
   }
 }
