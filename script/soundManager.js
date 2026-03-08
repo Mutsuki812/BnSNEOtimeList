@@ -23,7 +23,28 @@ const SOUND_MAP = {
  */
 export class SoundManager {
   constructor() {
-    this.settings = StorageHelper.get(SOUND_SETTINGS_KEY, {});
+    // 預設開啟所有音效。如果使用者之前有手動關閉，則會保留該設定。
+    // 對於初次使用的訪客，所有音效提示都會是開啟狀態。
+    const allSoundKeys = ['gishiki', 'shirao', 'sengen', 'mizuki'];
+    let loadedSettings = StorageHelper.get(SOUND_SETTINGS_KEY, null);
+
+    if (loadedSettings === null) {
+      // 首次訪問，預設開啟所有音效
+      loadedSettings = {};
+      allSoundKeys.forEach(key => {
+        loadedSettings[key] = true;
+      });
+    } else {
+      // 後續訪問，檢查是否有新的音效類型需要預設開啟，而不覆蓋舊的設定
+      allSoundKeys.forEach(key => {
+        if (typeof loadedSettings[key] === 'undefined') {
+          loadedSettings[key] = true;
+        }
+      });
+    }
+    this.settings = loadedSettings;
+    this.saveSettings(); // 將更新後的設定存回，確保狀態同步
+
     this.isAudioUnlocked = false; // Flag to ensure unlock is only attempted once
     this.lastPlayed = {}; // 記錄每個任務類型最後播放的時間，防止重複播放
     // 用於解鎖瀏覽器自動播放限制的無聲 Audio 元素
