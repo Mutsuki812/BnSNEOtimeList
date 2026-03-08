@@ -249,6 +249,42 @@ class TaskScheduleApp {
 
     // レンダリング完了後、オンライン予測と報告UIを注入します
     this.onlinePredictionManager.updateView();
+
+    this.checkAndPlayWorldBossSound();
+  }
+
+  /**
+   * 檢查並播放世界王提示音
+   */
+  checkAndPlayWorldBossSound() {
+    // 只在中文環境下觸發
+    if (this.languageManager.current !== 'zh') {
+      return;
+    }
+
+    const now = this.timeUtils.getNowBySVR();
+    const day = now.getDay(); // 0=日, 1=一, ..., 6=六
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    let audioSrc = null;
+
+    const isWeekend = (day === 0 || day === 6);
+
+    if (hour === 20) {
+      if (minute === 50) audioSrc = './audio/boss10.mp3';
+      else if (minute === 55) audioSrc = './audio/boss5.mp3';
+      else if (minute === 59) audioSrc = './audio/boss1.mp3';
+    } else if (isWeekend && hour === 15) {
+      if (minute === 50) audioSrc = './audio/boss10.mp3';
+      else if (minute === 55) audioSrc = './audio/boss5.mp3';
+      else if (minute === 59) audioSrc = './audio/boss1.mp3';
+    }
+
+    if (audioSrc) {
+      const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      this.soundManager.playWorldBossSound(audioSrc, playId);
+    }
   }
 
   /**

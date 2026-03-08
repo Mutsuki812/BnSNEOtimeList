@@ -25,7 +25,7 @@ export class SoundManager {
   constructor() {
     // 預設開啟所有音效。如果使用者之前有手動關閉，則會保留該設定。
     // 對於初次使用的訪客，所有音效提示都會是開啟狀態。
-    const allSoundKeys = ['gishiki', 'shirao', 'sengen', 'mizuki'];
+    const allSoundKeys = ['gishiki', 'shirao', 'sengen', 'mizuki', 'world_boss'];
     let loadedSettings = StorageHelper.get(SOUND_SETTINGS_KEY, null);
 
     if (loadedSettings === null) {
@@ -132,6 +132,40 @@ export class SoundManager {
           console.log(`[Sound] 自動播放被阻擋 (${taskTypeKey})。等待使用者互動後即可播放。`);
         } else {
           console.warn(`[Sound] 播放失敗 (${taskTypeKey})。`, error);
+        }
+      });
+    }
+  }
+
+  /**
+   * 播放世界王提示音
+   * @param {string} audioSrc - 音效檔案路徑
+   * @param {string} playId - 用於防止重複播放的唯一ID (例如 '20:50')
+   */
+  playWorldBossSound(audioSrc, playId) {
+    const taskTypeKey = 'world_boss';
+    if (!this.isSoundEnabled(taskTypeKey)) {
+      console.log(`[Sound] 世界王音效設定為關閉，跳過播放`);
+      return;
+    }
+
+    // 如果該時間點的音效已經播放過，則跳過
+    if (this.lastPlayed[taskTypeKey] === playId) {
+      return;
+    }
+
+    this.lastPlayed[taskTypeKey] = playId;
+    console.log(`[Sound] Playing world boss alert for ${playId}`);
+
+    const audio = new Audio(audioSrc);
+    const playPromise = audio.play();
+
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        if (error.name === 'NotAllowedError') {
+          console.log(`[Sound] 自動播放被阻擋 (world_boss)。等待使用者互動後即可播放。`);
+        } else {
+          console.warn(`[Sound] 播放失敗 (world_boss)。`, error);
         }
       });
     }
