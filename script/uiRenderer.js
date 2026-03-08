@@ -9,10 +9,11 @@ import { DOMHelper } from './utils.js';
  * UIレンダラー
  */
 export class UIRenderer {
-  constructor(languageManager, timeUtils, taskUtils) {
+  constructor(languageManager, timeUtils, taskUtils, soundManager) {
     this.languageManager = languageManager;
     this.timeUtils = timeUtils;
     this.taskUtils = taskUtils;
+    this.soundManager = soundManager;
   }
 
   updateTopTime() {
@@ -30,21 +31,21 @@ export class UIRenderer {
     `);
   }
 
-  // 常態公告
+  // 常設のお知らせ
   updateRegularNotice() {
     console.log('常態公告>>>');
     const text = TEXTS.regularNotice[this.languageManager.current];
     DOMHelper.updateElement("regularNotice", text, "block");
   }
 
-  // 限時公告
+  // 期間限定のお知らせ
   updateTemporaryNoticeText() {
     console.log('限時公告>>>');
     const text = TEXTS.temporaryNotice[this.languageManager.current];
     DOMHelper.updateElement("temporaryNotice", text);
   }
 
-  // 中文語系才顯示整日ボタン
+  // 中国語環境のみ終日ボタンを表示
   updateViewDailyButtonVisibility() {
     const viewDailyBtn = document.getElementById("viewDailyBtn");
     if (viewDailyBtn) {
@@ -52,7 +53,7 @@ export class UIRenderer {
     }
   }
 
-  // 前一小時
+  // 前の1時間
   createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute, type) {
     console.log('前一小時>>>');
     if (!item) {
@@ -97,7 +98,7 @@ export class UIRenderer {
     return taskRow;
   }
 
-  // 當前時間
+  // 現在の時間
   createCurrentTaskRow(type, item) {
     console.log('當前時間>>>');
     const row = DOMHelper.createElement("div", `taskRow ${type.key} current`);
@@ -124,7 +125,16 @@ export class UIRenderer {
     const maintenanceClass = isMaintenance ? "maintenance" : "";
     const typeLabel = this.languageManager.current === "zh" ? type.labelZh : type.labelJp;
 
+    let soundToggleHtml = '';
+    // 中国語環境かつsoundManagerが利用可能な場合のみ表示
+    if (this.languageManager.current === 'zh' && this.soundManager) {
+      const isSoundOn = this.soundManager.isSoundEnabled(type.key);
+      const iconSrc = isSoundOn ? './images/bell32.png' : './images/bellSlash32.png';
+      soundToggleHtml = `<button class="sound-toggle-btn" data-task-type="${type.key}" title="切換音效提示"><img src="${iconSrc}" alt="sound" style="vertical-align:middle;"></button> `;
+    }
+
     row.innerHTML = `
+      <div class="sound">${soundToggleHtml}</div>
       <div class="col-type">${typeLabel}</div>
       <div class="col-time ${maintenanceClass}">${timeText}</div>
       <div class="col-questionMark">${questionMark}</div>
@@ -144,10 +154,33 @@ export class UIRenderer {
       row.querySelectorAll(".col-time, .col-content").forEach(el => el.classList.add("gray"));
     }
 
+    // 効果音ボタンにイベントリスナーを追加
+    const soundBtn = row.querySelector('.sound-toggle-btn');
+    if (soundBtn) {
+      soundBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 第一次點擊時，嘗試解鎖瀏覽器的音訊播放限制
+        this.soundManager.unlockAudio();
+
+        const taskType = soundBtn.dataset.taskType;
+        // 切換設定
+        this.soundManager.toggleSound(taskType);
+        
+        // 更新按鈕圖示
+        const isSoundOn = this.soundManager.isSoundEnabled(taskType);
+        const img = soundBtn.querySelector('img');
+        if (img) {
+          img.src = isSoundOn ? './images/bell32.png' : './images/bellSlash32.png';
+        }
+      });
+    }
+
     return row;
   }
 
-  // 接下來兩小時 + 剩餘時間
+  // 次の2時間 + 残りの時間
   createTaskRow(item, isRemaining = false) {
     console.log('接下來兩小時 + 剩餘時間>>>');
     const content = this.taskUtils.getTaskContent(item);
@@ -172,6 +205,7 @@ export class UIRenderer {
     const tomorrow = item.isNextDay ? `<span class="tomorrow">${nextDayLabel}</span>` : '';
 
     taskRow.innerHTML = `
+      <span class=""></span>
       <span class="placeholder">${tomorrow}</span>
       <span class="col-time ${maintenanceClass}">${timeText}</span>
       <span class="col-questionMark ${maintenanceClass}">${questionMark}</span>
@@ -181,7 +215,7 @@ export class UIRenderer {
     return taskRow;
   }
 
-  // 其他時間/關閉 按鈕
+  // その他の時間/閉じる ボタン
   createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = false) {
     const footer = DOMHelper.createElement("div", "groupFooter");
 
@@ -225,5 +259,35 @@ export class UIRenderer {
 
     footer.appendChild(btn);
     return footer;
+  }
+
+  /**
+   * コンテナ内のすべての .col-content のフォントサイズを自動調整し、テキストが1行で表示されるようにする
+   * コンテンツカラムのみ対象とし、.col-typeには影響しない
+   * @param {HTMLElement} container 
+   */
+  autoFitContent(container) {
+    if (!container) return;
+
+    // すべてのコンテンツカラムを選択 (.col-content)、タイプカラム (.col-type) は除外
+    const elements = container.querySelectorAll('.col-content');
+
+    elements.forEach(el => {
+      // 1. フォントサイズをリセットし、CSSのデフォルト値から計算を開始するようにする
+      el.style.fontSize = '';
+
+      // 2. オーバーフローをチェック (scrollWidth > clientWidth)
+      // clientWidth > 0 で要素が表示されていることを確認
+      if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth) {
+        let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+        const minSize = 10; // 最小フォントサイズ制限 (px)
+
+        // 3. テキストがオーバーフローしなくなるか、最小制限に達するまで徐々に縮小
+        while (el.scrollWidth > el.clientWidth && currentSize > minSize) {
+          currentSize -= 0.5; // 每次縮小 0.5px
+          el.style.fontSize = `${currentSize}px`;
+        }
+      }
+    });
   }
 }

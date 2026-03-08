@@ -1,84 +1,84 @@
 /* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\common.css */
 
 /* ====================================================================
-   🎨 CSS 變數系統 | CSS Variables System
-   集中管理所有設計 token - 顏色、間距、字體、陰影等
+   🎨 CSS変数システム | CSS Variables System
+   すべてのデザイン設計トークン（色、間隔、フォント、影など）を一元管理
 ==================================================================== */
 
 :root {
-  /* ━━━ 色彩系統 | Color Palette ━━━ */
+  /* ━━━ カラーパレット | Color Palette ━━━ */
 
-  /* 主背景色 - Wabi-Sabi 風格溫暖米色 */
+  /* メイン背景色 - 侘び寂び風の温かみのあるベージュ */
   --color-bg-primary: #F5F1E8;
-  /* 骨白 Bone White */
+  /* ボーンホワイト Bone White */
   --color-bg-secondary: #FFFDF7;
-  /* 淺米黃 Light Cream */
+  /* ライトクリーム Light Cream */
   --color-bg-card: #FFFFFF;
-  /* 純白卡片 */
+  /* 純白カード */
 
-  /* 文字顏色 */
+  /* テキスト色 */
   --color-text-primary: #3A3533;
-  /* 木炭黑 Charcoal */
+  /* チャコールブラック Charcoal */
   --color-text-secondary: #777777;
-  /* 中性灰 Medium Grey */
+  /* ミディアムグレー Medium Grey */
   --color-text-tertiary: #8B8B8B;
-  /* 淺灰 Light Grey */
+  /* ライトグレー Light Grey */
   --color-text-disabled: #B3AFA8;
-  /* 霧灰 Ash Grey */
+  /* アッシュグレー Ash Grey */
 
   /* =========================
    儀式（紫系）
    ========================= */
-  /* 藤紫鼠 / Wisteria Nezumi（暗紫灰調） */
+  /* 藤紫鼠 / Wisteria Nezumi（暗い紫灰色） */
   --color-gishiki: #7A4171;
-  /* 藤鼠 / Light Wisteria Nezumi（淡紫灰） */
+  /* 藤鼠 / Light Wisteria Nezumi（淡い紫灰色） */
   --color-gishiki-light: #B89FB4;
   /* 紫系儀式背景（藤紫鼠 15%） */
   --color-gishiki-bg: rgba(184, 159, 180, 0.25);
 
   /* =========================
-   水月野王（藍系）
+   水月フィールドボス（青系）
    ========================= */
-  /* 錫色 / Tin Blue（低飽和灰藍） */
+  /* 錫色 / Tin Blue（低彩度の灰青色） */
   --color-mizuki: #507EA4;
-  /* 藍白橡 / Light Blue Ash（淡灰藍） */
+  /* 藍白橡 / Light Blue Ash（淡い灰青色） */
   --color-mizuki-light: #A7BBC6;
-  /* 藍系野王背景（錫色 15%） */
+  /* 青系フィールドボス背景（錫色 15%） */
   --color-mizuki-bg: rgba(167, 187, 198, 0.25);
 
   /* =========================
-   白青野王（綠系）
+   白青フィールドボス（緑系）
    ========================= */
-  /* 青磁鼠 / Celadon Nezumi（青綠灰） */
+  /* 青磁鼠 / Celadon Nezumi（青緑灰色） */
   --color-shirao: #65A48D;
-  /* 青鈍 / Dull Celadon（淡青灰綠） */
+  /* 青鈍 / Dull Celadon（淡い青灰緑色） */
   --color-shirao-light: #A4B4A4;
-  /* 綠系野王背景（青磁鼠 15%） */
+  /* 緑系フィールドボス背景（青磁鼠 15%） */
   --color-shirao-bg: rgba(164, 180, 164, 0.25);
 
   /* =========================
-   仙幻島野王（金系）
+   仙幻島フィールドボス（金系）
    ========================= */
-  /* 仙幻金 / Muted Japanese Gold（沉穩金） */
+  /* 仙幻金 / Muted Japanese Gold（落ち着いた金色） */
   --color-sengen: #B08F3E;
-  /* 淡金 / Soft Gold（低對比高級金） */
+  /* 淡金 / Soft Gold（低コントラストの上品な金） */
   --color-sengen-light: #D6C48F;
-  /* 金系野王背景（仙幻金 14%） */
+  /* 金系フィールドボス背景（仙幻金 14%） */
   --color-sengen-bg: rgba(176, 143, 62, 0.15);
 
-  /* 功能色 */
+  /* 機能色 */
   --color-accent: #C4A888;
-  /* 溫暖陶土 Warm Clay */
+  /* 暖かいテラコッタ Warm Clay */
   --color-border: #E0DDD8;
-  /* 邊框灰 Border Grey */
+  /* 枠線グレー Border Grey */
   --color-hover: rgba(0, 0, 0, 0.08);
-  /* 懸停效果 */
+  /* ホバー効果 */
   --color-maintenance: #8B8B8B;
-  /* 維修灰 */
+  /* メンテナンスグレー */
   --color-success: #9FB1A5;
-  /* 龜甲青綠 Kamenozoki */
+  /* 甕覗（かめのぞき） Kamenozoki */
 
-  /* ━━━ 間距系統 | Spacing System ━━━ */
+  /* ━━━ 間隔システム | Spacing System ━━━ */
   --space-2xs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
@@ -88,11 +88,11 @@
   --space-2xl: 24px;
   --space-3xl: 32px;
 
-  /* ━━━ 字體系統 | Typography ━━━ */
+  /* ━━━ タイポグラフィ | Typography ━━━ */
   --font-family-time: "M PLUS 1p", sans-serif;
   --font-family-content: "Kosugi Maru", sans-serif;
 
-  /* 字體大小 - 桌面版 */
+  /* フォントサイズ - デスクトップ版 */
   --font-size-2xs: 0.5rem;
   --font-size-xs: 0.75rem;
   /* 12px */
@@ -118,34 +118,34 @@
   --font-weight-bold: 700;
   --font-weight-black: 900;
 
-  /* ━━━ 陰影系統 | Shadow System ━━━ */
+  /* ━━━ 影システム | Shadow System ━━━ */
   --shadow-xs: 0 1px 3px rgba(58, 53, 51, 0.04);
   --shadow-sm: 0 2px 8px rgba(58, 53, 51, 0.06);
   --shadow-md: 0 4px 16px rgba(58, 53, 51, 0.08);
   --shadow-lg: 0 8px 28px rgba(58, 53, 51, 0.1);
-  /* 當前任務發光效果 */
+  /* 現在のタスクの発光効果 */
   --shadow-glow: 0 0 12px rgba(0, 0, 0, 0.12);
 
-  /* ━━━ 圓角系統 | Border Radius ━━━ */
+  /* ━━━ 角丸システム | Border Radius ━━━ */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-pill: 999px;
 
-  /* ━━━ 過渡動畫 | Transitions ━━━ */
+  /* ━━━ トランジション | Transitions ━━━ */
   --transition-fast: 0.15s ease;
   --transition-base: 0.25s ease;
   --transition-slow: 0.4s ease;
 
-  /* ━━━ 佈局寬度 | Layout Widths ━━━ */
-  --layout-max-width: 550px;
+  /* ━━━ レイアウト幅 | Layout Widths ━━━ */
+  --layout-max-width: 600px;
   --layout-padding: var(--space-md);
 }
 
 
 /* ====================================================================
-   🔧 全局重置與基礎樣式 | Global Reset & Base Styles
+   🔧 グローバルリセットと基本スタイル | Global Reset & Base Styles
 ==================================================================== */
 *,
 *::before,
@@ -176,7 +176,7 @@ body {
 }
 
 /* ====================================================================
-   📦 主容器佈局 | Main Container Layout
+   📦 メインコンテナレイアウト | Main Container Layout
 ==================================================================== */
 
 #app {
@@ -189,14 +189,14 @@ body {
   transition: max-width 0.3s ease;
 }
 
-/* 當每日任務選擇"全部"時，給予更寬的視圖 */
+/* デイリークエストで「すべて」を選択した場合、より広いビューを提供する */
 #app.daily-wide-view {
   max-width: 600px;
 }
 
 /* ====================================================================
-   🎯 上方工具列 | Top Bar Section
-   包含：日期顯示、時間顯示、語言切換按鈕
+   🎯 上部ツールバー | Top Bar Section
+   含む：日付表示、時間表示、言語切り替えボタン
 ==================================================================== */
 
 #topBar {
@@ -207,7 +207,7 @@ body {
   margin-bottom: var(--space-sm);
 }
 
-/* ─── 左側：日期與時間容器 ─── */
+/* ─── 左側：日付と時間のコンテナ ─── */
 #topLeft {
   display: flex;
   flex-direction: column;
@@ -216,7 +216,7 @@ body {
   gap: var(--space-sm);
 }
 
-/* 日期標籤 */
+/* 日付ラベル */
 #dateLabel {
   display: flex;
   width: 100%;
@@ -231,7 +231,7 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* 時間顯示容器 */
+/* 時間表示コンテナ */
 .timeBox {
   display: flex;
   align-items: center;
@@ -239,7 +239,7 @@ body {
   width: 100%;
 }
 
-/* 直書時間標籤（現在時間） */
+/* 縦書き時間ラベル（現在時間） */
 .timeBox .timeLabel {
   writing-mode: vertical-rl;
   text-orientation: upright;
@@ -252,7 +252,7 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* 大型時間數字 */
+/* 大型時間の数字 */
 .timeBox .timeValue {
   color: var(--color-text-primary);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12));
@@ -266,7 +266,7 @@ body {
   backdrop-filter: blur(10px);
 }
 
-/* ─── 右側：語言切換按鈕 ─── */
+/* ─── 右側：言語切り替えボタン ─── */
 #topRight {
   display: flex;
   justify-content: flex-end;
@@ -301,7 +301,7 @@ body {
   padding-bottom: var(--space-base);
 }
 
-/* ─── 資訊列 (查看整日按鈕 + 資料來源) ─── */
+/* ─── 情報バー (終日ボタン + データソース) ─── */
 .infoBar {
   display: flex;
   justify-content: space-between;
@@ -335,7 +335,7 @@ body {
 }
 
 /* ====================================================================
-   🗂️ 主卡片與任務 | Main Card & Task Container
+   🗂️ メインカードとタスク | Main Card & Task Container
 ==================================================================== */
 
 .mainCard {
@@ -356,8 +356,8 @@ body {
 }
 
 /* ====================================================================
-   📋 任務群組樣式 | Task Group Styles
-   包含：前一小時任務、當前任務、接下來任務、剩餘任務
+   📋 タスクグループスタイル | Task Group Styles
+   含む：前の1時間のタスク、現在のタスク、次のタスク、残りのタスク
 ==================================================================== */
 
 .group {
@@ -370,10 +370,10 @@ body {
   border: 1px solid var(--color-border);
 }
 
-/* ─── 任務列共通樣式 ─── */
+/* ─── タスク行の共通スタイル ─── */
 .taskRow {
   display: grid;
-  grid-template-columns: 1fr 80px 17px 1.5fr;
+  grid-template-columns: 50px 140px 70px 17px 1.5fr;
   align-items: center;
   min-height: 48px;
   border-radius: var(--radius-md);
@@ -383,12 +383,12 @@ body {
 }
 
 /* ====================================================================
-   ⭐ 前一小時任務 | PreviousHour Task Styles
+   ⭐ 前の1時間のタスク | PreviousHour Task Styles
 ==================================================================== */
-/* 前一小時任務（樣式與剩餘任務相同，文字灰色） */
+/* 前の1時間のタスク（スタイルは残りのタスクと同じ、文字はグレー） */
 .previoushour {
   display: grid;
-  grid-template-columns: 1fr 80px 17px 1.5fr;
+  grid-template-columns: 190px 70px 17px 1.5fr;
   align-items: center;
   min-height: 48px;
   border-radius: var(--radius-md);
@@ -417,44 +417,65 @@ body {
 }
 
 /* ====================================================================
-   ⭐ 當前任務樣式 | Current Task Styles
-   三種類型：儀式 (gishiki)、水月 (mizuki)、白青 (shirao)、仙幻島（sengen）
+   ⭐ 現在のタスクスタイル | Current Task Styles
+   3つのタイプ：儀式 (gishiki)、水月 (mizuki)、白青 (shirao)、仙幻島（sengen）
 ==================================================================== */
+
+/* 効果音切り替えボタンのスタイル */
+.sound-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  /* padding: 0 5px 0 0px; */
+  font-size: 1.2em;
+  vertical-align: middle;
+  line-height: 1;
+  /* ボタンがレイアウトに影響しないようにする */
+  margin: 7px 0;
+}
+
+/* 中国語環境のスタイル調整 */
+[lang="zh"] .taskRow.current .sound {
+  text-align: top;
+}
+[lang="zh"] .taskRow.current .col-type {
+  text-align: left;
+}
 
 .current {
   color: var(--color-text-primary);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
-/* 當前儀式 - 紫藤色系 */
+/* 現在の儀式 - 藤色系 */
 .taskRow.gishiki.current {
   background: linear-gradient(90deg, var(--color-gishiki-bg), rgba(235, 230, 240, 0.35));
   border-left: 5px solid var(--color-gishiki);
   font-size: var(--font-size-xl);
 }
 
-/* 當前水月 - 藍灰色系 */
+/* 現在の水月 - 青灰色系 */
 .taskRow.mizuki.current {
   background: linear-gradient(90deg, var(--color-mizuki-bg), rgba(230, 240, 245, 0.35));
   border-left: 5px solid var(--color-mizuki);
   font-size: var(--font-size-xl);
 }
 
-/* 當前白青 - 青綠色系 */
+/* 現在の白青 - 青緑色系 */
 .taskRow.shirao.current {
   background: linear-gradient(90deg, var(--color-shirao-bg), rgba(230, 238, 230, 0.35));
   border-left: 5px solid var(--color-shirao);
   font-size: var(--font-size-xl);
 }
 
-/* 當前仙幻島 - 金色系 */
+/* 現在の仙幻島 - 金色系 */
 .taskRow.sengen.current {
   background: linear-gradient(90deg, var(--color-sengen-bg), rgba(245, 240, 230, 0.35));
   border-left: 5px solid var(--color-sengen);
   font-size: var(--font-size-xl);
 }
 
-/* 當前任務的時間與內容 */
+/* 現在のタスクの時間と内容 */
 .taskRow.current .col-time {
   text-align: right;
 }
@@ -474,7 +495,7 @@ body {
   font-size: var(--font-size-md);
 }
 
-/* 灰色狀態（已過時間） */
+/* グレー状態（過ぎた時間） */
 .taskRow.current .col-time.gray,
 .taskRow.current .col-content.gray
 {
@@ -489,7 +510,7 @@ body {
 
 
 /* ====================================================================
-   📅 接下來任務與剩餘任務 | Upcoming & Remaining Tasks
+   📅 次のタスクと残りのタスク | Upcoming & Remaining Tasks
 ==================================================================== */
 
 .taskWrapper {
@@ -527,9 +548,10 @@ body {
 .remainingContainer .col-content {
 }
 
-/* 維修中狀態 */
+/* メンテナンス中状態 */
 .taskRow:has(.col-time.maintenance) {
-  grid-template-columns: 1fr 50px 0px 1.5fr;
+  /* 5列に修正し、.col-content（メンテナンスメッセージ）が正しく表示され、残りのスペースを埋めるようにする */
+  grid-template-columns: 50px 140px 0 0 1fr;
   padding: var(--space-xs);
 }
 
@@ -545,14 +567,14 @@ body {
   font-size: var(--font-size-md);
 }
 
-/* [?] 標記樣式：小字、灰色 */
+/* [?] マークスタイル：小文字、グレー */
 .col-questionMark {
   font-size: var(--font-size-xs);
   color: #999;
 }
 
 /* ====================================================================
-   🔽 可收合區塊 | Collapsible Section
+   🔽 折りたたみ可能なセクション | Collapsible Section
 ==================================================================== */
 
 .remainingContainer {
@@ -567,7 +589,7 @@ body {
   opacity: 1;
 }
 
-/* 群組底部按鈕區 */
+/* グループ下部のボタンエリア */
 .groupFooter {
   display: flex;
   justify-content: flex-end;
@@ -595,7 +617,7 @@ body {
 }
 
 /* ====================================================================
-   🔮 線上預測與回報 | Online Prediction & Reporting
+   🔮 オンライン予測と報告 | Online Prediction & Reporting
 ==================================================================== */
 
 .online-report-box {
@@ -670,14 +692,14 @@ body {
   border: none;
   cursor: pointer;
   padding: var(--space-xs);
-  margin-left: auto; /* 將按鈕推至右側 */
+  margin-left: auto; /* ボタンを右側に寄せる */
   margin-right: var(--space-sm);
   transition: transform var(--transition-fast);
-  line-height: 0; /* 避免圖片下方產生多餘空間 */
+  line-height: 0; /* 画像の下に余分なスペースができないようにする */
 }
 
 .report-history-btn img {
-  width: 24px; /* 可根據圖片大小調整 */
+  width: 24px; /* 画像サイズに合わせて調整可能 */
   height: 24px;
   opacity: 0.7;
   transition: opacity var(--transition-fast);
@@ -748,7 +770,7 @@ body {
   font-size: var(--font-size-xs);
   max-height: 150px;
   overflow-y: auto;
-  display: none; /* 預設隱藏 */
+  display: none; /* デフォルトで非表示 */
 }
 .report-history-item {
   padding: 2px 0;
@@ -806,7 +828,7 @@ body {
 }
 
 /* ====================================================================
-   📝 回報區塊 | Report Section
+   📝 報告セクション | Report Section
 ==================================================================== */
 
 .reportSection {
@@ -821,7 +843,7 @@ body {
   line-height: 1.6;
 }
 
-/* 表單元素 */
+/* フォーム要素 */
 .reportForm input,
 .reportForm select,
 .reportForm button {
@@ -842,7 +864,7 @@ body {
   box-shadow: 0 0 0 3px var(--color-mizuki-bg);
 }
 
-/* 回報容器 */
+/* 報告コンテナ */
 .reportContainer {
   display: flex;
   justify-content: flex-end;
@@ -871,7 +893,7 @@ body {
   transform: translateY(-1px);
 }
 
-/* 回報列表 */
+/* 報告リスト */
 .reportLog {
   margin: 0;
   padding: 0;
@@ -887,7 +909,7 @@ body {
 }
 
 /* ====================================================================
-   📅 整日任務 | Daily Quest（單一任務）
+   📅 デイリークエスト | Daily Quest（単一タスク）
 ==================================================================== */
 .dailyNav {
   margin-bottom: var(--space-md);
@@ -919,7 +941,7 @@ body {
   font-weight: var(--font-weight-bold);
 }
 
-/* 預設隱藏"全部"選項 */
+/* デフォルトで「すべて」オプションを非表示 */
 .filterLabel:has(input[value="all"]) {
   display: none;
 }
@@ -953,15 +975,15 @@ body {
   text-align: center;
 }
 
-/* 當前時間高亮 */
+/* 現在時間のハイライト */
 .dailyItem.active {
-  background: #fffbe6; /* 淡黃色背景 */
+  background: #fffbe6; /* 薄い黄色の背景 */
   border-color: var(--color-sengen);
   box-shadow: 0 0 5px rgba(176, 143, 62, 0.3);
 }
 
 /* ====================================================================
-   📊 整日任務 | Daily Quest（全部任務）
+   📊 デイリークエスト | Daily Quest（全タスク）
 ==================================================================== */
 .table-scroll-wrapper {
   overflow-x: auto;
@@ -969,7 +991,7 @@ body {
 }
 
 .dailyTable {
-  width: 100%; /* 指定寬度 */
+  width: 100%; /* 幅を指定 */
   border-collapse: collapse;
   background-color: rgba(255, 255, 255, 0.95);
   font-size: 0.85rem;
@@ -990,11 +1012,11 @@ body {
   font-family: var(--font-family-content);
 }
 
-/* 表格內由JS生成的div樣式 */
+/* JSによって生成されたテーブル内のdivスタイル */
 .dailyTable td div {
   padding: 1px 0;
 }
-/* 通用樣式：空白時間段 */
+/* 共通スタイル：空の時間帯 */
 .empty-time-slot {
   color: #e9dfe5;
   border-radius: var(--radius-sm);
@@ -1005,35 +1027,35 @@ body {
 .th-shirao { background-color: rgba(101, 164, 141, 0.15) !important; color: var(--color-shirao); }
 .th-sengen { background-color: rgba(176, 143, 62, 0.15) !important; color: var(--color-sengen); }
 
-/* 當前小時高亮 */
+/* 現在時間の行ハイライト */
 .current-hour-row {
   background-color: #fffbe6;
   border: 2px solid var(--color-sengen);
 }
 
 /* ====================================================================
-   🎭 進階視覺效果 | Advanced Visual Effects
-   (選用，可依需求啟用)
+   🎭 高度な視覚効果 | Advanced Visual Effects
+   (オプション、必要に応じて有効化)
 ==================================================================== */
 
-/* 卡片懸停效果 */
+/* カードホバー効果 */
 .group:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
-/* 任務列懸停效果 */
+/* タスク行ホバー効果 */
 .taskRow:not(.current):hover {
   background: var(--color-hover);
   transform: translateX(2px);
 }
 
-/* 平滑捲動 */
+/* スムーズスクロール */
 html {
   scroll-behavior: smooth;
 }
 
-/* 自定義滾動條 (僅 Webkit 瀏覽器) */
+/* カスタムスクロールバー (Webkitブラウザのみ) */
 .reportList::-webkit-scrollbar {
   width: 8px;
 }
@@ -1054,10 +1076,10 @@ html {
 
 
 /* ====================================================================
-   ♿ 無障礙輔助 | Accessibility Enhancements
+   ♿ アクセシビリティ向上 | Accessibility Enhancements
 ==================================================================== */
 
-/* 鍵盤焦點指示器 */
+/* キーボードフォーカスインジケーター */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
@@ -1065,7 +1087,7 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* 減少動畫偏好設定 */
+/* アニメーション抑制設定 */
 @media (prefers-reduced-motion: reduce) {
 
   *,
@@ -1077,7 +1099,7 @@ select:focus-visible {
   }
 }
 
-/* 高對比模式支援 */
+/* ハイコントラストモード対応 */
 @media (prefers-contrast: high) {
   :root {
     --color-text-primary: #000000;

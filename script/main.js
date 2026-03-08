@@ -7,6 +7,7 @@ import { LanguageManager, TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
 import { ReportManager } from './reportManager.js';
+import { SoundManager } from './soundManager.js';
 import { OnlinePredictionManager } from './onlinePrediction.js';
 
 /**
@@ -20,13 +21,18 @@ class TaskScheduleApp {
     this.taskUtils = new TaskUtils(this.languageManager);
     this.excelLoader = new ExcelDataLoader(this.languageManager, this.timeUtils);
     this.taskProcessor = new TaskDataProcessor(this.languageManager, this.timeUtils, this.taskUtils);
-    this.uiRenderer = new UIRenderer(this.languageManager, this.timeUtils, this.taskUtils);
+    this.soundManager = new SoundManager();
+    this.uiRenderer = new UIRenderer(this.languageManager, this.timeUtils, this.taskUtils, this.soundManager);
     this.reportManager = new ReportManager(this.languageManager);
     this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
 
     // データキャッシュ
     this.cachedExcelRows = null;
     this.minuteRefreshIntervalId = null;
+    this.minuteRefreshTimeoutId = null;
+    this.hourlyRefreshIntervalId = null;
+    this.hourlyRefreshTimeoutId = null;
+    this.secondlyIntervalId = null;
     this.loadToken = 0; // ロード操作の世代を管理するトークン
   }
 
@@ -64,11 +70,14 @@ class TaskScheduleApp {
       this.languageManager.toggle();
       this.updateLangButtonText();
 
-      // 重新建立 onlinePredictionManager 以拋棄舊語言環境的狀態。
-      // 這可以防止一個競態條件：從使用線上系統的中文模式切換到日文模式後，
-      // 一個來自中文模式的非同步操作（仍在背景執行）錯誤地將 isInitialized 設為 true，
-      // 導致日文模式的畫面渲染不正確。
+      // 古い言語環境の状態を破棄するために onlinePredictionManager を再作成します。
+      // これにより、オンラインシステムを使用する中国語モードから日本語モードに切り替えた後に発生する競合状態を防ぎます。
+      // 中国語モードからの非同期操作（バックグラウンドで実行中）が誤って isInitialized を true に設定し、
+      // 日本語モードの画面描画が正しく行われない問題を回避します。
       this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
+
+      // タイマーをリセットして、新しいタイムゾーンに同期させます
+      this.startTimers();
 
       this.uiRenderer.updateTopTime();
       this.uiRenderer.updateViewDailyButtonVisibility();
@@ -84,13 +93,13 @@ class TaskScheduleApp {
   }
 
   /**
-   * 整日任務按鈕設定
+   * 終日タスクボタンの設定
    */
   setupViewDailyButton() {
     const btn = document.getElementById("viewDailyBtn");
     if (btn) {
       btn.addEventListener("click", () => {
-        // 跳轉到 dailyQuest.html
+        // dailyQuest.html へ遷移
         window.location.href = "dailyQuest.html";
       });
     }
@@ -128,7 +137,7 @@ class TaskScheduleApp {
   initCommon({ showTemporaryNotice }) {
     this.uiRenderer.updateRegularNotice();
 
-    // 限時公告
+    // 期間限定のお知らせ
     const temporaryNoticeDiv = document.getElementById("temporaryNotice");
     if (temporaryNoticeDiv) {
       //　中文のみ
@@ -154,6 +163,7 @@ class TaskScheduleApp {
         this.renderAllGroups(this.cachedExcelRows);
       }
     }, CONFIG.REFRESH_INTERVAL);
+    // 分単位の更新タイマーは startTimers で一元管理されます。
   }
 
   /**
@@ -168,8 +178,8 @@ class TaskScheduleApp {
    */
   initInDateRange() {
     this.initCommon({ showTemporaryNotice: true });
-    // onlinePredictionManager 的初始化已移至 loadTasksAndRender 中處理，
-    // 以防止在數據加載完成前渲染舊的 UI，從而避免畫面閃爍。
+    // onlinePredictionManager の初期化は loadTasksAndRender 内に移動しました。
+    // データのロード完了前に古いUIがレンダリングされ、画面がちらつくのを防ぐためです。
   }
 
   /**
@@ -181,14 +191,14 @@ class TaskScheduleApp {
 
     const loadPromises = [this.excelLoader.loadExcel()];
 
-    // 如果在特殊活動期間，則同時初始化線上預測系統
+    // 特別イベント期間中の場合、オンライン予測システムも同時に初期化します
     if (this.isInDateRange()) {
       loadPromises.push(this.onlinePredictionManager.init());
     } else {
       this.onlinePredictionManager.isInitialized = false;
     }
 
-    // 等待所有必要的數據都加載完成
+    // 必要なすべてのデータがロードされるのを待ちます
     const [rows] = await Promise.all(loadPromises);
 
     // awaitの後に、新しいロードが開始されていないか確認します。もしそうなら、レンダリングを中止します。
@@ -237,7 +247,7 @@ class TaskScheduleApp {
       container.appendChild(group);
     });
 
-    // 渲染完成後，注入線上預測與回報 UI
+    // レンダリング完了後、オンライン予測と報告UIを注入します
     this.onlinePredictionManager.updateView();
   }
 
@@ -281,8 +291,21 @@ class TaskScheduleApp {
     combinedList = this.taskUtils.mergeConsecutiveMaintenance(combinedList);
 
     // タスクの分類
-    const { previousItem, currentItem, nextItems, remainingItems } =
+    const { previousItem, currentItem, nextItems, remainingItems, isInMaintenance } =
       this.taskProcessor.categorizeTasksByTime(combinedList, currentHour, currentMinute);
+
+    // 効果音再生チェック：現在のタスクがあり、まだ効果音が再生されていない場合は再生します
+    if (!isInMaintenance) {
+      combinedList.forEach(item => {
+        if (item.time) {
+          const [h, m] = item.time.split(":").map(Number);
+          if (h === currentHour && m === currentMinute) {
+            console.log(`[Sound Check] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
+            this.soundManager.playTaskSound(type.key, item);
+          }
+        }
+      });
+    }
 
     // グループ要素の作成
     const group = DOMHelper.createElement("div", `group ${type.key}`);
@@ -358,22 +381,55 @@ class TaskScheduleApp {
   }
 
   /**
-   * タイマーの開始
+   * タイマーの開始とリセット
    */
   startTimers() {
+    // 既存のタイマーをすべてクリア
+    clearInterval(this.secondlyIntervalId);
+    clearTimeout(this.minuteRefreshTimeoutId);
+    clearInterval(this.minuteRefreshIntervalId);
+    clearTimeout(this.hourlyRefreshTimeoutId);
+    clearInterval(this.hourlyRefreshIntervalId);
+
     // 1秒ごとに時刻を更新
-    setInterval(() => this.uiRenderer.updateTopTime(), 1000);
+    this.secondlyIntervalId = setInterval(() => this.uiRenderer.updateTopTime(), 1000);
 
-    // 1時間ごとにデータを更新
-    setInterval(() => {
+    // 毎分更新（分頭に同期）
+    const minuteUpdate = () => {
+      if (this.cachedExcelRows) {
+        this.renderAllGroups(this.cachedExcelRows);
+      }
+    };
+
+    const now = this.timeUtils.getNowBySVR();
+
+    const nextMinute = new Date(now);
+    nextMinute.setMinutes(now.getMinutes() + 1, 0, 0);
+    const msUntilNextMinute = nextMinute.getTime() - now.getTime();
+
+    this.minuteRefreshTimeoutId = setTimeout(() => {
+      minuteUpdate();
+      this.minuteRefreshIntervalId = setInterval(minuteUpdate, CONFIG.REFRESH_INTERVAL);
+    }, msUntilNextMinute);
+
+    // 毎時更新（時頭に同期）
+    const hourlyUpdate = () => {
       this.uiRenderer.updateTopTime();
-
       if (this.isInDateRange()) {
         this.initInDateRange();
       } else {
         this.initOutDateRange();
       }
-    }, CONFIG.HOUR_INTERVAL);
+    };
+
+    const nextHour = new Date(now);
+    nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+    const msUntilNextHour = nextHour.getTime() - now.getTime();
+
+    this.hourlyRefreshTimeoutId = setTimeout(() => {
+      hourlyUpdate();
+      this.hourlyRefreshIntervalId = setInterval(hourlyUpdate, CONFIG.HOUR_INTERVAL);
+    }, msUntilNextHour);
   }
 }
 

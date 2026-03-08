@@ -1,198 +1,231 @@
 /* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\mobile.css */
 
 /* ====================================================================
-   📱 手機版樣式 | Mobile Styles
-   適用於 431px 以下的裝置
+   📱 モバイル版スタイル | Mobile Styles
+   430px以下のデバイスに適用
 ==================================================================== */
+@media (max-width: 430px) {
 
-/* ─── CSS 變數覆寫（手機版） ─── */
-:root {
-  /* 調整字體大小 */
-  --font-size-xs: 0.7rem;
-  /* 11px */
-  --font-size-sm: 0.8rem;
-  /* 13px */
-  --font-size-base: 0.9rem;
-  /* 14px */
-  --font-size-md: 1rem;
-  /* 16px */
-  --font-size-lg: 1.1rem;
-  /* 18px */
-  --font-size-xl: 1.3rem;
-  /* 21px */
-  --font-size-2xl: 1.6rem;
-  /* 26px */
-  --font-size-3xl: 2rem;
-  /* 32px */
-  --font-size-4xl: 2.2rem;
-  /* 35px */
+  /* ─── CSS変数上書き（モバイル版） ─── */
+  :root {
+    /* フォントサイズ調整 */
+    --font-size-xs: 0.7rem;
+    /* 11px */
+    --font-size-sm: 0.8rem;
+    /* 13px */
+    --font-size-base: 0.9rem;
+    /* 14px */
+    --font-size-md: 1rem;
+    /* 16px */
+    --font-size-lg: 1.1rem;
+    /* 18px */
+    --font-size-xl: 1.3rem;
+    /* 21px */
+    --font-size-2xl: 1.6rem;
+    /* 26px */
+    --font-size-3xl: 2rem;
+    /* 32px */
+    --font-size-4xl: 2.2rem;
+    /* 35px */
 
-  /* 調整間距 */
-  --space-xs: 3px;
-  --space-sm: 6px;
-  --space-md: 10px;
-  --space-lg: 12px;
-  --space-xl: 16px;
-  --space-2xl: 20px;
+    /* 間隔調整 */
+    --space-xs: 3px;
+    --space-sm: 6px;
+    --space-md: 10px;
+    --space-lg: 12px;
+    --space-xl: 16px;
+    --space-2xl: 20px;
 
-  /* 調整佈局 */
-  --layout-padding: var(--space-sm);
-}
+    /* レイアウト調整 */
+    --layout-padding: var(--space-sm);
+  }
 
-/* ─── 主容器 ─── */
-#app {
-  margin: var(--space-sm) auto;
-  padding: var(--space-sm);
-  gap: var(--space-md);
-}
+  /* ─── メインコンテナ ─── */
+  #app {
+    margin: var(--space-sm) auto;
+    padding: var(--space-sm);
+    gap: var(--space-md);
+  }
 
-/* ─── 上方工具列 ─── */
-#topBar {
-  flex-direction: column;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
+  /* ─── 上部ツールバー ─── */
+  #topBar {
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
 
-#topLeft {
-  width: 100%;
-  align-items: stretch;
-}
+  #topLeft {
+    width: 100%;
+    align-items: stretch;
+  }
 
-/* 日期 星期 */
-#dateLabel {
-  justify-content: center;
-  text-align: center;
-  font-size: var(--font-size-lg);
-  padding-left: 70px;
-}
+  /* 日付 曜日 */
+  #dateLabel {
+    justify-content: center;
+    text-align: center;
+    font-size: var(--font-size-lg);
+    padding-left: 70px;
+  }
 
-/* 時間區塊 */
-.timeBox {
-  justify-content: center;
-  gap: var(--space-sm);
-}
+  /* 時間ブロック */
+  .timeBox {
+    justify-content: center;
+    gap: var(--space-sm);
+  }
 
-/* 語言按鈕 */
-#topRight {
-  width: 100%;
-  justify-content: center;
-}
+  /* 言語ボタン */
+  #topRight {
+    width: 100%;
+    justify-content: center;
+  }
 
-.langBtn {
-  width: 100%;
-  max-width: 200px;
-}
+  .langBtn {
+    width: 100%;
+    max-width: 200px;
+  }
 
-/* ─── 主卡片 ─── */
-.mainCard {
-  padding: var(--space-md);
-  gap: var(--space-md);
-}
+  /* ─── メインカード ─── */
+  .mainCard {
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
 
-.taskContainer {
-  gap: var(--space-md);
-  padding-right: 0;
-}
+  .taskContainer {
+    gap: var(--space-md);
+    padding-right: 0;
+  }
 
-/* ─── 任務列 ─── */
-.taskRow {
-  grid-template-columns: 100px 55px 12px 1fr;
-  min-height: 44px;
-  gap: var(--space-xs);
-}
+  /* ─── タスク行 ─── */
+  .taskRow {
+    /* グリッドレイアウトを最適化し、コンテンツに十分なスペースを確保して圧縮を防ぐ */
+    grid-template-columns: 30px 120px 50px 17px auto;
+    /* 時間 | 内容 | マーク | タイプ/アイコン */
+    min-height: 44px;
+    gap: var(--space-sm);
+    /* 可読性を高めるために間隔を増やす */
+    align-items: center; /* すべての列が垂直方向に中央揃えになるようにする */
+  }
 
-/* 當前任務 */
-.taskRow.gishiki.current .taskRow.sengen.current .col-type {
-  font-size: var(--font-size-md);
-  padding-left: var(--space-sm);
-}
+  /* 現在のタスク */
+  /* 無効なセレクタを修正し、現在のタスクのタイプテキストスタイルを統一設定 */
+  .taskRow.current .col-type {
+    font-size: var(--font-size-md);
+    /* レイアウトに合わせて少し縮小 */
+    /* padding-left: var(--space-sm); */
+  }
 
-.col-type {
-  font-size: var(--font-size-lg);
-}
 
-.taskRow.current .col-time,
-.taskRow.current .col-content {
-  font-size: var(--font-size-lg);
-}
 
-/* 接下來任務 */
-.taskWrapper .col-time,
-.taskWrapper .col-content,
-.remainingContainer .col-time,
-.remainingContainer .col-content {
-  font-size: var(--font-size-md);
-}
+  .col-type {
+    font-size: var(--font-size-md);
+    /* バランスをとるために基本フォントサイズを調整 */
+  }
 
-.taskRow:has(.col-time.maintenance) {
-  grid-template-columns: 85px 0px 0px 1fr;
-  padding: var(--space-xs);
-}
+  .taskRow.current .col-time,
+  .taskRow.current .col-content {
+    font-size: var(--font-size-md);
+  }
 
-/* ─── 維修狀態調整 ─── */
-.taskRow .col-content.maintenance {
-  font-size: var(--font-size-md);
-  padding: var(--space-xs);
-  width: 1fr;
-}
+  /* 針對過長文字的自動縮小處理 */
+  .taskRow.current .col-content.long11,
+  .taskRow.current .col-content.long12 {
+    font-size: var(--font-size-base);
+  }
 
-/* ─── 收合區塊 ─── */
-.remainingContainer.open {
-  max-height: 1500px;
-}
+  .taskRow.current .col-content.long13,
+  .taskRow.current .col-content.long14,
+  .taskRow.current .col-content.long15 {
+    font-size: var(--font-size-sm);
+  }
 
-/* 群組 */
-.group {
-  padding: var(--space-sm);
-  gap: var(--space-xs);
-}
+  /* 次のタスク */
+  .taskWrapper .col-time,
+  .taskWrapper .col-content,
+  .remainingContainer .col-time,
+  .remainingContainer .col-content {
+    font-size: var(--font-size-md);
+  }
 
-/* 按鈕 */
-.showBtn {
-  padding: var(--space-xs) var(--space-md);
-  font-size: var(--font-size-xs);
-}
+  .taskRow:has(.col-time.maintenance) {
+    /* 新しいグリッド定義に合わせて、メンテナンスメッセージ（2列目）が正しく埋まるようにする */
+    grid-template-columns: 30px 90px 0 0 auto;
+    padding: var(--space-xs);
+  }
 
-/* ─── 回報區塊 ─── */
-.reportSection {
-  margin-top: var(--space-lg);
-  margin-left: var(--space-sm);
-}
+  /* ─── メンテナンス状態調整 ─── */
+  .taskRow .col-content.maintenance {
+    text-align: center;
+    font-size: var(--font-size-md);
+    padding: var(--space-xs);
+    width: 100%;
+    /* グリッドセルを埋めるようにする */
+  }
 
-.reportText {
-  font-size: var(--font-size-xs);
-  margin-bottom: var(--space-sm);
-}
+  /* ─── 折りたたみブロック ─── */
+  .remainingContainer.open {
+    max-height: 1500px;
+  }
 
-.reportForm input,
-.reportForm select,
-.reportForm button {
-  padding: var(--space-sm);
-  font-size: var(--font-size-sm);
-}
+  /* グループ */
+  .group {
+    padding: var(--space-sm);
+    gap: var(--space-xs);
+  }
 
-.reportContainer {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-sm);
-}
+  /* ボタン */
+  .showBtn {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-xs);
+  }
 
-.reportButtons {
-  width: 100%;
-}
+  /* ─── 報告ブロック ─── */
+  .reportSection {
+    margin-top: var(--space-lg);
+    margin-left: var(--space-sm);
+  }
 
-.reportButtons button {
-  width: 100%;
-  padding: var(--space-md);
-}
+  .reportText {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+  }
 
-#reportMessage {
-  text-align: center;
-  font-size: var(--font-size-xs);
-}
+  .reportForm input,
+  .reportForm select,
+  .reportForm button {
+    padding: var(--space-sm);
+    font-size: var(--font-size-sm);
+  }
 
-.reportList {
-  padding: var(--space-xs);
-  margin-top: var(--space-sm);
-  max-height: 200px;
+  .reportContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .reportButtons {
+    width: 100%;
+  }
+
+  .reportButtons button {
+    width: 100%;
+    padding: var(--space-md);
+  }
+
+  #reportMessage {
+    text-align: center;
+    font-size: var(--font-size-xs);
+  }
+
+  .reportList {
+    padding: var(--space-xs);
+    margin-top: var(--space-sm);
+    max-height: 200px;
+  }
+
+  /* 効果音アイコン縮小 */
+  .sound-toggle-btn img {
+    width: 28px;
+    height: 28px;
+    margin: 7px 0;
+  }
 }
