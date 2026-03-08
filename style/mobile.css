@@ -98,23 +98,33 @@
   /* ─── タスク行 ─── */
   .taskRow {
     /* グリッドレイアウトを最適化し、コンテンツに十分なスペースを確保して圧縮を防ぐ */
-    grid-template-columns: 30px 120px 50px 17px auto;
+    grid-template-columns: 30px 90px 50px 17px auto;
     /* 時間 | 内容 | マーク | タイプ/アイコン */
     min-height: 44px;
-    gap: var(--space-sm);
+    gap: var(--space-base);
     /* 可読性を高めるために間隔を増やす */
     align-items: center; /* すべての列が垂直方向に中央揃えになるようにする */
   }
+
+  /* ? */
+  .col-questionMark{
+    font-size: var(--font-size-2xs);
+  }
+
+  /* ====================================================================
+   ⭐ 前の1時間のタスク | PreviousHour Task Styles
+==================================================================== */
+/* 前の1時間のタスク（スタイルは残りのタスクと同じ、文字はグレー） */
+.previoushour {
+  display: grid;
+  grid-template-columns: 135px 50px 0px auto;
+}
 
   /* 現在のタスク */
   /* 無効なセレクタを修正し、現在のタスクのタイプテキストスタイルを統一設定 */
   .taskRow.current .col-type {
     font-size: var(--font-size-md);
-    /* レイアウトに合わせて少し縮小 */
-    /* padding-left: var(--space-sm); */
   }
-
-
 
   .col-type {
     font-size: var(--font-size-md);
@@ -126,16 +136,20 @@
     font-size: var(--font-size-md);
   }
 
-  /* 針對過長文字的自動縮小處理 */
-  .taskRow.current .col-content.long11,
-  .taskRow.current .col-content.long12 {
+  /* 儀式 (Gishiki) 專用縮小處理 */
+  .taskRow.gishiki .col-content {
     font-size: var(--font-size-base);
   }
 
-  .taskRow.current .col-content.long13,
-  .taskRow.current .col-content.long14,
-  .taskRow.current .col-content.long15 {
+  .taskRow.gishiki .col-content.long11,
+  .taskRow.gishiki .col-content.long12 {
     font-size: var(--font-size-sm);
+  }
+
+  .taskRow.gishiki .col-content.long13,
+  .taskRow.gishiki .col-content.long14,
+  .taskRow.gishiki .col-content.long15 {
+    font-size: var(--font-size-base);
   }
 
   /* 次のタスク */

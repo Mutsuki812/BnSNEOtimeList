@@ -88,11 +88,13 @@ export class UIRenderer {
       hintText = hints;
     }
 
+    const longClass = this._getLongClass(content);
+
     taskRow.innerHTML = `
       <span class="previoushour_placeholder">${hintText}</span>
       <span class="col-time gray">${timeText}</span>
       <span class="col-questionMark gray">${questionMark}</span>
-      <span class="col-content gray">${content}</span>
+      <span class="col-content gray ${longClass}">${content}</span>
     `;
 
     return taskRow;
@@ -122,6 +124,8 @@ export class UIRenderer {
       content = "-------";
     }
 
+    const longClass = this._getLongClass(content);
+
     const maintenanceClass = isMaintenance ? "maintenance" : "";
     const typeLabel = this.languageManager.current === "zh" ? type.labelZh : type.labelJp;
 
@@ -138,7 +142,7 @@ export class UIRenderer {
       <div class="col-type">${typeLabel}</div>
       <div class="col-time ${maintenanceClass}">${timeText}</div>
       <div class="col-questionMark">${questionMark}</div>
-      <div class="col-content ${maintenanceClass}">${content}</div>
+      <div class="col-content ${maintenanceClass} ${longClass}">${content}</div>
     `;
 
     // タスクの期限切れ判定
@@ -181,7 +185,7 @@ export class UIRenderer {
   }
 
   // 次の2時間 + 残りの時間
-  createTaskRow(item, isRemaining = false) {
+  createTaskRow(item, isRemaining = false, type = null) {
     console.log('接下來兩小時 + 剩餘時間>>>');
     const content = this.taskUtils.getTaskContent(item);
 
@@ -189,7 +193,11 @@ export class UIRenderer {
       return document.createDocumentFragment();
     }
 
-    const taskRow = DOMHelper.createElement("div", isRemaining ? "taskRow remaining" : "taskRow");
+    const rowClass = isRemaining ? "taskRow remaining" : "taskRow";
+    const typeClass = type ? type.key : "";
+    const finalRowClass = typeClass ? `${rowClass} ${typeClass}` : rowClass;
+
+    const taskRow = DOMHelper.createElement("div", finalRowClass);
     const isMaintenance = this.taskUtils.isMaintenanceTask(item);
     const maintenanceClass = isMaintenance ? 'maintenance' : '';
 
@@ -201,6 +209,8 @@ export class UIRenderer {
       timeText = item.time || "--:--";
     }
 
+    const longClass = this._getLongClass(content);
+
     const nextDayLabel = this.languageManager.current === "zh" ? "明日" : "翌日";
     const tomorrow = item.isNextDay ? `<span class="tomorrow">${nextDayLabel}</span>` : '';
 
@@ -209,7 +219,7 @@ export class UIRenderer {
       <span class="placeholder">${tomorrow}</span>
       <span class="col-time ${maintenanceClass}">${timeText}</span>
       <span class="col-questionMark ${maintenanceClass}">${questionMark}</span>
-      <span class="col-content ${maintenanceClass}">${content}</span>
+      <span class="col-content ${maintenanceClass} ${longClass}">${content}</span>
     `;
 
     return taskRow;
@@ -289,5 +299,21 @@ export class UIRenderer {
         }
       }
     });
+  }
+
+  /**
+   * 根據文字長度回傳對應的 CSS class
+   * @param {string} text 
+   * @returns {string} long11 ~ long15
+   */
+  _getLongClass(text) {
+    if (!text) return "";
+    const len = text.length;
+    if (len >= 15) return "long15";
+    if (len >= 14) return "long14";
+    if (len >= 13) return "long13";
+    if (len >= 12) return "long12";
+    if (len >= 11) return "long11";
+    return "";
   }
 }

@@ -350,7 +350,7 @@ class TaskScheduleApp {
     // 従来のラッパーにコンテンツを常に追加
     // 次の2時間のタスク
     nextItems.forEach(item => {
-      wrapper.appendChild(this.uiRenderer.createTaskRow(item, false));
+      wrapper.appendChild(this.uiRenderer.createTaskRow(item, false, type));
     });
 
     // 残りのタスク（折りたたみ可能）
@@ -359,7 +359,7 @@ class TaskScheduleApp {
       remWrapper.classList.add('open');
     }
     remainingItems.forEach(item => {
-      remWrapper.appendChild(this.uiRenderer.createTaskRow(item, true));
+      remWrapper.appendChild(this.uiRenderer.createTaskRow(item, true, type));
     });
     wrapper.appendChild(remWrapper);
 
