@@ -150,9 +150,9 @@ export class SoundManager {
     });
 
     modal.innerHTML = `
-      <h3 style="margin:0 0 15px; font-size:22px; color: #61dafb;">啟用音效提示</h3>
+      <h3 style="margin:0 0 15px; font-size:22px; color: #61dafb;">點擊畫面 啟用音效</h3>
       <p style="margin:0 0 25px; line-height:1.7; font-size: 16px;">
-        為了讓您能接收到即時的任務通知，<br>請點擊頁面任意處以啟用音效。
+        為了確保音效正常運作<br>請點擊頁面任意處。
       </p>
       <div style="font-size: 13px; color: #999;">(這是瀏覽器的安全限制，需要您的互動來授權聲音播放)</div>
     `;
