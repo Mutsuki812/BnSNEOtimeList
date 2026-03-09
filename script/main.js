@@ -270,12 +270,14 @@ class TaskScheduleApp {
     const now = this.timeUtils.getNowBySVR();
     const s = now.getSeconds();
 
-    // 仙幻島 (sengen) -10秒提示
+    // 仙幻島 (sengen) 野王出現前10秒提示 (任務時間 + 4分50秒)
     if (s === 50) {
-      const targetTime = new Date(now.getTime() + 10000); // +10秒
-      const tHour = targetTime.getHours();
-      const tMinute = targetTime.getMinutes();
-      const tDay = targetTime.getDay();
+      // 當前時間是 HH:MM:50，我們要找的任務時間是 HH:(MM-4):00
+      // 所以我們從當前時間回推4分鐘，來取得任務應該開始的小時與分鐘
+      const taskTime = new Date(now.getTime() - (4 * 60 * 1000));
+      const tHour = taskTime.getHours();
+      const tMinute = taskTime.getMinutes();
+      const tDay = taskTime.getDay();
       
       const WEEKDAYS_ZH = ["日", "一", "二", "三", "四", "五", "六"];
       const weekZh = WEEKDAYS_ZH[tDay];
@@ -283,6 +285,7 @@ class TaskScheduleApp {
       const type = { key: "sengen" };
       const tasks = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, weekZh);
 
+      // 檢查在 4 分鐘前是否有仙幻島任務
       const hasTask = tasks.some(t => {
         const [h, m] = t.time.split(":").map(Number);
         return h === tHour && m === tMinute;
