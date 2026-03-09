@@ -250,6 +250,7 @@ class TaskScheduleApp {
         tomorrowWeekZh,
         currentHour,
         currentMinute,
+        currentDay,
         openStates
       );
       container.appendChild(group);
@@ -351,7 +352,7 @@ class TaskScheduleApp {
   /**
    * タスクグループの作成
    */
-  createTaskGroup(rows, type, todayWeekZh, tomorrowWeekZh, currentHour, currentMinute, openStates) {
+  createTaskGroup(rows, type, todayWeekZh, tomorrowWeekZh, currentHour, currentMinute, currentDay, openStates) {
     // 今日と明日のタスクリストを取得
     let todayList = this.taskProcessor.getTaskListForWeek(rows, type, todayWeekZh);
     let tomorrowList = this.taskProcessor.getTaskListForWeek(rows, type, tomorrowWeekZh);
@@ -380,6 +381,22 @@ class TaskScheduleApp {
         if (item.time) {
           const [h, m] = item.time.split(":").map(Number);
           if (h === currentHour && m === currentMinute) {
+            // 在世界王出現的時間 (每日 20:50-59, 週末 14:50-59) 暫停儀式/白青/仙幻島的音效
+            const isTargetTask = ['gishiki', 'shirao', 'sengen'].includes(type.key);
+            if (isTargetTask) {
+              const day = currentDay; // 0 = Sunday, 6 = Saturday
+              const hour = currentHour;
+              const minute = currentMinute;
+              const isWeekend = (day === 0 || day === 6);
+
+              const isDailySuppressionTime = (hour === 20 && minute >= 50 && minute <= 59);
+              const isWeekendSuppressionTime = (isWeekend && hour === 14 && minute >= 50 && minute <= 59);
+
+              if (isDailySuppressionTime || isWeekendSuppressionTime) {
+                console.log(`[Sound Check] Sound suppressed for ${type.key} at ${hour}:${minute} due to world boss time.`);
+                return; // continue to next item in forEach
+              }
+            }
             console.log(`[Sound Check] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
             this.soundManager.playTaskSound(type.key, item);
           }
