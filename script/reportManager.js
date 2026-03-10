@@ -196,7 +196,7 @@ export class ReportManager {
         const div = DOMHelper.createElement("div", "reportItem");
         const formatDate = r.Timestamp.substring(0, 10);
         let respond = '';
-
+        // ???
         const isResponded = r.Respond === true || r.Respond === "TRUE";
         if (isResponded) {
           respond = '<img src="./images/thanks24.png" alt="thx!!">';
