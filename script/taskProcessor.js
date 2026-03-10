@@ -76,7 +76,7 @@ export class ExcelDataLoader {
           if (typeof XLSX === 'undefined') {
             await this._loadXLSXLib();
           }
-          const sheetName = "timeList_ZH"; // 中文版固定讀取 _ZH sheet
+          const sheetName = "timeList"; // 中文版固定讀取 _ZH sheet
           const response = await fetch(CONFIG.EXCEL_URL);
           const buffer = await response.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: "array" });
