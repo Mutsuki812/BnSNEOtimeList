@@ -2,7 +2,7 @@
    ==== 線上預測與回報系統 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES } from './config.js';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
 import { DOMHelper } from './utils.js';
 
 export class OnlinePredictionManager {
@@ -20,7 +20,7 @@ export class OnlinePredictionManager {
     if (!this.isInDateRange()) return;
 
     // 載入最新回報數據
-    await this.fetchLastReports();
+    await this.fetchPredictionData();
     this.isInitialized = true;
   }
 
@@ -29,10 +29,6 @@ export class OnlinePredictionManager {
    */
   isInDateRange() {
     if (this.languageManager.current !== 'zh') return false;
-    
-    // const now = this.timeUtils.getNowBySVR();
-    // const range = DATE_RANGES.zh;
-    // return now >= range.start && now <= range.end;
     const now = this.timeUtils.getNowBySVR();
     const range = DATE_RANGES.zh;
     const start = this.timeUtils.getShiftedDate(range.start);
@@ -41,22 +37,81 @@ export class OnlinePredictionManager {
   }
 
   /**
-   * 從 GAS 獲取最新回報數據
-   * 假設 GAS 回傳格式為 { gishiki: { time: "HH:mm", ... }, shirao: { ... }, sengen: { ... } }
+   * 從 GAS 獲取預測所需的回報數據
+   * 規則：
+   * 1. 優先抓取今日的最後一筆回報。
+   * 2. 如果今日無任何回報，則抓取昨日的最後一筆回報。
    */
-  async fetchLastReports() {
+  async fetchPredictionData() {
+    const nowSVR = this.timeUtils.getNowBySVR();
+    const todayDayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
+    const todayWeekdayChar = WEEKDAYS.zh[todayDayOfWeek];
+
+    // 1. 嘗試獲取今日數據
+    let reports = await this.fetchReportsForWeekday(todayWeekdayChar);
+
+    // 2. 若今日無數據，則嘗試獲取昨日數據
+    if (!reports || Object.keys(reports).length === 0) {
+      console.log(`No data for today (${todayWeekdayChar}), fetching yesterday's data.`);
+      const yesterdayDayOfWeek = (todayDayOfWeek - 1 + 7) % 7;
+      const yesterdayWeekdayChar = WEEKDAYS.zh[yesterdayDayOfWeek];
+      reports = await this.fetchReportsForWeekday(yesterdayWeekdayChar);
+    }
+
+    this.lastReports = reports || {};
+  }
+
+  /**
+   * 從 GAS 獲取指定星期（中文字元）的回報數據
+   * @param {string} weekdayChar - '日', '一', '二'...
+   */
+  async fetchReportsForWeekday(weekdayChar) {
     try {
-      // 這裡使用 CONFIG.GAS_DATA_URL，並加上參數 action=getLastReports 區分請求
-      // 實際需配合 GAS 端實作，此處為模擬前端邏輯
-      const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getLastReports&t=${new Date().getTime()}`);
+      // 後端需支援 action=getReportsForDate&weekday=日
+      const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getReportsForDate&weekday=${weekdayChar}&t=${new Date().getTime()}`);
       const json = await response.json();
       
       if (json.status === 'success' && json.data) {
-        this.lastReports = json.data;
+        return json.data;
       }
+      return null;
     } catch (e) {
-      console.error("Failed to fetch last reports:", e);
+      console.error(`Failed to fetch reports for weekday ${weekdayChar}:`, e);
+      return null;
     }
+  }
+
+  /**
+   * 從多種格式的時間輸入中解析並格式化為 HH:MM
+   * @param {string | Date} timeInput 
+   * @returns {string} HH:MM 格式的時間
+   */
+  _parseAndFormatTime(timeInput) {
+    if (!timeInput) return "--:--";
+
+    // 如果是 Date 物件
+    if (timeInput instanceof Date) {
+      const h = String(timeInput.getHours()).padStart(2, '0');
+      const m = String(timeInput.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    const timeStr = String(timeInput);
+
+    // 格式 1: 已經是 "HH:MM"
+    if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+      const [h, m] = timeStr.split(':');
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    // 格式 2: 完整日期字串 "Sat Dec 30..."
+    const match = timeStr.match(/(\d{1,2}):(\d{2}):\d{2}/);
+    if (match) {
+      return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+    }
+
+    // 回退
+    return timeStr;
   }
 
   /**
@@ -93,9 +148,10 @@ export class OnlinePredictionManager {
       const lastReport = this.lastReports['gishiki'];
       
       if (lastReport && lastReport.time) {
+        const formattedTime = this._parseAndFormatTime(lastReport.time);
         timeEl.textContent = "上次出現";
         timeEl.classList.add('prediction-label');
-        contentEl.textContent = `${lastReport.time} ${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
+        contentEl.textContent = `${formattedTime} ${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
       } else {
         timeEl.textContent = "尚無數據";
         timeEl.classList.add('prediction-label');
@@ -126,19 +182,35 @@ export class OnlinePredictionManager {
     if (lastReport && lastReport.time) {
       // 計算預測時間
       // 規則：回報時間 + 1小時25分 (Start) ~ + 1小時40分 (End)
-      const [h, m] = lastReport.time.split(':').map(Number);
+      const formattedTime = this._parseAndFormatTime(lastReport.time);
+      const [h, m] = formattedTime.split(':').map(Number);
+
+      if (isNaN(h) || isNaN(m)) {
+        console.error("時間解析失敗:", lastReport.time);
+        timeEl.textContent = "時間格式錯誤";
+        contentEl.textContent = "無法計算預測";
+        return;
+      }
       const reportTotalMinutes = h * 60 + m;
 
       const startPredTotalMinutes = reportTotalMinutes + 85;  // +1h 25m
       const endPredTotalMinutes = reportTotalMinutes + 100; // +1h 40m
 
       const formatMinutesToTime = (totalMinutes) => {
-        const hours = Math.floor(totalMinutes / 60) % 24;
+        const totalHours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        const displayHours = totalHours % 24;
+        
+        const timeStr = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+        return (totalHours >= 24)
+          ? `${this.languageManager.current === "zh" ? "明天" : "翌日"} ${timeStr}`
+          : timeStr;
       };
 
-      const predInfo = `${formatMinutesToTime(startPredTotalMinutes)} ～ ${formatMinutesToTime(endPredTotalMinutes)}`;
+      const predStartStr = formatMinutesToTime(startPredTotalMinutes);
+      const predEndStr = formatMinutesToTime(endPredTotalMinutes);
+      const predInfo = `${predStartStr} ～ ${predEndStr}`;
       // 顯示兩行資訊：上次出現 & 推算時間
       timeEl.innerHTML = `
         <div class="pred-row-label">上次出現</div>
@@ -146,7 +218,7 @@ export class OnlinePredictionManager {
       `;
       timeEl.classList.remove('prediction-highlight', 'prediction-label');
 
-      const lastInfo = `${lastReport.time} ${lastReport.location || ''}`;
+      const lastInfo = `${formattedTime} ${lastReport.location || ''}`;
       contentEl.innerHTML = `
         <div class="pred-row-info">${lastInfo}</div>
         <div class="pred-row-time">${predInfo}</div>
@@ -382,8 +454,11 @@ export class OnlinePredictionManager {
       listDiv.innerHTML = '載入中...';
 
       try {
-        // 呼叫 GAS 獲取歷史紀錄 (需後端支援 action=getHistory)
-        const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getHistory&taskType=${typeKey}&t=${new Date().getTime()}`);
+        const nowSVR = this.timeUtils.getNowBySVR();
+        const todayDayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
+        const todayWeekdayChar = WEEKDAYS.zh[todayDayOfWeek];
+        // 呼叫 GAS 獲取指定 "星期" 的歷史紀錄
+        const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getHistory&taskType=${typeKey}&weekday=${todayWeekdayChar}&t=${new Date().getTime()}`);
         const json = await response.json();
 
         if (json.status === 'success' && json.data && json.data.length > 0) {
@@ -398,7 +473,7 @@ export class OnlinePredictionManager {
               const parts = item.time.split(':');
               const h = parts[0];
               const m = parts[1] || '00';
-              formattedTime = `${String(h).padStart(2, ' ')}:${String(m).padStart(2, '0')}`;
+              formattedTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             }
 
             // 假設回報資料包含 time, method, location 等欄位
@@ -438,12 +513,14 @@ export class OnlinePredictionManager {
 
     // 準備 Payload
     const nowSVR = this.timeUtils.getNowBySVR();
+    const dayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
+    const weekdayChar = WEEKDAYS.zh[dayOfWeek];
     const payload = {
       action: "reportOnline", // 區分 GAS 動作
       taskType: typeKey,
       time: timeVal,
       // 直接使用當前伺服器時間的星期，不考慮遊戲重置時間
-      dayOfWeek: nowSVR.getDay(), // 0-6 (日-六)
+      weekday: weekdayChar, // '日', '一', ...
       // 增加傳送 YYYY-MM-DD 格式的日期，讓後端能精準判斷「今天」
       reportDate: `${nowSVR.getFullYear()}-${String(nowSVR.getMonth() + 1).padStart(2, '0')}-${String(nowSVR.getDate()).padStart(2, '0')}`
     };

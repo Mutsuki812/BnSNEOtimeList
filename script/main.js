@@ -375,34 +375,37 @@ class TaskScheduleApp {
     const { previousItem, currentItem, nextItems, remainingItems, isInMaintenance } =
       this.taskProcessor.categorizeTasksByTime(combinedList, currentHour, currentMinute);
 
-    // 効果音再生チェック：現在のタスクがあり、まだ効果音が再生されていない場合は再生します
-    if (!isInMaintenance) {
-      combinedList.forEach(item => {
-        if (item.time) {
-          const [h, m] = item.time.split(":").map(Number);
-          if (h === currentHour && m === currentMinute) {
-            // 在世界王出現的時間 (每日 20:50-59, 週末 14:50-59) 暫停儀式/白青/仙幻島的音效
-            const isTargetTask = ['gishiki', 'shirao', 'sengen'].includes(type.key);
-            if (isTargetTask) {
-              const day = currentDay; // 0 = Sunday, 6 = Saturday
-              const hour = currentHour;
-              const minute = currentMinute;
-              const isWeekend = (day === 0 || day === 6);
-
-              const isDailySuppressionTime = (hour === 20 && minute >= 50 && minute <= 59);
-              const isWeekendSuppressionTime = (isWeekend && hour === 14 && minute >= 50 && minute <= 59);
-
-              if (isDailySuppressionTime || isWeekendSuppressionTime) {
-                console.log(`[Sound Check] Sound suppressed for ${type.key} at ${hour}:${minute} due to world boss time.`);
-                return; // continue to next item in forEach
-              }
-            }
-            console.log(`[Sound Check] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
-            this.soundManager.playTaskSound(type.key, item);
+    // 効果音再生チェック：現在のタスクがあり、まだ効果音が再生されていない場合は再生します。
+    combinedList.forEach(item => {
+      if (item.time) {
+        const [h, m] = item.time.split(":").map(Number);
+        if (h === currentHour && m === currentMinute) {
+          // 任務內容是維護中的話，不播放音效
+          if (this.taskUtils.isMaintenanceTask(item)) {
+            return; // continue to next item in forEach
           }
+
+          // 在世界王出現的時間 (每日 20:50-59, 週末 14:50-59) 暫停儀式/白青/仙幻島的音效
+          const isTargetTask = ['gishiki', 'shirao', 'sengen'].includes(type.key);
+          if (isTargetTask) {
+            const day = currentDay; // 0 = Sunday, 6 = Saturday
+            const hour = currentHour;
+            const minute = currentMinute;
+            const isWeekend = (day === 0 || day === 6);
+
+             const isDailySuppressionTime = (hour === 20 && minute >= 50 && minute <= 59);
+             const isWeekendSuppressionTime = (isWeekend && hour === 14 && minute >= 50 && minute <= 59);
+ 
+             if (isDailySuppressionTime || isWeekendSuppressionTime) {
+               console.log(`[Sound Check] Sound suppressed for ${type.key} at ${hour}:${minute} due to world boss time.`);
+               return; // continue to next item in forEach
+             }
+          }
+          console.log(`[Sound Check] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
+          this.soundManager.playTaskSound(type.key, item);
         }
-      });
-    }
+      }
+    });
 
     // グループ要素の作成
     const group = DOMHelper.createElement("div", `group ${type.key}`);
