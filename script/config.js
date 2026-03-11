@@ -38,8 +38,8 @@ export const WEEKDAYS = {
 
 export const DATE_RANGES = {
   zh: {
-    start: new Date('2026-03-11T10:00:00+08:00'),
-    end: new Date('2026-03-18T05:59:59+08:00')
+    start: new Date('2026-03-09T10:00:00+08:00'),
+    end: new Date('2026-03-10T05:59:59+08:00')
   },
   jp: {
     start: new Date('2025-12-17T06:00:00+09:00'),
@@ -55,6 +55,7 @@ export const TEXTS = {
       "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" +
       //"・時間有[?]，是路上不小心遇到，不是系統出字時間。","
       "<spen style=\"color:red\">" +
+      "　可喜可賀! 貌似維持2/11的時間表 沒變<br>" +
       "　新增提示音效機能 發生問題時 請告知我" +
       "</spen>",
 
