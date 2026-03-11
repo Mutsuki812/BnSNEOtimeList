@@ -76,11 +76,15 @@ export class ExcelDataLoader {
           if (typeof XLSX === 'undefined') {
             await this._loadXLSXLib();
           }
-          const sheetName = "timeList"; // 中文版固定讀取 _ZH sheet
+          const sheetName = "timeList";
           const response = await fetch(CONFIG.EXCEL_URL);
           const buffer = await response.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: "array" });
-          const sheet = workbook.Sheets[sheetName] || workbook.Sheets[workbook.SheetNames[0]];
+          const sheet = workbook.Sheets[sheetName];
+          if (!sheet) {
+            console.error(`Excel file does not contain a sheet named '${sheetName}'. Returning empty data.`);
+            return [];
+          }
           const rawData = XLSX.utils.sheet_to_json(sheet);
           
           // 正規化
