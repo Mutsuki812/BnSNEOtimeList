@@ -11,7 +11,7 @@ export const CONFIG = {
   REFRESH_INTERVAL: 60000, // 1分
   HOUR_INTERVAL: 3600000, // 1時間
   CACHE_KEY: "dailyQuestData_zh",
-  CACHE_DURATION: 5 * 60 * 1000, // 5分鐘快取
+  CACHE_DURATION: 30 * 1000, // 改為 30秒快取，避免錯誤資料殘留過久
   XLSX_CDN: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
 };
 

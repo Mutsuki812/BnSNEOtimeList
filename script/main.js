@@ -380,6 +380,12 @@ class TaskScheduleApp {
       if (item.time) {
         const [h, m] = item.time.split(":").map(Number);
         if (h === currentHour && m === currentMinute) {
+          // 只有今天的任務才播放音效，避免播放到明天同一時間的任務
+          if (item.isNextDay) {
+            console.log(`[Sound Check] Skipped next day's task: ${type.key} at ${item.time}`);
+            return; // 這是明天的任務，跳過
+          }
+
           // 任務內容是維護中的話，不播放音效
           if (this.taskUtils.isMaintenanceTask(item)) {
             return; // continue to next item in forEach
