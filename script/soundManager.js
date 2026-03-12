@@ -48,9 +48,9 @@ export class SoundManager {
     this.modalShown = false;
     this.isAudioUnlocked = false; // Flag to ensure unlock is only attempted once
     this.lastPlayed = {}; // 記錄每個任務類型最後播放的時間，防止重複播放
-    // 用於解鎖瀏覽器自動播放限制的無聲 Audio 元素
-    this.silentAudio = new Audio("data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-    this.silentAudio.volume = 0;
+    // 改為使用單一 Audio 物件並重複使用，解決手機版 Chrome 禁止自動播放新 Audio 物件的問題
+    this.audioPlayer = new Audio();
+    this.silentSource = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
 
     // 監聽全域互動事件，一旦使用者與頁面互動（點擊、按鍵、觸控），就嘗試解鎖音訊
     this.modalElement = null; // Reference to the unlock modal
@@ -92,7 +92,9 @@ export class SoundManager {
     }
     // 建立一個 Web Audio Context 並嘗試恢復它。
     // 透過播放一段無聲的音訊來取得瀏覽器的播放權限，這是更可靠的方法。
-    this.silentAudio.play().then(() => {
+    this.audioPlayer.src = this.silentSource;
+    this.audioPlayer.volume = 0; // 靜音
+    this.audioPlayer.play().then(() => {
       this.isAudioUnlocked = true;
       console.log('[Sound] Audio context unlocked by user interaction.');
     }).catch(e => {
@@ -201,8 +203,9 @@ export class SoundManager {
       audioSrc = SOUND_MAP[taskTypeKey][taskItem.zh];
     }
 
-    const audio = new Audio(audioSrc);
-    const playPromise = audio.play();
+    this.audioPlayer.src = audioSrc;
+    this.audioPlayer.volume = 1; // 恢復音量
+    const playPromise = this.audioPlayer.play();
 
     if (playPromise !== undefined) {
       playPromise.catch(error => {
@@ -236,8 +239,9 @@ export class SoundManager {
     this.lastPlayed[taskTypeKey] = playId;
     console.log(`[Sound] Playing world boss alert for ${playId}`);
 
-    const audio = new Audio(audioSrc);
-    const playPromise = audio.play();
+    this.audioPlayer.src = audioSrc;
+    this.audioPlayer.volume = 1; // 恢復音量
+    const playPromise = this.audioPlayer.play();
 
     if (playPromise !== undefined) {
       playPromise.catch(error => {
@@ -260,8 +264,9 @@ export class SoundManager {
     this.lastPlayed['sengen_pre'] = timeTag;
 
     console.log('[Sound] Playing sengen pre-alert');
-    const audio = new Audio('./audio/sengen10.mp3');
-    audio.play().catch(e => {
+    this.audioPlayer.src = './audio/sengen10.mp3';
+    this.audioPlayer.volume = 1;
+    this.audioPlayer.play().catch(e => {
       console.warn('[Sound] Pre-alert play failed', e);
     });
   }
