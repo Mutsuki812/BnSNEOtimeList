@@ -6,24 +6,26 @@ import { TEXTS } from './config.js';
 import { DOMHelper } from './utils.js';
 
 /**
- * UIレンダラー
+ * UI 渲染器類別，負責產生 HTML 元素
  */
 export class UIRenderer {
-  constructor(languageManager, timeUtils, taskUtils, soundManager) {
-    this.languageManager = languageManager;
+  constructor(timeUtils, taskUtils, soundManager) {
     this.timeUtils = timeUtils;
     this.taskUtils = taskUtils;
     this.soundManager = soundManager;
   }
 
+  /**
+   * 更新頂部的目前時間顯示
+   */
   updateTopTime() {
     const now = this.timeUtils.getNowBySVR();
     DOMHelper.updateElement("dateLabel", this.timeUtils.formatDateLabel(now));
 
-    const locale = this.languageManager.current === "zh" ? "zh-TW" : "ja-JP";
+    const locale = "zh-TW";
     const options = { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
     const timeStr = now.toLocaleTimeString(locale, options);
-    const timeLabel = this.languageManager.current === "zh" ? "台灣時間" : "日本時間";
+    const timeLabel = "台灣時間";
 
     DOMHelper.updateElement("timeBox", `
       <span class="timeLabel">${timeLabel}</span>
@@ -31,31 +33,30 @@ export class UIRenderer {
     `);
   }
 
-  // 常設のお知らせ
+  /**
+   * 更新常態公告
+   */
   updateRegularNotice() {
-    console.log('常態公告>>>');
-    const text = TEXTS.regularNotice[this.languageManager.current];
-    DOMHelper.updateElement("regularNotice", text, "block");
+    DOMHelper.updateElement("regularNotice", TEXTS.regularNotice, "block");
   }
 
-  // 期間限定のお知らせ
+  /**
+   * 更新限時公告
+   */
   updateTemporaryNoticeText() {
-    console.log('限時公告>>>');
-    const text = TEXTS.temporaryNotice[this.languageManager.current];
-    DOMHelper.updateElement("temporaryNotice", text);
+    DOMHelper.updateElement("temporaryNotice", TEXTS.temporaryNotice);
   }
 
-  // 中国語環境のみ終日ボタンを表示
-  updateViewDailyButtonVisibility() {
-    const viewDailyBtn = document.getElementById("viewDailyBtn");
-    if (viewDailyBtn) {
-      viewDailyBtn.style.display = this.languageManager.current === "zh" ? "none" : "none";
-    }
-  }
-
-  // 前の1時間
+  /**
+   * 建立前一小時的任務列 (如果有的話)
+   * @param {object} item - 任務項目
+   * @param {object} currentItem - 當前任務項目
+   * @param {number} currentHour - 當前小時
+   * @param {number} currentMinute - 當前分鐘
+   * @param {object} type - 任務類型定義
+   * @returns {HTMLElement|DocumentFragment} - 任務列元素
+   */
   createPreviousHourTaskRow(item, currentItem, currentHour, currentMinute, type) {
-    console.log('前一小時>>>');
     if (!item) {
       return document.createDocumentFragment();
     }
@@ -80,13 +81,7 @@ export class UIRenderer {
     const questionMark = item.hasQuestionMark ? ' [?]' : "";
 
     let hintText;
-    const hints = TEXTS.previousHourHint[this.languageManager.current];
-
-    if (this.languageManager.current === 'zh' && typeof hints === 'object' && type) {
-      hintText = hints[type.key] || hints.default;
-    } else {
-      hintText = hints;
-    }
+    hintText = TEXTS.previousHourHint[type.key] || TEXTS.previousHourHint.default;
 
     const longClass = this._getLongClass(content);
 
@@ -100,9 +95,13 @@ export class UIRenderer {
     return taskRow;
   }
 
-  // 現在の時間
+  /**
+   * 建立當前時間的任務列
+   * @param {object} type - 任務類型定義
+   * @param {object} item - 任務項目
+   * @returns {HTMLElement} - 任務列元素
+   */
   createCurrentTaskRow(type, item) {
-    console.log('當前時間>>>');
     const row = DOMHelper.createElement("div", `taskRow ${type.key} current`);
     const content = item ? this.taskUtils.getTaskContent(item) : "-------";
     const isMaintenance = item && this.taskUtils.isMaintenanceTask(item);
@@ -127,11 +126,11 @@ export class UIRenderer {
     const longClass = this._getLongClass(content);
 
     const maintenanceClass = isMaintenance ? "maintenance" : "";
-    const typeLabel = this.languageManager.current === "zh" ? type.labelZh : type.labelJp;
+    const typeLabel = type.label;
 
     let soundToggleHtml = '';
-    // 中国語環境かつsoundManagerが利用可能な場合のみ表示
-    if (this.languageManager.current === 'zh' && this.soundManager) {
+    // soundManagerが利用可能な場合のみ表示
+    if (this.soundManager) {
       const isSoundOn = this.soundManager.isSoundEnabled(type.key);
       const iconSrc = isSoundOn ? './images/bell32.png' : './images/bellSlash32.png';
       soundToggleHtml = `<button class="sound-toggle-btn" data-task-type="${type.key}" title="切換音效提示"><img src="${iconSrc}" alt="sound" style="vertical-align:middle;"></button> `;
@@ -184,9 +183,14 @@ export class UIRenderer {
     return row;
   }
 
-  // 次の2時間 + 残りの時間
+  /**
+   * 建立一般任務列 (用於未來2小時或剩餘時間)
+   * @param {object} item - 任務項目
+   * @param {boolean} isRemaining - 是否為剩餘時間區塊 (會影響 CSS class)
+   * @param {object} type - 任務類型定義 (可選)
+   * @returns {HTMLElement|DocumentFragment} - 任務列元素
+   */
   createTaskRow(item, isRemaining = false, type = null) {
-    console.log('接下來兩小時 + 剩餘時間>>>');
     const content = this.taskUtils.getTaskContent(item);
 
     if (!content || content.trim() === "") {
@@ -211,7 +215,7 @@ export class UIRenderer {
 
     const longClass = this._getLongClass(content);
 
-    const nextDayLabel = this.languageManager.current === "zh" ? "明日" : "翌日";
+    const nextDayLabel = "明天";
     const tomorrow = item.isNextDay ? `<span class="tomorrow">${nextDayLabel}</span>` : '';
 
     taskRow.innerHTML = `
@@ -225,7 +229,13 @@ export class UIRenderer {
     return taskRow;
   }
 
-  // その他の時間/閉じる ボタン
+  /**
+   * 建立「其他時間」區域的頁尾與展開/收合按鈕
+   * @param {HTMLElement} remWrapper - 剩餘時間的容器元素
+   * @param {Array} remainingItems - 剩餘任務列表
+   * @param {boolean} isInitiallyOpen - 初始狀態是否展開
+   * @returns {HTMLElement} - 頁尾元素
+   */
   createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = false) {
     const footer = DOMHelper.createElement("div", "groupFooter");
 
@@ -236,8 +246,8 @@ export class UIRenderer {
     const btn = DOMHelper.createElement("button", "showBtn");
     btn.type = "button";
     btn.textContent = isInitiallyOpen
-      ? (this.languageManager.current === "zh" ? "關閉 ▲" : "閉じる ▲")
-      : (this.languageManager.current === "zh" ? "其他時間 ▼" : "その他 ▼");
+      ? "關閉 ▲" 
+      : "其他時間 ▼";
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -253,17 +263,17 @@ export class UIRenderer {
       // 他のボタンをリセット
       document.querySelectorAll(".groupFooter .showBtn").forEach(b => {
         if (b !== btn) {
-          b.textContent = this.languageManager.current === "zh" ? "其他時間 ▼" : "その他 ▼";
+          b.textContent = "其他時間 ▼";
         }
       });
 
       // 現在のエリアをトグル
       if (!isOpen) {
         remWrapper.classList.add("open");
-        btn.textContent = this.languageManager.current === "zh" ? "關閉 ▲" : "閉じる ▲";
+        btn.textContent = "關閉 ▲";
       } else {
         remWrapper.classList.remove("open");
-        btn.textContent = this.languageManager.current === "zh" ? "其他時間 ▼" : "その他 ▼";
+        btn.textContent = "其他時間 ▼";
       }
     });
 
@@ -272,9 +282,9 @@ export class UIRenderer {
   }
 
   /**
-   * コンテナ内のすべての .col-content のフォントサイズを自動調整し、テキストが1行で表示されるようにする
-   * コンテンツカラムのみ対象とし、.col-typeには影響しない
-   * @param {HTMLElement} container 
+   * 自動調整容器內所有 .col-content 的字體大小，確保文字顯示為單行
+   * 僅針對內容欄位，不影響類型欄位
+   * @param {HTMLElement} container - 容器元素
    */
   autoFitContent(container) {
     if (!container) return;

@@ -1,30 +1,35 @@
 /* ==========================
-   === Excelデータ処理 ===
+   === Excel 資料處理 ===
    ========================== */
 
 import { CONFIG, DATE_RANGES, TASK_TYPES } from './config.js';
 import { TimeUtils, TaskUtils } from './utils.js';
 
 /**
- * Excelデータローダー
+ * Excel 資料讀取器
  */
 export class ExcelDataLoader {
-  constructor(languageManager, timeUtils) {
-    this.languageManager = languageManager;
+  constructor(timeUtils) {
     this.timeUtils = timeUtils;
   }
 
+  /**
+   * 內部方法：檢查是否在活動日期範圍內
+   * @returns {boolean}
+   */
   _isInDateRange() {
     if (!this.timeUtils) return false;
 
     const now = this.timeUtils.getNowBySVR();
-    const range = DATE_RANGES[this.languageManager.current];
-    if (!range) return false;
-    const start = this.timeUtils.getShiftedDate(range.start);
-    const end = this.timeUtils.getShiftedDate(range.end);
+    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
+    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
     return now >= start && now <= end;
   }
 
+  /**
+   * 內部方法：動態載入 XLSX 函式庫
+   * @returns {Promise}
+   */
   _loadXLSXLib() {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -35,44 +40,27 @@ export class ExcelDataLoader {
     });
   }
 
+  /**
+   * 載入 Excel 或 JSON 資料
+   * @returns {Promise<Array>} - 解析後的資料陣列
+   */
   async loadExcel() {
     try {
-      const lang = this.languageManager.current;
-
-      // 1. 嘗試從快取讀取
-      const cachedData = this.getFromCache(lang);
-      if (cachedData) {
-        return cachedData;
-      }
-
       let data = null;
 
-      // 2. 根據語言和條件從遠端獲取數據
-      if (lang === 'jp') { // 日文語系：只讀取靜態 JSON
-        try {
-          const response = await fetch(CONFIG.EXCEL_JP_JSON_URL);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch JP JSON: ${response.statusText}`);
-          }
-          data = await response.json();
-        } catch (e) {
-          console.error("Failed to load JP JSON data. No fallback available.", e);
-          data = []; // 失敗時返回空陣列，不使用 Excel 作為備用
-        }
-      } else { // lang === 'zh' (中文語系邏輯不變)
+      // 2. 特定期間內，優先從 GAS 獲取 JSON 數據
         if (CONFIG.GAS_DATA_URL && this._isInDateRange()) {
-          // 中文語系（活動期間）：從 GAS 讀取 JSON
           try {
             const response = await fetch(`${CONFIG.GAS_DATA_URL}?t=${new Date().getTime()}`);
             const json = await response.json();
             data = Array.isArray(json) ? json : (json.data || []);
           } catch (e) {
-            console.warn("GAS data load failed, falling back to Excel", e);
+            console.warn("從 GAS 載入即時資料失敗。頁面將顯示為無資料。", e);
           }
         }
 
-        // 如果尚未獲取數據（ZH 非活動期、或 GAS 失敗），則讀取 Excel
-        if (!data) {
+        // 僅在特定期間外，才讀取 Excel
+        if (!this._isInDateRange()) {
           if (typeof XLSX === 'undefined') {
             await this._loadXLSXLib();
           }
@@ -82,7 +70,7 @@ export class ExcelDataLoader {
           const workbook = XLSX.read(buffer, { type: "array" });
           const sheet = workbook.Sheets[sheetName];
           if (!sheet) {
-            console.error(`Excel file does not contain a sheet named '${sheetName}'. Returning empty data.`);
+            console.error(`Excel 檔案中找不到名為 '${sheetName}' 的工作表。將回傳空資料。`);
             return [];
           }
           const rawData = XLSX.utils.sheet_to_json(sheet);
@@ -101,86 +89,48 @@ export class ExcelDataLoader {
             return newRow;
           });
         }
-      }
-
-      // 4. 寫入快取
-      if (data) {
-        this.saveToCache(data, lang);
-      }
       return data || [];
 
     } catch (err) {
-      console.error("Data loading error:", err);
+      console.error("資料載入錯誤:", err);
       return [];
-    }
-  }
-
-  getFromCache(lang) {
-    const key = `dailyQuestData_${lang}`;
-    try {
-      const item = sessionStorage.getItem(key);
-      if (!item) return null;
-      const parsed = JSON.parse(item);
-      // 檢查是否過期
-      if (Date.now() > parsed.expiry) {
-        sessionStorage.removeItem(key);
-        return null;
-      }
-      return parsed.data;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  saveToCache(data, lang) {
-    const key = `dailyQuestData_${lang}`;
-    try {
-      const item = {
-        data: data,
-        expiry: Date.now() + CONFIG.CACHE_DURATION
-      };
-      sessionStorage.setItem(key, JSON.stringify(item));
-    } catch (e) {
-      console.warn("Cache save failed", e);
     }
   }
 }
 
 /**
- * タスクデータプロセッサー
+ * 任務資料處理器
  */
 export class TaskDataProcessor {
-  constructor(languageManager, timeUtils, taskUtils) {
-    this.languageManager = languageManager;
+  constructor(timeUtils, taskUtils) {
     this.timeUtils = timeUtils;
     this.taskUtils = taskUtils;
   }
 
+  /**
+   * 獲取需要顯示的任務類型列表
+   * @returns {Array<object>}
+   */
   getVisibleTaskTypes() {
-    const visibleKeys = this.languageManager.current === "zh" 
-      ? ["gishiki", "shirao", "sengen"]
-      : ["gishiki", "mizuki", "shirao"];
+    const visibleKeys = ["gishiki", "shirao", "sengen"];
     
     return TASK_TYPES.filter(type => visibleKeys.includes(type.key));
   }
 
+  /**
+   * 獲取指定星期的任務列表
+   * @param {Array} rows - 資料來源
+   * @param {object} type - 任務類型
+   * @param {string} weekZh - 星期幾 (中文)
+   * @returns {Array} - 排序後的任務列表
+   */
   getTaskListForWeek(rows, type, weekZh) {
-    // 曜日判定の強化（日文データ対応）
-    const zhDays = ["日", "一", "二", "三", "四", "五", "六"];
-    const jpDays = ["日", "月", "火", "水", "木", "金", "土"];
-    const dayIndex = zhDays.indexOf(weekZh);
-    const weekJp = dayIndex !== -1 ? jpDays[dayIndex] : null;
-
     return rows
       .filter(r => {
-        // 1. Week-zh での一致確認（標準）
+        // 1. 檢查 Week-zh 是否匹配 (標準)
         if (r["Week-zh"] === weekZh) return true;
-        // 2. Week-jp での一致確認（日文データ用）
-        if (weekJp && r["Week-jp"] === weekJp) return true;
-        // 3. Week-zh に日文曜日が入っている場合の確認
-        if (weekJp && r["Week-zh"] === weekJp) return true;
-        // 4. 汎用的な "Week" カラムの確認
-        if (r["Week"] && (r["Week"] === weekZh || (weekJp && r["Week"] === weekJp))) return true;
+        // 2. 檢查通用的 "Week" 欄位
+        if (r["Week"] && r["Week"] === weekZh) return true;
         return false;
       })
       .filter(r => r[`${type.key}-time`])
@@ -191,13 +141,19 @@ export class TaskDataProcessor {
           time: timeResult.time,
           hasQuestionMark: timeResult.hasQuestionMark,
           zh: r[`${type.key}-zh`] || "",
-          jp: r[`${type.key}-jp`] || "",
           isNextDay: false
         };
       })
       .sort((a, b) => this.timeUtils.timeToMinutes(a.time) - this.timeUtils.timeToMinutes(b.time));
   }
 
+  /**
+   * 根據當前時間將任務分類 (前一個、當前、未來、剩餘)
+   * @param {Array} list - 任務列表
+   * @param {number} currentHour - 當前小時
+   * @param {number} currentMinute - 當前分鐘
+   * @returns {object} - 分類後的任務物件
+   */
   categorizeTasksByTime(list, currentHour, currentMinute) {
     let currentItem = null;
     let previousItem = null;
@@ -205,7 +161,7 @@ export class TaskDataProcessor {
     const remainingItemsToday = [];
     const remainingItemsTomorrow = [];
 
-    // メンテナンス時間帯の検出
+    // 偵測維護時段
     const maintenanceHours = this._getMaintenanceHours(list);
     const isInMaintenance = maintenanceHours.has(currentHour);
 
@@ -222,10 +178,10 @@ export class TaskDataProcessor {
         const itemTotalMinutes = itemHour * 60 + (itemMinute || 0);
         const actualHour = item.isNextDay ? itemHour + 24 : itemHour;
 
-        // 前の時間帯のタスク
+        // 前一個時段的任務
         if (!item.isNextDay && !this.taskUtils.isMaintenanceTask(item)) {
           if (itemTotalMinutes >= halfHourStart && itemTotalMinutes <= halfHourEnd) {
-            // 現在時間が「タスク時間 + 30分」を超えていない場合のみ表示
+            // 僅在當前時間未超過「任務時間 + 30分」時顯示
             const currentTotalMinutes = currentHour * 60 + currentMinute;
             const taskDeadlineMinutes = itemTotalMinutes + 30;
             
@@ -235,19 +191,19 @@ export class TaskDataProcessor {
           }
         }
 
-        // 現在のタスク
+        // 目前的任務
         if (actualHour === currentHour) {
           currentItem = item;
         }
-        // 次の2時間のタスク
+        // 接下來 2 小時的任務
         else if (actualHour === currentHour + 1 || actualHour === currentHour + 2) {
           nextItems.push(item);
         }
-        // 残りのタスク（今日）
+        // 今日剩餘的任務
         else if (actualHour > currentHour + 2 && !item.isNextDay && itemHour <= 23) {
           remainingItemsToday.push(item);
         }
-        // 翌日早朝のタスク
+        // 明日清晨的任務
         else if (item.isNextDay && itemHour >= 0 && itemHour <= 5 && actualHour > currentHour + 2) {
           remainingItemsTomorrow.push(item);
         }
@@ -261,6 +217,11 @@ export class TaskDataProcessor {
     return { previousItem, currentItem, nextItems, remainingItems, isInMaintenance };
   }
 
+  /**
+   * 內部方法：獲取維護時段的小時集合
+   * @param {Array} list - 任務列表
+   * @returns {Set<number>} - 維護小時集合
+   */
   _getMaintenanceHours(list) {
     const maintenanceHours = new Set();
     
@@ -280,6 +241,12 @@ export class TaskDataProcessor {
     return maintenanceHours;
   }
 
+  /**
+   * 內部方法：尋找當前時間對應的維護任務項目
+   * @param {Array} list - 任務列表
+   * @param {number} currentHour - 當前小時
+   * @returns {object|null} - 維護任務項目
+   */
   _findMaintenanceItem(list, currentHour) {
     let maintenanceItem = list.find(it => {
       if (!this.taskUtils.isMaintenanceTask(it)) return false;
@@ -297,6 +264,9 @@ export class TaskDataProcessor {
     return maintenanceItem;
   }
 
+  /**
+   * 內部方法：分類非維護狀態下的任務 (下2小時、剩餘時間)
+   */
   _categorizeNonMaintenanceTasks(list, currentHour, nextItems, remainingItemsToday, remainingItemsTomorrow) {
     list.forEach(item => {
       if (this.taskUtils.isMaintenanceTask(item)) return;

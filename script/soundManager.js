@@ -25,7 +25,7 @@ export class SoundManager {
   constructor() {
     // 預設開啟所有音效。如果使用者之前有手動關閉，則會保留該設定。
     // 對於初次使用的訪客，所有音效提示都會是開啟狀態。
-    const allSoundKeys = ['gishiki', 'shirao', 'sengen', 'mizuki', 'world_boss'];
+    const allSoundKeys = ['gishiki', 'shirao', 'sengen', 'world_boss'];
     let loadedSettings = StorageHelper.get(SOUND_SETTINGS_KEY, null);
 
     if (loadedSettings === null) {
@@ -66,17 +66,30 @@ export class SoundManager {
     ['click', 'keydown', 'touchstart'].forEach(e => document.addEventListener(e, unlockHandler));
   }
 
+  /**
+   * 檢查指定任務類型的音效是否開啟
+   * @param {string} taskTypeKey - 任務類型 Key
+   * @returns {boolean}
+   */
   isSoundEnabled(taskTypeKey) {
     // 預設為關閉
     return !!this.settings[taskTypeKey];
   }
 
+  /**
+   * 切換指定任務類型的音效開關
+   * @param {string} taskTypeKey - 任務類型 Key
+   * @returns {boolean} - 切換後的新狀態
+   */
   toggleSound(taskTypeKey) {
     this.settings[taskTypeKey] = !this.isSoundEnabled(taskTypeKey);
     this.saveSettings();
     return this.settings[taskTypeKey];
   }
 
+  /**
+   * 儲存音效設定到 localStorage
+   */
   saveSettings() {
     StorageHelper.set(SOUND_SETTINGS_KEY, this.settings);
   }
@@ -96,10 +109,10 @@ export class SoundManager {
     this.audioPlayer.volume = 0; // 靜音
     this.audioPlayer.play().then(() => {
       this.isAudioUnlocked = true;
-      console.log('[Sound] Audio context unlocked by user interaction.');
+      console.log('[音效] 音訊已由使用者互動解鎖。');
     }).catch(e => {
       // 在某些極端情況下，即使是互動後也可能解鎖失敗
-      console.warn('[Sound] Silent audio play failed to unlock.', e);
+      console.warn('[音效] 透過播放靜音音訊解鎖失敗。', e);
     });
   }
 
@@ -195,7 +208,7 @@ export class SoundManager {
     }
 
     this.lastPlayed[taskTypeKey] = taskTime;
-    console.log(`[Sound] Playing alert for ${taskTypeKey} at ${taskTime}`);
+    console.log(`[音效] 正在播放 ${taskTypeKey} 的提示音，時間點 ${taskTime}`);
 
     let audioSrc = `./audio/${taskTypeKey}.mp3`; // 預設音效 (gishiki 會用這個)
     
@@ -237,7 +250,7 @@ export class SoundManager {
     }
 
     this.lastPlayed[taskTypeKey] = playId;
-    console.log(`[Sound] Playing world boss alert for ${playId}`);
+    console.log(`[音效] 正在播放世界王提示音，ID ${playId}`);
 
     this.audioPlayer.src = audioSrc;
     this.audioPlayer.volume = 1; // 恢復音量
@@ -254,6 +267,9 @@ export class SoundManager {
     }
   }
 
+  /**
+   * 播放仙幻島野王 10秒前預告音效
+   */
   playSengenPreAlert() {
     if (!this.isSoundEnabled('sengen')) return;
 
@@ -263,11 +279,11 @@ export class SoundManager {
     if (this.lastPlayed['sengen_pre'] === timeTag) return;
     this.lastPlayed['sengen_pre'] = timeTag;
 
-    console.log('[Sound] Playing sengen pre-alert');
+    console.log('[音效] 正在播放仙幻島預告音效');
     this.audioPlayer.src = './audio/sengen10.mp3';
     this.audioPlayer.volume = 1;
     this.audioPlayer.play().catch(e => {
-      console.warn('[Sound] Pre-alert play failed', e);
+      console.warn('[音效] 預告音效播放失敗', e);
     });
   }
 }

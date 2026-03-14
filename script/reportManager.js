@@ -1,29 +1,32 @@
 /* ==========================
-   ==== レポート機能 ====
+   ==== 回報功能 ====
    ========================== */
 
 import { CONFIG, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
-import { StorageHelper, DOMHelper } from "./utils.js";
+import { DOMHelper } from "./utils.js";
 
+// GAS 回報後端 URL
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwI2_v_FA17GVDyDOJqYRkHWGBNrhKuQ4BQ3mvcQUzEtaVRuBFJ9JKN20yCym0-J36rlQ/exec";
 
 /**
- * レポートマネージャー
+ * 回報管理器
  */
 export class ReportManager {
-  constructor(languageManager) {
-    this.languageManager = languageManager;
+  constructor() {
     this.render();
     this.updateAll();
     this.loadReports();
     this.attachEventListeners();
   }
 
+  /**
+   * 渲染回報系統的 UI 結構
+   */
   render() {
     const root = document.getElementById("reportRoot");
     if (!root) return;
 
-    root.style.display = this.languageManager.current === "zh" ? "block" : "none";
+    root.style.display = "block";
 
     root.innerHTML = `
       <section id="reportSection" class="reportSection">
@@ -51,11 +54,17 @@ export class ReportManager {
     this.reportTextEl = root.querySelector(".reportText");
   }
 
+  /**
+   * 綁定 DOM 事件監聽器
+   */
   attachEventListeners() {
     this.reportTaskTypeEl?.addEventListener("change", () => this.updateReportTypeOptions());
     this.submitReportBtn?.addEventListener("click", () => this.submitReport());
   }
 
+  /**
+   * 更新回報說明文字
+   */
   updateReportText() {
     const text = "請幫忙填寫儀式或是白青野王的系統提示時間<br>有你的幫忙 能讓數據更完善 感謝";
     if (this.reportTextEl) {
@@ -63,18 +72,23 @@ export class ReportManager {
     }
   }
 
+  /**
+   * 更新任務類型下拉選單
+   */
   updateReportTaskOptions() {
     if (!this.reportTaskTypeEl) return;
     
     this.reportTaskTypeEl.innerHTML = "";
     REPORT_TASK.forEach(task => {
       const opt = document.createElement("option");
-      // opt.value = task;
       opt.textContent = task;
       this.reportTaskTypeEl.appendChild(opt);
     });
   }
 
+  /**
+   * 根據選擇的任務更新回報類型選項
+   */
   updateReportTypeOptions() {
     if (!this.reportTypeEl || !this.reportTaskTypeEl) return;
     
@@ -91,6 +105,9 @@ export class ReportManager {
     });
   }
 
+  /**
+   * 更新備註欄位的提示文字
+   */
   updateReportCommentPlaceholder() {
     if (this.reportCommentEl) {
       this.reportCommentEl.placeholder = "五 09:26 地點 / 地點";
@@ -101,6 +118,11 @@ export class ReportManager {
     }
   }
 
+  /**
+   * 顯示操作訊息 (成功或失敗)
+   * @param {string} text - 訊息內容
+   * @param {boolean} isError - 是否為錯誤訊息
+   */
   showMessage(text, isError = false) {
     if (!this.msgEl) return;
     
@@ -109,6 +131,9 @@ export class ReportManager {
     setTimeout(() => { this.msgEl.textContent = ""; }, 3000);
   }
 
+  /**
+   * 提交回報至 GAS
+   */
   async submitReport() {
     const taskType = this.reportTaskTypeEl?.value;
     const reportType = this.reportTypeEl?.value;
@@ -122,7 +147,7 @@ export class ReportManager {
 
     if (GAS_WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
       const errorMsg = "GAS URL is not configured.";
-      this.showMessage("後端服務未設定" , true);
+      this.showMessage("後端服務未設定", true);
       console.error(errorMsg);
       return;
     }
@@ -158,7 +183,7 @@ export class ReportManager {
       // 延遲一下再重新載入
       setTimeout(() => this.loadReports(), 1000);
     } catch (error) {
-      console.error("Error submitting report:", error);
+      console.error("提交回報時發生錯誤:", error);
       const errorMsg = "回報失敗，請稍後再試";
       this.showMessage(errorMsg, true);
     } finally {
@@ -166,6 +191,9 @@ export class ReportManager {
     }
   }
 
+  /**
+   * 從 GAS 載入現有的回報列表
+   */
   async loadReports() {
     if (!this.reportListEl) return;
     
@@ -196,7 +224,7 @@ export class ReportManager {
         const div = DOMHelper.createElement("div", "reportItem");
         const formatDate = r.Timestamp.substring(0, 10);
         let respond = '';
-        // ???
+        // 檢查是否有管理員回覆
         const isResponded = r.Respond === true || r.Respond === "TRUE";
         if (isResponded) {
           respond = '<img src="./images/thanks24.png" alt="thx!!">';
@@ -207,15 +235,18 @@ export class ReportManager {
         this.reportListEl.appendChild(div);
       });
     } catch (error) {
-      console.error("Error loading reports:", error);
+      console.error("載入回報時發生錯誤:", error);
       this.reportListEl.innerHTML = `<div class="reportItem" style="color: red;">載入失敗：${error.message}</div>`;
     }
   }
 
+  /**
+   * 更新所有 UI 元件
+   */
   updateAll() {
     const root = document.getElementById("reportRoot");
     if (root) {
-      root.style.display = this.languageManager.current === "zh" ? "block" : "none";
+      root.style.display = "block";
     }
 
     this.updateReportText();

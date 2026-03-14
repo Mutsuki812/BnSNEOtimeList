@@ -73,17 +73,6 @@
     gap: var(--space-sm);
   }
 
-  /* 言語ボタン */
-  #topRight {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .langBtn {
-    width: 100%;
-    max-width: 200px;
-  }
-
   /* ─── メインカード ─── */
   .mainCard {
     padding: var(--space-md);

@@ -5,11 +5,24 @@
 import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
 import { DOMHelper } from './utils.js';
 
+const CONSTANTS = {
+  ACTIONS: {
+    GET_REPORTS_FOR_DATE: 'getReportsForDate',
+    GET_HISTORY: 'getHistory',
+    REPORT_ONLINE: 'reportOnline',
+  },
+  PREDICTION_OFFSET_MINUTES: {
+    START: 85, // +1h 25m
+    END: 100,  // +1h 40m
+  },
+  GISHIKI_LOCATIONS: ['-', '黑森林', '巨岩海岸', '孤村', '土門客棧', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
+};
+
 export class OnlinePredictionManager {
-  constructor(languageManager, timeUtils) {
-    this.languageManager = languageManager;
+  constructor(timeUtils) {
     this.timeUtils = timeUtils;
     this.lastReports = {}; // 儲存從 GAS 獲取的最新回報資料
+    // 初始化狀態旗標
     this.isInitialized = false;
   }
 
@@ -25,14 +38,12 @@ export class OnlinePredictionManager {
   }
 
   /**
-   * 檢查是否在活動期間內 (僅限中文語系)
+   * 檢查是否在活動期間內
    */
   isInDateRange() {
-    if (this.languageManager.current !== 'zh') return false;
     const now = this.timeUtils.getNowBySVR();
-    const range = DATE_RANGES.zh;
-    const start = this.timeUtils.getShiftedDate(range.start);
-    const end = this.timeUtils.getShiftedDate(range.end);
+    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
+    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
     return now >= start && now <= end;
   }
 
@@ -45,16 +56,16 @@ export class OnlinePredictionManager {
   async fetchPredictionData() {
     const nowSVR = this.timeUtils.getNowBySVR();
     const todayDayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
-    const todayWeekdayChar = WEEKDAYS.zh[todayDayOfWeek];
+    const todayWeekdayChar = WEEKDAYS[todayDayOfWeek];
 
     // 1. 嘗試獲取今日數據
     let reports = await this.fetchReportsForWeekday(todayWeekdayChar);
 
     // 2. 若今日無數據，則嘗試獲取昨日數據
     if (!reports || Object.keys(reports).length === 0) {
-      console.log(`No data for today (${todayWeekdayChar}), fetching yesterday's data.`);
+      console.log(`今日 (${todayWeekdayChar}) 無資料，正在抓取昨日資料。`);
       const yesterdayDayOfWeek = (todayDayOfWeek - 1 + 7) % 7;
-      const yesterdayWeekdayChar = WEEKDAYS.zh[yesterdayDayOfWeek];
+      const yesterdayWeekdayChar = WEEKDAYS[yesterdayDayOfWeek];
       reports = await this.fetchReportsForWeekday(yesterdayWeekdayChar);
     }
 
@@ -67,8 +78,8 @@ export class OnlinePredictionManager {
    */
   async fetchReportsForWeekday(weekdayChar) {
     try {
-      // 後端需支援 action=getReportsForDate&weekday=日
-      const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getReportsForDate&weekday=${weekdayChar}&t=${new Date().getTime()}`);
+      // 後端需支援 action=getReportsForDate&weekday=日 (範例)
+      const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=${CONSTANTS.ACTIONS.GET_REPORTS_FOR_DATE}&weekday=${weekdayChar}&t=${new Date().getTime()}`);
       const json = await response.json();
       
       if (json.status === 'success' && json.data) {
@@ -76,7 +87,7 @@ export class OnlinePredictionManager {
       }
       return null;
     } catch (e) {
-      console.error(`Failed to fetch reports for weekday ${weekdayChar}:`, e);
+      console.error(`抓取星期 ${weekdayChar} 的回報失敗:`, e);
       return null;
     }
   }
@@ -193,8 +204,8 @@ export class OnlinePredictionManager {
       }
       const reportTotalMinutes = h * 60 + m;
 
-      const startPredTotalMinutes = reportTotalMinutes + 85;  // +1h 25m
-      const endPredTotalMinutes = reportTotalMinutes + 100; // +1h 40m
+      const startPredTotalMinutes = reportTotalMinutes + CONSTANTS.PREDICTION_OFFSET_MINUTES.START;
+      const endPredTotalMinutes = reportTotalMinutes + CONSTANTS.PREDICTION_OFFSET_MINUTES.END;
 
       const formatMinutesToTime = (totalMinutes) => {
         const totalHours = Math.floor(totalMinutes / 60);
@@ -204,7 +215,7 @@ export class OnlinePredictionManager {
         const timeStr = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
         return (totalHours >= 24)
-          ? `${this.languageManager.current === "zh" ? "明天" : "翌日"} ${timeStr}`
+          ? `明天 ${timeStr}`
           : timeStr;
       };
 
@@ -228,11 +239,6 @@ export class OnlinePredictionManager {
       timeEl.textContent = "尚無數據";
       timeEl.classList.add('prediction-label');
       contentEl.textContent = "等待回報...";
-      // timeEl.textContent = "推算時間";
-      // timeEl.classList.add('prediction-label');
-      // timeEl.classList.remove('prediction-highlight');
-      // contentEl.textContent = "尚無回報數據";
-      // contentEl.classList.remove('prediction-highlight');
     }
   }
 
@@ -250,8 +256,42 @@ export class OnlinePredictionManager {
     if (wrapper.querySelector('.online-report-box')) return;
 
     const reportBox = DOMHelper.createElement('div', 'online-report-box');
+    const { timeInput, timeControlsRow } = this._createTimeControls();
+    
+    const historyListDiv = DOMHelper.createElement('div', 'report-history-list');
+    const { msgDiv, historyBtn, submitBtn, footerRow } = this._createFooterControls(typeKey, historyListDiv);
 
-    // 1. 時間輸入 (共通)
+    let extraInputs, specificInputsRow;
+
+    if (typeKey === 'gishiki') {
+      reportBox.appendChild(timeControlsRow);
+      ({ specificInputsRow, extraInputs } = this._createGishikiInputs());
+      reportBox.appendChild(specificInputsRow);
+    } else {
+      // _createBossInputs 會直接修改 timeControlsRow，我們只需要接收它回傳的新元素即可。
+      const bossInputs = this._createBossInputs(typeKey, timeControlsRow);
+      ({ specificInputsRow, extraInputs } = bossInputs);
+      reportBox.appendChild(timeControlsRow);
+      reportBox.appendChild(specificInputsRow);
+    }
+
+    reportBox.appendChild(historyListDiv);
+    reportBox.appendChild(footerRow);
+
+    submitBtn.onclick = () => this.handleSubmit(typeKey, timeInput.value, extraInputs, submitBtn, msgDiv);
+
+    wrapper.insertBefore(reportBox, wrapper.firstChild);
+  }
+
+  /**
+   * 輔助函式：建立時間輸入相關的 UI
+   */
+  _createTimeControls() {
+    const timeControlsRow = DOMHelper.createElement('div', 'report-form-row');
+    timeControlsRow.style.display = 'flex';
+    timeControlsRow.style.alignItems = 'center';
+    timeControlsRow.style.gap = '10px';
+
     const now = this.timeUtils.getNowBySVR();
     const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     
@@ -260,7 +300,6 @@ export class OnlinePredictionManager {
     timeInput.value = defaultTime;
     timeInput.className = 'report-time-input';
     
-    // 方便按鈕：現在
     const nowBtn = document.createElement('button');
     nowBtn.textContent = "現在";
     nowBtn.type = "button";
@@ -270,168 +309,127 @@ export class OnlinePredictionManager {
       timeInput.value = `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
     };
 
-    const timeLabel = DOMHelper.createElement('span', 'report-label', '時間');
+    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label', '時間'));
+    timeControlsRow.appendChild(timeInput);
+    timeControlsRow.appendChild(nowBtn);
 
-    // 歷史紀錄按鈕
-    const historyBtn = document.createElement('button');
-    historyBtn.className = 'report-history-btn';
-    historyBtn.innerHTML = '<img src="./images/history30.png" alt="今日紀錄">';
-    historyBtn.title = "今日紀錄";
-    
-    // 歷史紀錄列表容器 (放在 formContainer 外部，但在 reportBox 內部)
-    const historyListDiv = DOMHelper.createElement('div', 'report-history-list');
-    historyBtn.onclick = () => this.toggleHistory(typeKey, historyListDiv);
+    return { timeInput, timeControlsRow };
+  }
 
-    // 送出按鈕
-    const submitBtn = document.createElement('button');
-    submitBtn.textContent = "回報";
-    submitBtn.className = "report-submit-btn";
+  /**
+   * 輔助函式：建立儀式專用的地點輸入 UI
+   */
+  _createGishikiInputs() {
+    const specificInputsRow = DOMHelper.createElement('div', 'report-form-row');
+    specificInputsRow.style.marginTop = '10px';
+    specificInputsRow.style.display = 'flex';
+    specificInputsRow.style.alignItems = 'center';
+    specificInputsRow.style.gap = '10px';
+    specificInputsRow.style.flexWrap = 'wrap';
+
+    const createSelect = (label) => {
+      const wrap = DOMHelper.createElement('span', 'report-label', `${label} `);
+      wrap.style.display = 'inline-flex';
+      wrap.style.alignItems = 'center';
+      const sel = document.createElement('select');
+      sel.className = 'report-select';
+      CONSTANTS.GISHIKI_LOCATIONS.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        sel.appendChild(o);
+      });
+      wrap.appendChild(sel);
+      return { wrap, sel };
+    };
+
+    const locA = createSelect("地點１");
+    const locB = createSelect("地點２");
     
-    // 設定按鈕顏色
-    if (typeKey === 'gishiki') submitBtn.style.backgroundColor = '#7A4171';
-    else if (typeKey === 'shirao') submitBtn.style.backgroundColor = '#65A48D';
-    else if (typeKey === 'sengen') submitBtn.style.backgroundColor = '#B08F3E';
+    specificInputsRow.appendChild(locA.wrap);
+    specificInputsRow.appendChild(locB.wrap);
     
-    // 訊息顯示區
+    const extraInputs = { locA: locA.sel, locB: locB.sel };
+    return { specificInputsRow, extraInputs };
+  }
+
+  /**
+   * 輔助函式：建立野王專用的地點與方式輸入 UI
+   */
+  _createBossInputs(typeKey, timeControlsRow) {
+    // 1. 地點
+    const locationOptions = typeKey === 'shirao' ? ['白樺林', '風之平原'] : ['知性森林', '力王山脈', '武神荒野'];
+    const locSelect = document.createElement('select');
+    locSelect.className = 'report-select';
+    locationOptions.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l;
+      o.textContent = l;
+      locSelect.appendChild(o);
+    });
+    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label', '地點'));
+    timeControlsRow.appendChild(locSelect);
+
+    // 2. 出現方式
+    const specificInputsRow = DOMHelper.createElement('div', 'report-form-row');
+    specificInputsRow.style.marginTop = '10px';
+    const methodOptions = ['系統出字', '打雷中', '不確定'];
+    const radioGroupName = `report-method-${typeKey}`;
+    const methodContainer = DOMHelper.createElement('div', 'report-radio-container');
+    const radioInputs = [];
+    methodOptions.forEach((m, index) => {
+      const radioId = `radio-${typeKey}-${m.replace(/\s/g, '')}`;
+      const label = document.createElement('label');
+      label.className = 'report-radio-label';
+      label.setAttribute('for', radioId);
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = radioGroupName;
+      radio.value = m;
+      radio.id = radioId;
+      if (index === 0) radio.checked = true;
+      radioInputs.push(radio);
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(` ${m}`));
+      methodContainer.appendChild(label);
+    });
+    specificInputsRow.appendChild(methodContainer);
+
+    const extraInputs = { methodRadios: radioInputs, location: locSelect };
+    return { specificInputsRow, extraInputs };
+  }
+
+  /**
+   * 輔助函式：建立包含送出按鈕的頁尾 UI
+   */
+  _createFooterControls(typeKey, historyListDiv) {
+    const footerRow = DOMHelper.createElement('div', 'report-form-row');
+    footerRow.style.display = 'flex';
+    footerRow.style.alignItems = 'center';
+    footerRow.style.marginTop = '10px';
+    footerRow.style.gap = '5px';
+
     const msgDiv = DOMHelper.createElement('div', 'report-msg');
     msgDiv.style.flex = '1';
     msgDiv.style.margin = '0';
 
-    // 2. 類型特定的輸入項
-    let extraInputs = [];
+    const historyBtn = document.createElement('button');
+    historyBtn.className = 'report-history-btn';
+    historyBtn.innerHTML = '<img src="./images/history30.png" alt="今日紀錄">';
+    historyBtn.title = "今日紀錄";
+    historyBtn.onclick = () => this.toggleHistory(typeKey, historyListDiv);
 
-    // Row 1: 時間 (共通部分)
-    const row1 = DOMHelper.createElement('div', 'report-form-row');
-    row1.style.display = 'flex';
-    row1.style.alignItems = 'center';
-    row1.style.gap = '10px';
-    row1.appendChild(timeLabel);
-    row1.appendChild(timeInput);
-    row1.appendChild(nowBtn);
+    const submitBtn = document.createElement('button');
+    submitBtn.textContent = "回報";
+    submitBtn.className = "report-submit-btn";
+    const colors = { gishiki: '#7A4171', shirao: '#65A48D', sengen: '#B08F3E' };
+    submitBtn.style.backgroundColor = colors[typeKey];
 
-    if (typeKey === 'gishiki') {
-      // 儀式布局
-      // 第一行：時間
-      reportBox.appendChild(row1);
+    footerRow.appendChild(msgDiv);
+    footerRow.appendChild(historyBtn);
+    footerRow.appendChild(submitBtn);
 
-      // 第二行：地點
-      const row2 = DOMHelper.createElement('div', 'report-form-row');
-      row2.style.marginTop = '10px';
-      row2.style.display = 'flex';
-      row2.style.alignItems = 'center';
-      row2.style.gap = '10px';
-      row2.style.flexWrap = 'wrap';
-
-      const locOptions = ['-', '黑森林', '巨岩海岸', '孤村', '土門客棧', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'];
-      
-      const createSelect = (label) => {
-        const wrap = document.createElement('span');
-        wrap.className = 'report-label';
-        wrap.textContent = `${label} `;
-        wrap.style.display = 'inline-flex';
-        wrap.style.alignItems = 'center';
-        const sel = document.createElement('select');
-        sel.className = 'report-select';
-        locOptions.forEach(opt => {
-          const o = document.createElement('option');
-          o.value = opt;
-          o.textContent = opt;
-          sel.appendChild(o);
-        });
-        wrap.appendChild(sel);
-        return { wrap, sel };
-      };
-
-      const locA = createSelect("地點１");
-      const locB = createSelect("地點２");
-      
-      row2.appendChild(locA.wrap);
-      row2.appendChild(locB.wrap);
-      reportBox.appendChild(row2);
-      
-      extraInputs = { locA: locA.sel, locB: locB.sel };
-
-    } else {
-      // 白青/仙幻島布局
-      // 第一行：時間、地點
-      const locSelect = document.createElement('select');
-      locSelect.className = 'report-select';
-      let locationOptions = [];
-      if (typeKey === 'shirao') {
-        locationOptions = ['白樺林', '風之平原'];
-      } else if (typeKey === 'sengen') {
-        locationOptions = ['知性森林', '力王山脈', '武神荒野'];
-      }
-
-      locationOptions.forEach(l => {
-        const o = document.createElement('option');
-        o.value = l;
-        o.textContent = l;
-        locSelect.appendChild(o);
-      });
-      
-      const locLabel = DOMHelper.createElement('span', 'report-label', '地點');
-      row1.appendChild(locLabel);
-      row1.appendChild(locSelect);
-      reportBox.appendChild(row1);
-
-      // 第二行：出現方式
-      const row2 = DOMHelper.createElement('div', 'report-form-row');
-      row2.style.marginTop = '10px';
-
-      const methodOptions = ['系統出字', '打雷中', '不確定'];
-      const radioGroupName = `report-method-${typeKey}`;
-      const methodContainer = DOMHelper.createElement('div', 'report-radio-container');
-
-      // const methodLabel = DOMHelper.createElement('span', 'report-label', '');
-      // methodContainer.appendChild(methodLabel);
-
-      const radioInputs = [];
-      methodOptions.forEach((m, index) => {
-        const radioId = `radio-${typeKey}-${m.replace(/\s/g, '')}`;
-        const label = document.createElement('label');
-        label.className = 'report-radio-label';
-        label.setAttribute('for', radioId);
-
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = radioGroupName;
-        radio.value = m;
-        radio.id = radioId;
-        if (index === 0) radio.checked = true; // 預設選取第一項
-
-        radioInputs.push(radio);
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(` ${m}`));
-        methodContainer.appendChild(label);
-      });
-
-      row2.appendChild(methodContainer);
-      reportBox.appendChild(row2);
-
-      extraInputs = { methodRadios: radioInputs, location: locSelect };
-    }
-
-    // 第三行：今天的歷史紀錄
-    reportBox.appendChild(historyListDiv);
-
-    // 第四行：訊息顯示區、歷史紀錄按鈕、回報按鈕
-    const row4 = DOMHelper.createElement('div', 'report-form-row');
-    row4.style.display = 'flex';
-    row4.style.alignItems = 'center';
-    row4.style.marginTop = '10px';
-    row4.style.gap = '5px';
-
-    row4.appendChild(msgDiv);
-    row4.appendChild(historyBtn);
-    row4.appendChild(submitBtn);
-
-    reportBox.appendChild(row4);
-
-    submitBtn.onclick = () => this.handleSubmit(typeKey, timeInput.value, extraInputs, submitBtn, msgDiv);
-
-    // 插入到 taskWrapper 的最前面 (或最後面，依需求)
-    wrapper.insertBefore(reportBox, wrapper.firstChild);
+    return { msgDiv, historyBtn, submitBtn, footerRow };
   }
 
   /**
@@ -456,9 +454,9 @@ export class OnlinePredictionManager {
       try {
         const nowSVR = this.timeUtils.getNowBySVR();
         const todayDayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
-        const todayWeekdayChar = WEEKDAYS.zh[todayDayOfWeek];
+        const todayWeekdayChar = WEEKDAYS[todayDayOfWeek];
         // 呼叫 GAS 獲取指定 "星期" 的歷史紀錄
-        const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=getHistory&taskType=${typeKey}&weekday=${todayWeekdayChar}&t=${new Date().getTime()}`);
+        const response = await fetch(`${CONFIG.GAS_DATA_URL}?action=${CONSTANTS.ACTIONS.GET_HISTORY}&taskType=${typeKey}&weekday=${todayWeekdayChar}&t=${new Date().getTime()}`);
         const json = await response.json();
 
         if (json.status === 'success' && json.data && json.data.length > 0) {
@@ -514,12 +512,12 @@ export class OnlinePredictionManager {
     // 準備 Payload
     const nowSVR = this.timeUtils.getNowBySVR();
     const dayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
-    const weekdayChar = WEEKDAYS.zh[dayOfWeek];
+    const weekdayChar = WEEKDAYS[dayOfWeek];
     const payload = {
-      action: "reportOnline", // 區分 GAS 動作
+      action: CONSTANTS.ACTIONS.REPORT_ONLINE, // 區分 GAS 動作
       taskType: typeKey,
       time: timeVal,
-      // 直接使用當前伺服器時間的星期，不考慮遊戲重置時間
+      // 直接使用當前伺服器時間的星期
       weekday: weekdayChar, // '日', '一', ...
       // 增加傳送 YYYY-MM-DD 格式的日期，讓後端能精準判斷「今天」
       reportDate: `${nowSVR.getFullYear()}-${String(nowSVR.getMonth() + 1).padStart(2, '0')}-${String(nowSVR.getDate()).padStart(2, '0')}`
@@ -555,7 +553,7 @@ export class OnlinePredictionManager {
         throw new Error(result.message || "Unknown error");
       }
     } catch (error) {
-      console.error("Report failed:", error);
+      console.error("回報失敗:", error);
       msgDiv.textContent = "回報失敗，請稍後再試。";
       msgDiv.style.color = "red";
     } finally {

@@ -1,9 +1,9 @@
 /* ==========================
-   ==== メインアプリケーション ====
+   ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES } from './config.js';
-import { LanguageManager, TimeUtils, TaskUtils, DOMHelper } from './utils.js';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
+import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
 import { ReportManager } from './reportManager.js';
@@ -11,40 +11,35 @@ import { SoundManager } from './soundManager.js';
 import { OnlinePredictionManager } from './onlinePrediction.js';
 
 /**
- * メインアプリケーションクラス
+ * 主應用程式類別
  */
 class TaskScheduleApp {
   constructor() {
-    // 依存関係の初期化
-    this.languageManager = new LanguageManager();
-    this.timeUtils = new TimeUtils(this.languageManager);
-    this.taskUtils = new TaskUtils(this.languageManager);
-    this.excelLoader = new ExcelDataLoader(this.languageManager, this.timeUtils);
-    this.taskProcessor = new TaskDataProcessor(this.languageManager, this.timeUtils, this.taskUtils);
+    // 初始化依賴項目
+    this.timeUtils = new TimeUtils();
+    this.taskUtils = new TaskUtils();
+    this.excelLoader = new ExcelDataLoader(this.timeUtils);
+    this.taskProcessor = new TaskDataProcessor(this.timeUtils, this.taskUtils);
     this.soundManager = new SoundManager();
-    this.uiRenderer = new UIRenderer(this.languageManager, this.timeUtils, this.taskUtils, this.soundManager);
-    this.reportManager = new ReportManager(this.languageManager);
-    this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
+    this.uiRenderer = new UIRenderer(this.timeUtils, this.taskUtils, this.soundManager);
+    this.reportManager = new ReportManager();
+    this.onlinePredictionManager = new OnlinePredictionManager(this.timeUtils);
 
-    // データキャッシュ
+    // 資料快取
     this.cachedExcelRows = null;
     this.minuteRefreshIntervalId = null;
     this.minuteRefreshTimeoutId = null;
     this.hourlyRefreshIntervalId = null;
     this.hourlyRefreshTimeoutId = null;
-    this.secondlyIntervalId = null;
-    this.loadToken = 0; // ロード操作の世代を管理するトークン
+    this.secondlyIntervalId = null; // 載入操作的序列號，用來處理非同步渲染的競爭問題。
+    this.loadToken = 0;
   }
 
   /**
-   * アプリケーション初期化
+   * 應用程式初始化
    */
   async init() {
-    this.languageManager.detect();
-    this.setupLanguageToggle();
-    this.setupViewDailyButton();
     this.uiRenderer.updateTopTime();
-    this.uiRenderer.updateViewDailyButtonVisibility();
 
     if (this.isInDateRange()) {
       this.initInDateRange();
@@ -58,99 +53,31 @@ class TaskScheduleApp {
 
     // 僅在中文環境下，延遲短時間後顯示音效解鎖提示，引導使用者互動
     // 這樣可以確保音效功能正常運作
-    if (this.languageManager.current === 'zh') {
-      setTimeout(() => {
-        this.soundManager.showUnlockModal();
-      }, 500);
-    }
+    setTimeout(() => {
+      this.soundManager.showUnlockModal();
+    }, 500);
   }
 
   /**
-   * 言語切り替えボタンの設定
-   */
-  setupLanguageToggle() {
-    const langBtn = document.getElementById("langBtn");
-    if (!langBtn) return;
-
-    this.updateLangButtonText();
-
-    langBtn.addEventListener("click", () => {
-      this.languageManager.toggle();
-      this.updateLangButtonText();
-
-      // 古い言語環境の状態を破棄するために onlinePredictionManager を再作成します。
-      // これにより、オンラインシステムを使用する中国語モードから日本語モードに切り替えた後に発生する競合状態を防ぎます。
-      // 中国語モードからの非同期操作（バックグラウンドで実行中）が誤って isInitialized を true に設定し、
-      // 日本語モードの画面描画が正しく行われない問題を回避します。
-      this.onlinePredictionManager = new OnlinePredictionManager(this.languageManager, this.timeUtils);
-
-      // タイマーをリセットして、新しいタイムゾーンに同期させます
-      this.startTimers();
-
-      this.uiRenderer.updateTopTime();
-      this.uiRenderer.updateViewDailyButtonVisibility();
-
-      if (this.isInDateRange()) {
-        this.initInDateRange();
-      } else {
-        this.initOutDateRange();
-      }
-
-      this.reportManager.updateAll();
-    });
-  }
-
-  /**
-   * 終日タスクボタンの設定
-   */
-  setupViewDailyButton() {
-    const btn = document.getElementById("viewDailyBtn");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        // dailyQuest.html へ遷移
-        window.location.href = "dailyQuest.html";
-      });
-    }
-  }
-
-  /**
-   * 言語ボタンテキスト更新
-   */
-  updateLangButtonText() {
-    const langBtn = document.getElementById("langBtn");
-    if (langBtn) {
-      langBtn.textContent = this.languageManager.current === "zh"
-        ? "日本鯖切替"
-        : "切換到台服";
-    }
-  }
-
-  /**
-   * 特定期間内かチェック
+   * 檢查是否在特定日期範圍內
    */
   isInDateRange() {
-    // const now = this.timeUtils.getNowBySVR();
-    // const range = DATE_RANGES[this.languageManager.current];
-    // return now >= range.start && now <= range.end;
     const now = this.timeUtils.getNowBySVR();
-    const range = DATE_RANGES[this.languageManager.current];
-    const start = this.timeUtils.getShiftedDate(range.start);
-    const end = this.timeUtils.getShiftedDate(range.end);
+    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
+    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
     return now >= start && now <= end;
   }
 
   /**
-   * 共通初期化処理
+   * 通用初始化處理
    */
   initCommon({ showTemporaryNotice }) {
     this.uiRenderer.updateRegularNotice();
 
-    // 期間限定のお知らせ
+    // 限時公告
     const temporaryNoticeDiv = document.getElementById("temporaryNotice");
     if (temporaryNoticeDiv) {
-      //　中文のみ
-      const isZh = this.languageManager.current === "zh";
-      const shouldShow = showTemporaryNotice && isZh;
+      const shouldShow = showTemporaryNotice;
       
       temporaryNoticeDiv.style.display = shouldShow ? "block" : "none";
 
@@ -162,7 +89,7 @@ class TaskScheduleApp {
     DOMHelper.updateElement("taskContainer", null, "block");
     this.loadTasksAndRender();
 
-    // 分単位の更新タイマー
+    // 分鐘單位的更新計時器
     if (this.minuteRefreshIntervalId) {
       clearInterval(this.minuteRefreshIntervalId);
     }
@@ -171,47 +98,47 @@ class TaskScheduleApp {
         this.renderAllGroups(this.cachedExcelRows);
       }
     }, CONFIG.REFRESH_INTERVAL);
-    // 分単位の更新タイマーは startTimers で一元管理されます。
+    // 分鐘單位的更新計時器由 startTimers 統一管理。
   }
 
   /**
-   * 期間外の初期化
+   * 非活動期間的初始化
    */
   initOutDateRange() {
     this.initCommon({ showTemporaryNotice: false });
   }
 
   /**
-   * 期間内の初期化
+   * 活動期間內的初始化
    */
   initInDateRange() {
     this.initCommon({ showTemporaryNotice: true });
-    // onlinePredictionManager の初期化は loadTasksAndRender 内に移動しました。
-    // データのロード完了前に古いUIがレンダリングされ、画面がちらつくのを防ぐためです。
+    // onlinePredictionManager 的初始化已移至 loadTasksAndRender 中。
+    // 這是為了防止在資料載入完成前渲染舊 UI 導致畫面閃爍。
   }
 
   /**
-   * タスクデータのロードとレンダリング
+   * 載入任務資料並渲染
    */
   async loadTasksAndRender() {
-    this.loadToken++; // 新しいロードリクエストごとにトークンをインクリメント
+    this.loadToken++; // 產生新的載入序列號，使舊請求的渲染作廢。
     const currentToken = this.loadToken;
 
     const loadPromises = [this.excelLoader.loadExcel()];
 
-    // 特別イベント期間中の場合、オンライン予測システムも同時に初期化します
+    // 如果在特殊活動期間，同時初始化線上預測系統
     if (this.isInDateRange()) {
       loadPromises.push(this.onlinePredictionManager.init());
     } else {
       this.onlinePredictionManager.isInitialized = false;
     }
 
-    // 必要なすべてのデータがロードされるのを待ちます
+    // 等待所有必要的資料載入完成
     const [rows] = await Promise.all(loadPromises);
 
-    // awaitの後に、新しいロードが開始されていないか確認します。もしそうなら、レンダリングを中止します。
+    // 在 await 之後，檢查是否有新的載入請求已開始。若有，則中止本次渲染。
     if (currentToken !== this.loadToken) {
-      console.log(`Render aborted for token ${currentToken}, current is ${this.loadToken}.`);
+      console.log(`渲染操作已中止 (Token: ${currentToken})，因為已有新的載入請求 (Token: ${this.loadToken})。`);
       return;
     }
 
@@ -220,7 +147,8 @@ class TaskScheduleApp {
   }
 
   /**
-   * すべてのタスクグループをレンダリング
+   * 渲染所有任務群組
+   * @param {Array} rows - Excel/JSON 資料列
    */
   renderAllGroups(rows) {
     const container = document.getElementById("taskContainer");
@@ -228,7 +156,7 @@ class TaskScheduleApp {
       return;
     }
 
-    // 展開状態を保存
+    // 儲存展開狀態
     const openStates = this.saveOpenStates(container);
 
     container.innerHTML = "";
@@ -238,9 +166,8 @@ class TaskScheduleApp {
     const currentMinute = now.getMinutes();
     const currentDay = now.getDay();
     
-    const WEEKDAYS_ZH = ["日", "一", "二", "三", "四", "五", "六"];
-    const todayWeekZh = WEEKDAYS_ZH[currentDay];
-    const tomorrowWeekZh = WEEKDAYS_ZH[(currentDay + 1) % 7];
+    const todayWeekZh = WEEKDAYS[currentDay];
+    const tomorrowWeekZh = WEEKDAYS[(currentDay + 1) % 7];
 
     this.taskProcessor.getVisibleTaskTypes().forEach(type => {
       const group = this.createTaskGroup(
@@ -256,7 +183,7 @@ class TaskScheduleApp {
       container.appendChild(group);
     });
 
-    // レンダリング完了後、オンライン予測と報告UIを注入します
+    // 渲染完成後，注入線上預測與回報 UI
     this.onlinePredictionManager.updateView();
 
     this.checkAndPlayWorldBossSound();
@@ -279,9 +206,8 @@ class TaskScheduleApp {
       const tHour = taskTime.getHours();
       const tMinute = taskTime.getMinutes();
       const tDay = taskTime.getDay();
-      
-      const WEEKDAYS_ZH = ["日", "一", "二", "三", "四", "五", "六"];
-      const weekZh = WEEKDAYS_ZH[tDay];
+
+      const weekZh = WEEKDAYS[tDay];
 
       const type = { key: "sengen" };
       const tasks = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, weekZh);
@@ -302,11 +228,6 @@ class TaskScheduleApp {
    * 檢查並播放世界王提示音
    */
   checkAndPlayWorldBossSound() {
-    // 只在中文環境下觸發
-    if (this.languageManager.current !== 'zh') {
-      return;
-    }
-
     const now = this.timeUtils.getNowBySVR();
     const day = now.getDay(); // 0=日, 1=一, ..., 6=六
     const hour = now.getHours();
@@ -320,20 +241,22 @@ class TaskScheduleApp {
       if (minute === 50) audioSrc = './audio/boss10.mp3';
       else if (minute === 55) audioSrc = './audio/boss5.mp3';
       else if (minute === 59) audioSrc = './audio/boss1.mp3';
-    } else if (isWeekend && hour === 15) {
+    } else if (isWeekend && hour === 14) {
       if (minute === 50) audioSrc = './audio/boss10.mp3';
       else if (minute === 55) audioSrc = './audio/boss5.mp3';
       else if (minute === 59) audioSrc = './audio/boss1.mp3';
     }
 
     if (audioSrc) {
+      console.log(`[世界王] 嘗試在伺服器時間 ${hour}:${minute} 播放 ${audioSrc}`);
       const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       this.soundManager.playWorldBossSound(audioSrc, playId);
     }
   }
 
   /**
-   * 展開状態を保存
+   * 儲存目前的展開狀態 (其他時間是否已展開)
+   * @param {HTMLElement} container - 任務容器元素
    */
   saveOpenStates(container) {
     const openStates = {};
@@ -350,14 +273,14 @@ class TaskScheduleApp {
   }
 
   /**
-   * タスクグループの作成
+   * 建立單一類型的任務群組 (包含 UI 元素)
    */
   createTaskGroup(rows, type, todayWeekZh, tomorrowWeekZh, currentHour, currentMinute, currentDay, openStates) {
-    // 今日と明日のタスクリストを取得
+    // 獲取今天和明天的任務列表
     let todayList = this.taskProcessor.getTaskListForWeek(rows, type, todayWeekZh);
     let tomorrowList = this.taskProcessor.getTaskListForWeek(rows, type, tomorrowWeekZh);
 
-    // 組み合わせ
+    // 組合列表
     let combinedList = [...todayList];
     if (tomorrowList.length > 0 && currentHour > 20) {
       const markedTomorrowList = tomorrowList.map(item => ({
@@ -368,25 +291,25 @@ class TaskScheduleApp {
       combinedList = [...todayList, ...markedTomorrowList];
     }
 
-    // メンテナンスタスクのマージ
+    // 合併維護任務
     combinedList = this.taskUtils.mergeConsecutiveMaintenance(combinedList);
 
-    // タスクの分類
+    // 任務分類
     const { previousItem, currentItem, nextItems, remainingItems, isInMaintenance } =
       this.taskProcessor.categorizeTasksByTime(combinedList, currentHour, currentMinute);
 
-    // 効果音再生チェック：現在のタスクがあり、まだ効果音が再生されていない場合は再生します。
+    // 音效播放檢查：如果存在當前任務且音效尚未播放，則進行播放。
     combinedList.forEach(item => {
       if (item.time) {
         const [h, m] = item.time.split(":").map(Number);
         if (h === currentHour && m === currentMinute) {
           // 只有今天的任務才播放音效，避免播放到明天同一時間的任務
           if (item.isNextDay) {
-            console.log(`[Sound Check] Skipped next day's task: ${type.key} at ${item.time}`);
-            return; // 這是明天的任務，跳過
+            console.log(`[音效檢查] 跳過明日任務: ${type.key} 於 ${item.time}`);
+            return; // 明天的任務，跳過
           }
 
-          // 任務內容是維護中的話，不播放音效
+          // 維護中，不播放音效
           if (this.taskUtils.isMaintenanceTask(item)) {
             return; // continue to next item in forEach
           }
@@ -403,7 +326,7 @@ class TaskScheduleApp {
              const isWeekendSuppressionTime = (isWeekend && hour === 14 && minute >= 50 && minute <= 59);
  
              if (isDailySuppressionTime || isWeekendSuppressionTime) {
-               console.log(`[Sound Check] Sound suppressed for ${type.key} at ${hour}:${minute} due to world boss time.`);
+               console.log(`[音效檢查] 因世界王時間，抑制 ${type.key} 在 ${hour}:${minute} 的音效。`);
                return; // continue to next item in forEach
              }
           }
@@ -413,23 +336,18 @@ class TaskScheduleApp {
       }
     });
 
-    // グループ要素の作成
+    // 建立群組元素
     const group = DOMHelper.createElement("div", `group ${type.key}`);
 
-    // 前の時間のタスク
-    const lang = this.languageManager.current;
+    // 前一小時的任務
     let showPrevious = false;
 
-    if (lang === "jp") {
+    if (type.key === "gishiki") {
       showPrevious = true;
-    } else if (lang === "zh") {
-      if (type.key === "gishiki") {
+    } else if ((type.key === "shirao" || type.key === "sengen") && previousItem) {
+      const prevMin = parseInt(previousItem.time.split(":")[1], 10);
+      if (prevMin >= 55 && currentMinute <= 5) {
         showPrevious = true;
-      } else if ((type.key === "shirao" || type.key === "sengen") && previousItem) {
-        const prevMin = parseInt(previousItem.time.split(":")[1], 10);
-        if (prevMin >= 55 && currentMinute <= 5) {
-          showPrevious = true;
-        }
       }
     }
 
@@ -444,22 +362,22 @@ class TaskScheduleApp {
       group.appendChild(previousRow);
     }
 
-    // 現在のタスク
+    // 目前的任務
     const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem);
     group.appendChild(curRow);
 
-    // 期間外に表示される従来のタスクラッパー
+    // 在活動期間外顯示的傳統任務容器
     const wrapper = DOMHelper.createElement("div", "taskWrapper");
-    // 期間内に表示されるオンライン回報システム用のラッパー
+    // 在活動期間內顯示的線上回報系統容器
     const onlineWrapper = DOMHelper.createElement("div", "onlineWrapper");
 
-    // 従来のラッパーにコンテンツを常に追加
-    // 次の2時間のタスク
+    // 總是將內容添加到傳統容器中
+    // 接下來2小時的任務
     nextItems.forEach(item => {
       wrapper.appendChild(this.uiRenderer.createTaskRow(item, false, type));
     });
 
-    // 残りのタスク（折りたたみ可能）
+    // 剩餘的任務 (可折疊)
     const remWrapper = DOMHelper.createElement("div", "remainingContainer");
     if (openStates[type.key]) {
       remWrapper.classList.add('open');
@@ -469,14 +387,14 @@ class TaskScheduleApp {
     });
     wrapper.appendChild(remWrapper);
 
-    // フッターとボタン
+    // 頁尾與按鈕
     const footer = this.uiRenderer.createFooterWithButton(remWrapper, remainingItems, openStates[type.key]);
     wrapper.appendChild(footer);
 
     group.appendChild(wrapper);
     group.appendChild(onlineWrapper);
 
-    // isInitialized の状態に基づいて表示を切り替える
+    // 根據 isInitialized 的狀態切換顯示
     if (!this.onlinePredictionManager.isInitialized) {
       onlineWrapper.style.display = 'none';
     } else {
@@ -487,23 +405,23 @@ class TaskScheduleApp {
   }
 
   /**
-   * タイマーの開始とリセット
+   * 啟動和重置計時器 (秒級、分級、時級更新)
    */
   startTimers() {
-    // 既存のタイマーをすべてクリア
+    // 清除所有現有的計時器
     clearInterval(this.secondlyIntervalId);
     clearTimeout(this.minuteRefreshTimeoutId);
     clearInterval(this.minuteRefreshIntervalId);
     clearTimeout(this.hourlyRefreshTimeoutId);
     clearInterval(this.hourlyRefreshIntervalId);
 
-    // 1秒ごとに時刻を更新
+    // 每秒更新一次時間
     this.secondlyIntervalId = setInterval(() => {
       this.uiRenderer.updateTopTime();
       this.checkPreAlerts();
     }, 1000);
 
-    // 毎分更新（分頭に同期）
+    // 每分鐘更新 (與分鐘開始時同步)
     const minuteUpdate = () => {
       if (this.cachedExcelRows) {
         this.renderAllGroups(this.cachedExcelRows);
@@ -521,7 +439,7 @@ class TaskScheduleApp {
       this.minuteRefreshIntervalId = setInterval(minuteUpdate, CONFIG.REFRESH_INTERVAL);
     }, msUntilNextMinute);
 
-    // 毎時更新（時頭に同期）
+    // 每小時更新 (與小時開始時同步)
     const hourlyUpdate = () => {
       this.uiRenderer.updateTopTime();
       if (this.isInDateRange()) {
@@ -542,7 +460,7 @@ class TaskScheduleApp {
   }
 }
 
-// アプリケーションの起動
+// 啟動應用程式
 document.addEventListener("DOMContentLoaded", () => {
   const app = new TaskScheduleApp();
   app.init();
