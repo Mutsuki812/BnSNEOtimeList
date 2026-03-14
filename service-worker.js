@@ -1,20 +1,22 @@
-const cacheName = 'timeList-03141738'; // 版本
+const cacheName = 'timeList-0314_1742'; // 版本
 const cacheFiles = [
     './',
     './index.html',
-    'style/common.css',
+    './style/common.css',
     './script/main.js',
+    './script/config.js',
   // 其他需要快取的資源
 ];
 
+// Service Worker 安裝事件
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] 安裝中...');
+  console.log(`[Service Worker] 安裝中... 使用快取版本: ${cacheName}`);
     event.waitUntil(
         caches.open(cacheName)
             .then((cache) => {
                 console.log('[Service Worker] 快取檔案');
                 return Promise.all(
-                    cacheFiles.map(url => {
+                    cacheFiles.map(url => { // 迴圈 快取列表
                         return fetch(url).then(response => {
                             if (!response.ok) {
                                 console.warn(`[Service Worker] 無法快取 ${url}: 狀態 ${response.status}`);
@@ -39,8 +41,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] 啟動中...');
+// Service Worker 啟動事件
+self.addEventListener('activate', (event) => { 
+  console.log(`[Service Worker] 啟動中... 使用快取版本: ${cacheName}`);
   event.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(keyList.map((key) => {
