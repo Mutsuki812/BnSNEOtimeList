@@ -40,8 +40,7 @@ export const TEXTS = {
     "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
     "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" +
     "<spen style=\"color:red\">" +
-    "　可喜可賀! 貌似維持2/11的時間表 沒變<br>" +
-    "　<b>畫面或音效出現異常時 煩請刪除網頁</b>Cookie<br>" +
+    "　<b>畫面或音效出現異常時 煩請刷新或刪除網頁Cookie</b><br>" +
     "</spen>",
   
   temporaryNotice:
