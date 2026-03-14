@@ -1,7 +1,7 @@
-const cacheName = 'timeList-0314_1742'; // 版本
+const cacheName = 'timeList-0314_1803'; // 版本
 const cacheFiles = [
     './',
-    './index.html',
+    // './index.html',
     './style/common.css',
     './script/main.js',
     './script/config.js',
