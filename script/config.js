@@ -29,8 +29,8 @@ export const MAINTENANCE_PATTERN = /例行維護中/;
 export const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 export const DATE_RANGES = {
-  start: new Date('2026-03-09T10:00:00+08:00'),
-  end: new Date('2026-03-10T05:59:59+08:00')
+  start: new Date('2026-03-25T11:00:00+08:00'),
+  end: new Date('2026-04-01T05:59:59+08:00')
 };
 
 export const TEXTS = {
@@ -40,7 +40,7 @@ export const TEXTS = {
     "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
     "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" +
     "<spen style=\"color:red\">" +
-    "　<b>畫面或音效出現異常時 煩請刷新或刪除網頁Cookie</b><br>" +
+    "　<b>畫面/音效出現異常時 煩請強制刷新Ctrl+F5或刪除網頁Cookie</b><br>" +
     "</spen>",
   
   temporaryNotice:
