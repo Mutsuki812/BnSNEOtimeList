@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260320-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -56,17 +56,6 @@ class TaskScheduleApp {
     setTimeout(() => {
       this.soundManager.showUnlockModal();
     }, 500);
-
-    // 註冊 Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(error => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
   }
 
   /**
@@ -474,5 +463,5 @@ class TaskScheduleApp {
 // 啟動應用程式
 document.addEventListener("DOMContentLoaded", () => {
   const app = new TaskScheduleApp();
-  app.init();
+    app.init();
 });
