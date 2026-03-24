@@ -342,9 +342,9 @@ class TaskScheduleApp {
     // 前一小時的任務
     let showPrevious = false;
 
-    if (type.key === "gishiki") {
+    if (type.key === "gishiki" || type.key === "shirao") {
       showPrevious = true;
-    } else if ((type.key === "shirao" || type.key === "sengen") && previousItem) {
+    } else if (type.key === "sengen" && previousItem) {
       const prevMin = parseInt(previousItem.time.split(":")[1], 10);
       if (prevMin >= 55 && currentMinute <= 5) {
         showPrevious = true;

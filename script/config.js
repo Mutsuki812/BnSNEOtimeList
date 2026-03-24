@@ -50,6 +50,7 @@ export const TEXTS = {
 
   previousHourHint: {
     gishiki: "可能還沒死，可以找找看",
-    default: "跑圖快的，還不快飛"
+    shirao: "可能還沒死，可以找找看",
+    sengen: "跑圖快的，還不快飛"
   }
 };

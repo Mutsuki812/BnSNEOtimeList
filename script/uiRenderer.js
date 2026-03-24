@@ -81,7 +81,7 @@ export class UIRenderer {
     const questionMark = item.hasQuestionMark ? ' [?]' : "";
 
     let hintText;
-    hintText = TEXTS.previousHourHint[type.key] || TEXTS.previousHourHint.default;
+    hintText = TEXTS.previousHourHint[type.key];
 
     const longClass = this._getLongClass(content);
 
