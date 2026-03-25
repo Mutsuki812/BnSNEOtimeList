@@ -3,11 +3,17 @@
    ========================== */
 
 export const CONFIG = {
-  EXCEL_URL: "./files/timeList.xlsx",
-  // GAS 時間表資料來源 URL
-  GAS_DATA_URL: "https://script.google.com/macros/s/AKfycbzrg0szQBpHlzMyEpel1_CvXYey-Ps1rCKUyDsRmIBeiImsKs_jbueA-lQjTaH8O47bZg/exec",
+  // Supabase 設定
+  SUPABASE_CDN: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+  SUPABASE_URL: "https://bagzrimxitmegqpmvnfi.supabase.co",
+  SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZ3pyaW14aXRtZWdxcG12bmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjgxMzgsImV4cCI6MjA4OTkwNDEzOH0.G4nS0Q5XmkSQOg2UDddrEUeeOx3lQWdZJigqjmudX14",
+
   REFRESH_INTERVAL: 60000, // 1分鐘
   HOUR_INTERVAL: 3600000, // 1小時
+
+    EXCEL_URL: "./files/timeList.xlsx",
+  // GAS 時間表資料來源 URL
+  GAS_DATA_URL: "https://script.google.com/macros/s/AKfycbzrg0szQBpHlzMyEpel1_CvXYey-Ps1rCKUyDsRmIBeiImsKs_jbueA-lQjTaH8O47bZg/exec",
   XLSX_CDN: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
 };
 
@@ -35,7 +41,7 @@ export const DATE_RANGES = {
 
 export const TEXTS = {
   regularNotice:
-    "<b>仙幻島第２賽季　2026.02.25 - 2026.03.25</b><br>" +
+    "<b>仙幻島第３賽季　2026.03.25 - 2026.04.29</b><br>" +
     "・表記時間 = 系統出字時間<br>" +
     "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
     "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" +
@@ -45,7 +51,6 @@ export const TEXTS = {
   
   temporaryNotice:
     "<spen style=\"color:red\">" +
-    "　即時回報系統測試使用中" +
     "</spen>",
 
   previousHourHint: {
