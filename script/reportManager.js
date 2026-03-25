@@ -3,16 +3,14 @@
    ========================== */
 
 import { CONFIG, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
-import { DOMHelper } from "./utils.js";
-
-// GAS 回報後端 URL
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwI2_v_FA17GVDyDOJqYRkHWGBNrhKuQ4BQ3mvcQUzEtaVRuBFJ9JKN20yCym0-J36rlQ/exec";
+import { DOMHelper, SupabaseHelper } from "./utils.js";
 
 /**
  * 回報管理器
  */
 export class ReportManager {
-  constructor() {
+  constructor(userManager) {
+    this.userManager = userManager;
     this.render();
     this.updateAll();
     this.loadReports();
@@ -38,7 +36,7 @@ export class ReportManager {
           <input type="text" id="reportComment" aria-label="備註" placeholder="備註..." autocomplete="off" />
           <div class="reportContainer">
             <div id="reportMessage" role="status" aria-live="polite"></div>
-            <div class="reportButtons"><button id="submitReport"></button></div>
+            <div class="reportButtons"><button id="submitReport" class="report-submit-btn">送出</button></div>
           </div>
         </div>
         <div class="reportLog"><div id="reportList" class="reportList"></div></div>
@@ -58,7 +56,10 @@ export class ReportManager {
    * 綁定 DOM 事件監聽器
    */
   attachEventListeners() {
-    this.reportTaskTypeEl?.addEventListener("change", () => this.updateReportTypeOptions());
+    this.reportTaskTypeEl?.addEventListener("change", () => {
+      this.updateReportTypeOptions();
+      this.updateButtonColor();
+    });
     this.submitReportBtn?.addEventListener("click", () => this.submitReport());
   }
 
@@ -119,6 +120,21 @@ export class ReportManager {
   }
 
   /**
+   * 根據選擇的任務更新按鈕顏色
+   */
+  updateButtonColor() {
+    if (!this.submitReportBtn || !this.reportTaskTypeEl) return;
+    
+    const selectedTask = this.reportTaskTypeEl.value;
+    this.submitReportBtn.classList.remove('type-gishiki', 'type-shirao', 'type-sengen', 'type-other');
+    
+    if (selectedTask.includes('儀式')) this.submitReportBtn.classList.add('type-gishiki');
+    else if (selectedTask.includes('白青')) this.submitReportBtn.classList.add('type-shirao');
+    else if (selectedTask.includes('仙幻')) this.submitReportBtn.classList.add('type-sengen');
+    else this.submitReportBtn.classList.add('type-other');
+  }
+
+  /**
    * 顯示操作訊息 (成功或失敗)
    * @param {string} text - 訊息內容
    * @param {boolean} isError - 是否為錯誤訊息
@@ -127,7 +143,7 @@ export class ReportManager {
     if (!this.msgEl) return;
     
     this.msgEl.textContent = text;
-    this.msgEl.style.color = isError ? "red" : "green";
+    this.msgEl.className = isError ? "error" : "success";
     setTimeout(() => { this.msgEl.textContent = ""; }, 3000);
   }
 
@@ -145,34 +161,28 @@ export class ReportManager {
       return;
     }
 
-    if (GAS_WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-      const errorMsg = "GAS URL is not configured.";
-      this.showMessage("後端服務未設定", true);
-      console.error(errorMsg);
-      return;
-    }
+    const user = await this.userManager.requireUser();
+    if (!user) return; // 使用者取消登入
 
     const payload = {
-      taskType,
-      reportType,
-      comment
+      bossType: taskType,
+      reportType: reportType,
+      comment: comment,
+      user_id: user.id
     };
 
     try {
+      this.showMessage("傳送中...");
       this.submitReportBtn.disabled = true; // 防止重複點擊
-      const response = await fetch(GAS_WEB_APP_URL, {
-        method: "POST",
-        // text/plain 避免觸發複雜的 CORS preflight 請求
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-        body: JSON.stringify(payload),
-      });
+      this.submitReportBtn.textContent = "傳送中...";
+      
+      const supabase = await SupabaseHelper.getClient();
+      const { error } = await supabase
+        .from('feedback_reports')
+        .insert([payload]);
 
-      // 即使 fetch 成功，檢查後端是否真的成功
-      const result = await response.json();
-      if (result.status !== "success") {
-        throw new Error(result.message || "Server-side error");
+      if (error) {
+        throw error;
       }
 
       if (this.reportCommentEl) { 
@@ -188,6 +198,7 @@ export class ReportManager {
       this.showMessage(errorMsg, true);
     } finally {
       this.submitReportBtn.disabled = false; // 恢復按鈕
+      this.submitReportBtn.textContent = "送出";
     }
   }
 
@@ -197,21 +208,18 @@ export class ReportManager {
   async loadReports() {
     if (!this.reportListEl) return;
     
-    if (GAS_WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-      this.reportListEl.innerHTML = `<div class="reportItem">後端服務未設定，無法載入紀錄。</div>`;
-      return;
-    }
-
     try {
-      // 加入時間戳記參數，避免瀏覽器快取導致讀不到最新資料
-      const response = await fetch(`${GAS_WEB_APP_URL}?t=${new Date().getTime()}`);
-      const result = await response.json();
+      const supabase = await SupabaseHelper.getClient();
+      const { data: reports, error } = await supabase
+        .from('feedback_reports')
+        .select('*, Users(userName)')
+        .order('postTime', { ascending: false })
+        .limit(20);
 
-      if (result.status !== "success") {
-        throw new Error(result.message || "Failed to load reports");
+      if (error) {
+        throw error;
       }
 
-      const reports = result.data || [];
       this.reportListEl.innerHTML = "";
 
       if (reports.length === 0) {
@@ -220,17 +228,48 @@ export class ReportManager {
         return;
       }
 
+      const currentUserId = this.userManager.getCurrentUser()?.id;
       reports.forEach((r) => {
-        const div = DOMHelper.createElement("div", "reportItem");
-        const formatDate = r.Timestamp.substring(0, 10);
+        const div = DOMHelper.createElement("div", "report-history-item");
+        const displayTime = r.postTime.substring(5, 16).replace('-', '/').replace('T', ' '); // 顯示 MM/DD HH:mm
+        const userName = r.Users ? r.Users.userName : '訪客';
+        
         let respond = '';
         // 檢查是否有管理員回覆
-        const isResponded = r.Respond === true || r.Respond === "TRUE";
+        const isResponded = r.respond === true || r.respond === "TRUE";
         if (isResponded) {
           respond = '<img src="./images/thanks24.png" alt="thx!!">';
         }
 
-        div.innerHTML = `[${formatDate}][${r.TaskType} ${r.ReportType}] ${r.Comment} ${respond}`;
+        // 判斷任務類型以套用顏色類別
+        let typeClass = 'hist-tag';
+        if (r.bossType.includes('儀式')) typeClass += ' type-gishiki';
+        else if (r.bossType.includes('白青')) typeClass += ' type-shirao';
+        else if (r.bossType.includes('仙幻')) typeClass += ' type-sengen';
+        else typeClass += ' type-other';
+
+        div.innerHTML = `
+          <div class="hist-left">
+            <span class="hist-time gray">${displayTime}</span>
+            <span class="${typeClass}">${r.bossType}</span>
+            <span class="hist-loc">${r.reportType}: ${r.comment} ${respond}</span>
+          </div>
+          <div class="hist-right">
+            <span class="hist-user user-tag gray">${userName}</span>
+            <span class="hist-actions"></span>
+          </div>
+        `;
+
+        // 如果是該使用者的回報，顯示刪除按鈕
+        if (currentUserId && r.user_id === currentUserId) {
+          const actionsSpan = div.querySelector('.hist-actions');
+          const delBtn = document.createElement("span");
+          delBtn.innerHTML = '<img src="./images/delete24.png" alt="刪除" class="icon-delete">';
+          delBtn.className = 'hist-del-btn';
+          delBtn.title = "刪除";
+          delBtn.onclick = () => this.deleteReport(r.postTime);
+          actionsSpan.appendChild(delBtn);
+        }
 
         this.reportListEl.appendChild(div);
       });
@@ -238,6 +277,25 @@ export class ReportManager {
       console.error("載入回報時發生錯誤:", error);
       this.reportListEl.innerHTML = `<div class="reportItem" style="color: red;">載入失敗：${error.message}</div>`;
     }
+  }
+
+  deleteReport(postTime) {
+    this.userManager.showConfirmModal("確定要刪除這條回報嗎？", async () => {
+      try {
+        const user = this.userManager.getCurrentUser();
+        if (!user) return;
+
+        const supabase = await SupabaseHelper.getClient();
+        // 增加 user_id 檢查，確保只能刪除自己的資料
+        const { error } = await supabase.from('feedback_reports').delete().eq('postTime', postTime).eq('user_id', user.id);
+        if (error) throw error;
+        this.showMessage("已刪除");
+        this.loadReports();
+      } catch (e) {
+        console.error(e);
+        this.showMessage("刪除失敗", true);
+      }
+    }, true);
   }
 
   /**
@@ -253,5 +311,6 @@ export class ReportManager {
     this.updateReportTaskOptions();
     this.updateReportTypeOptions();
     this.updateReportCommentPlaceholder();
+    this.updateButtonColor();
   }
 }

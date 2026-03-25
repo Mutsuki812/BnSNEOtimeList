@@ -2,7 +2,7 @@
    ==== 工具函式 ====
    ========================== */
 
-import { MAINTENANCE_PATTERN, WEEKDAYS } from './config.js';
+import { CONFIG, MAINTENANCE_PATTERN, WEEKDAYS } from './config.js';
 
 /**
  * 時間相關的工具函式
@@ -122,12 +122,12 @@ export class TaskUtils {
   }
 
   /**
-   * 獲取任務項目的內容 (中文字串)
+   * 獲取任務項目的內容
    * @param {object} item - 任務項目物件
    * @returns {string} - 任務內容
    */
   getTaskContent(item) {
-    return item.zh;
+    return item.content;
   }
 
   /**
@@ -150,6 +150,7 @@ export class TaskUtils {
         let lastIndex = index;
         for (let i = index + 1; i < list.length; i++) {
           const nextContent = this.getTaskContent(list[i]);
+          
           if (nextContent === content) {
             lastIndex = i;
           } else {
@@ -264,5 +265,43 @@ export class StorageHelper {
    */
   static remove(key) {
     localStorage.removeItem(key);
+  }
+}
+
+/**
+ * Supabase 輔助函式
+ */
+export class SupabaseHelper {
+  static loadPromise = null;
+
+  static async getClient() {
+    if (window.supabaseClient) return window.supabaseClient;
+    
+    // 確保 SDK 腳本只載入一次，避免並行呼叫時重複插入 script 標籤
+    if (!window.supabase && !this.loadPromise) {
+      this.loadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = CONFIG.SUPABASE_CDN;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('無法載入 Supabase SDK'));
+        document.head.appendChild(script);
+      });
+    }
+
+    // 等待載入完成
+    if (this.loadPromise) {
+      await this.loadPromise;
+    }
+    
+    if (!window.supabase) {
+      throw new Error('Supabase SDK 載入後 window.supabase 仍未定義');
+    }
+    
+    // 建立 Client (若尚未建立)
+    if (!window.supabaseClient) {
+      window.supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    }
+    
+    return window.supabaseClient;
   }
 }

@@ -3,7 +3,7 @@
    ========================== */
 
 import { CONFIG, DATE_RANGES, TASK_TYPES } from './config.js';
-import { TimeUtils, TaskUtils } from './utils.js';
+import { TimeUtils, TaskUtils, SupabaseHelper } from './utils.js';
 
 /**
  * Excel 資料讀取器
@@ -14,87 +14,107 @@ export class ExcelDataLoader {
   }
 
   /**
-   * 內部方法：檢查是否在活動日期範圍內
-   * @returns {boolean}
-   */
-  _isInDateRange() {
-    if (!this.timeUtils) return false;
-
-    const now = this.timeUtils.getNowBySVR();
-    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
-    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
-    return now >= start && now <= end;
-  }
-
-  /**
-   * 內部方法：動態載入 XLSX 函式庫
-   * @returns {Promise}
-   */
-  _loadXLSXLib() {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = CONFIG.XLSX_CDN;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("XLSX library failed to load"));
-      document.head.appendChild(script);
-    });
-  }
-
-  /**
-   * 載入 Excel 或 JSON 資料
+   * 載入任務資料 (改為從 Supabase 讀取)
    * @returns {Promise<Array>} - 解析後的資料陣列
    */
   async loadExcel() {
     try {
-      let data = null;
+      // 初始化 Supabase
+      const supabase = await SupabaseHelper.getClient();
+      
+      // 讀取 schedule_data 表格 (假設您將原本的 excel 資料匯入到此表)
+      const { data, error } = await supabase
+        .from('schedule_data')
+        .select('*');
 
-      // 2. 特定期間內，優先從 GAS 獲取 JSON 數據
-        if (CONFIG.GAS_DATA_URL && this._isInDateRange()) {
-          try {
-            const response = await fetch(`${CONFIG.GAS_DATA_URL}?t=${new Date().getTime()}`);
-            const json = await response.json();
-            data = Array.isArray(json) ? json : (json.data || []);
-          } catch (e) {
-            console.warn("從 GAS 載入即時資料失敗。頁面將顯示為無資料。", e);
-          }
-        }
+      if (error) {
+        console.error("Supabase 查詢錯誤 (schedule_data):", error);
+        throw error;
+      }
 
-        // 僅在特定期間外，才讀取 Excel
-        if (!this._isInDateRange()) {
-          if (typeof XLSX === 'undefined') {
-            await this._loadXLSXLib();
-          }
-          const sheetName = "timeList";
-          const response = await fetch(CONFIG.EXCEL_URL);
-          const buffer = await response.arrayBuffer();
-          const workbook = XLSX.read(buffer, { type: "array" });
-          const sheet = workbook.Sheets[sheetName];
-          if (!sheet) {
-            console.error(`Excel 檔案中找不到名為 '${sheetName}' 的工作表。將回傳空資料。`);
-            return [];
-          }
-          const rawData = XLSX.utils.sheet_to_json(sheet);
-          
-          // 正規化
-          data = rawData.map(row => {
-            const newRow = {};
-            Object.keys(row).forEach(key => {
-              const cleanKey = key.trim();
-              let value = row[key];
-              if (typeof value === 'string') {
-                value = value.trim();
-              }
-              newRow[cleanKey] = value;
-            });
-            return newRow;
-          });
-        }
-      return data || [];
+      console.log("Supabase 資料載入成功，筆數:", data?.length);
+      // 將資料庫回傳的寬表格資料轉換為系統可識別的長表格格式
+      return this._transformData(data || []);
 
     } catch (err) {
-      console.error("資料載入錯誤:", err);
+      console.error("Supabase 資料載入流程發生錯誤:", err);
       return [];
     }
+  }
+
+  /**
+   * 資料轉換：將 DB 欄位轉為內部格式
+   * @param {Array} rows 
+   */
+  _transformData(rows) {
+    const result = [];
+    const weekMap = { '日': 7, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6 };
+
+    if (rows && rows.length > 0) {
+      console.log("[Debug] DB 第一筆資料範例:", rows[0]);
+      console.log("[Debug] DB 欄位列表:", Object.keys(rows[0]));
+    }
+    
+    // 定義資料庫欄位對應到的任務類型 (支援小寫與駝峰)
+    const typeMapping = {
+      'gishikitime': 'gishiki',
+      'shiraotime': 'shirao',
+      'sengentime': 'sengen',
+      'gishikiTime': 'gishiki',
+      'shiraoTime': 'shirao',
+      'sengenTime': 'sengen'
+    };
+
+    if (!Array.isArray(rows)) return [];
+
+    rows.forEach(row => {
+      // 1. 處理星期轉換
+      // 優先讀取 week (小寫, DB欄位), 其次 Week (相容舊格式)
+      let w = row['week'] || row['Week'];
+      if (typeof w === 'string' && weekMap[w]) w = weekMap[w];
+      else if (typeof w === 'string') w = parseInt(w, 10);
+
+      // 2. 處理地點
+      // 優先讀取 location (小寫, DB欄位)
+      const loc = row['location'] || row['Location'] || "";
+
+      // 3. 判斷資料格式 (長表格 vs 寬表格)
+      // 檢查是否直接包含 type 與 time 欄位 (長表格格式)
+      // 寬鬆檢查欄位名稱 (支援 type, Type, bossType, boss_type)
+      const rawType = row['type'] || row['Type'] || row['bossType'];
+      const rawTime = row['time'] || row['Time'];
+
+      if (rawType && rawTime) {
+        // --- 長表格處理邏輯 (DB 可能已經是 normalized 格式) ---
+        // 嘗試正規化 type key
+        let typeKey = String(rawType).toLowerCase();
+        
+        // 映射資料庫內容到系統內部 Key
+        if (typeKey.includes('儀式') || typeKey.includes('gishiki')) typeKey = 'gishiki';
+        else if (typeKey.includes('白青') || typeKey.includes('shirao')) typeKey = 'shirao';
+        else if (typeKey.includes('仙幻') || typeKey.includes('sengen')) typeKey = 'sengen';
+
+        result.push({
+          week: w,
+          type: typeKey,
+          time: rawTime,
+          location: loc
+        });
+      } else {
+        // --- 寬表格處理邏輯 (原有邏輯，適用於從 Excel 直接匯入的結構) ---
+        Object.keys(typeMapping).forEach(key => {
+          if (row[key]) {
+            result.push({
+              week: w,
+              type: typeMapping[key],
+              time: row[key],
+              location: loc
+            });
+          }
+        });
+      }
+    });
+    return result;
   }
 }
 
@@ -121,26 +141,24 @@ export class TaskDataProcessor {
    * 獲取指定星期的任務列表
    * @param {Array} rows - 資料來源
    * @param {object} type - 任務類型
-   * @param {string} weekZh - 星期幾 (中文)
+   * @param {string} week - 星期
    * @returns {Array} - 排序後的任務列表
    */
-  getTaskListForWeek(rows, type, weekZh) {
+  getTaskListForWeek(rows, type, week) {
     return rows
       .filter(r => {
-        // 1. 檢查 Week-zh 是否匹配 (標準)
-        if (r["Week-zh"] === weekZh) return true;
-        // 2. 檢查通用的 "Week" 欄位
-        if (r["Week"] && r["Week"] === weekZh) return true;
-        return false;
+        // 檢查 week 是否匹配 (對應數字)，以及 type 是否符合目前類型
+        const dbWeek = parseInt(r["week"], 10);
+
+        return dbWeek === week && r["type"] === type.key;
       })
-      .filter(r => r[`${type.key}-time`])
       .map(r => {
-        const timeResult = this.timeUtils.normalizeExcelTime(r[`${type.key}-time`]);
+        const timeResult = this.timeUtils.normalizeExcelTime(r["time"]);
         
         return {
           time: timeResult.time,
           hasQuestionMark: timeResult.hasQuestionMark,
-          zh: r[`${type.key}-zh`] || "",
+          content: r["location"] || "",
           isNextDay: false
         };
       })

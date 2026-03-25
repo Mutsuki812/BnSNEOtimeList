@@ -135,41 +135,17 @@ export class SoundManager {
     // 創建彈窗元素
     const overlay = document.createElement('div');
     this.modalElement = overlay; // 保存對彈窗的引用
-    overlay.id = 'sound-unlock-overlay';
-    Object.assign(overlay.style, {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10000,
-      cursor: 'pointer',
-    });
+    overlay.className = 'sound-unlock-overlay';
 
     const modal = document.createElement('div');
-    Object.assign(modal.style, {
-      backgroundColor: '#282c34',
-      color: '#e6e6e6',
-      padding: '25px 30px',
-      borderRadius: '12px',
-      textAlign: 'center',
-      maxWidth: '90%',
-      width: '380px',
-      border: '1px solid #444',
-      boxShadow: '0 5px 20px rgba(0,0,0,0.6)',
-      cursor: 'default',
-    });
+    modal.className = 'sound-unlock-modal';
 
     modal.innerHTML = `
-      <h3 style="margin:0 0 15px; font-size:22px; color: #61dafb;">點擊畫面 啟用音效</h3>
-      <p style="margin:0 0 25px; line-height:1.7; font-size: 16px;">
+      <h3>點擊畫面 啟用音效</h3>
+      <p>
         為了確保音效正常運作<br>請點擊頁面任意處。
       </p>
-      <div style="font-size: 13px; color: #999;">(這是瀏覽器的安全限制，需要您的互動來授權聲音播放)</div>
+      <div class="sound-unlock-hint">(這是瀏覽器的安全限制，需要您的互動來授權聲音播放)</div>
     `;
 
     // 點擊彈窗內的任何地方都會關閉它（因為全域的 unlockHandler 會觸發）
@@ -212,8 +188,8 @@ export class SoundManager {
 
     let audioSrc = `./audio/${taskTypeKey}.mp3`; // 預設音效 (gishiki 會用這個)
     
-    if (SOUND_MAP[taskTypeKey] && taskItem.zh && SOUND_MAP[taskTypeKey][taskItem.zh]) {
-      audioSrc = SOUND_MAP[taskTypeKey][taskItem.zh];
+    if (SOUND_MAP[taskTypeKey] && taskItem.content && SOUND_MAP[taskTypeKey][taskItem.content]) {
+      audioSrc = SOUND_MAP[taskTypeKey][taskItem.content];
     }
 
     this.audioPlayer.src = audioSrc;
@@ -284,6 +260,27 @@ export class SoundManager {
     this.audioPlayer.volume = 1;
     this.audioPlayer.play().catch(e => {
       console.warn('[音效] 預告音效播放失敗', e);
+    });
+  }
+
+  /**
+   * 播放特殊期間預報音效 (白青/仙幻島)
+   * @param {string} taskTypeKey - shirao 或 sengen
+   */
+  playForecastSound(taskTypeKey) {
+    if (!this.isSoundEnabled(taskTypeKey)) return;
+
+    const now = new Date();
+    const timeTag = `forecast_${taskTypeKey}_${now.getHours()}:${now.getMinutes()}`;
+    
+    if (this.lastPlayed[timeTag]) return;
+    this.lastPlayed[timeTag] = true;
+
+    console.log(`[音效] 正在播放 ${taskTypeKey} 的預報音效`);
+    this.audioPlayer.src = `./audio/${taskTypeKey}Forecast.mp3`;
+    this.audioPlayer.volume = 1;
+    this.audioPlayer.play().catch(e => {
+      console.warn(`[音效] ${taskTypeKey} 預報音效播放失敗`, e);
     });
   }
 }

@@ -74,10 +74,10 @@
 **欄位格式**
 | 欄位 | 說明 |
 | :-- | :-- |
-| Week-zh | 星期（日、一、二 …） |
-| gishiki-time | 儀式 |
-| shirao-time | 白青野王 |
-| sengen-time | 仙幻島野王 |
+| Week | 星期（日、一、二 …） |
+| gishikiTime | 儀式 |
+| shiraoTime | 白青野王 |
+| sengenTime | 仙幻島野王 |
 
 **補充規則**
 - 時間可使用 HH:MM 或 Excel 時間格式

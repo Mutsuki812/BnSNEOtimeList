@@ -2,13 +2,14 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260320-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260326-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
 import { ReportManager } from './reportManager.js';
 import { SoundManager } from './soundManager.js';
 import { OnlinePredictionManager } from './onlinePrediction.js';
+import { UserManager } from './userManager.js';
 
 /**
  * 主應用程式類別
@@ -16,14 +17,15 @@ import { OnlinePredictionManager } from './onlinePrediction.js';
 class TaskScheduleApp {
   constructor() {
     // 初始化依賴項目
+    this.userManager = new UserManager();
     this.timeUtils = new TimeUtils();
     this.taskUtils = new TaskUtils();
     this.excelLoader = new ExcelDataLoader(this.timeUtils);
     this.taskProcessor = new TaskDataProcessor(this.timeUtils, this.taskUtils);
     this.soundManager = new SoundManager();
     this.uiRenderer = new UIRenderer(this.timeUtils, this.taskUtils, this.soundManager);
-    this.reportManager = new ReportManager();
-    this.onlinePredictionManager = new OnlinePredictionManager(this.timeUtils);
+    this.reportManager = new ReportManager(this.userManager);
+    this.onlinePredictionManager = new OnlinePredictionManager(this.timeUtils, this.userManager, this.soundManager);
 
     // 資料快取
     this.cachedExcelRows = null;
@@ -166,19 +168,24 @@ class TaskScheduleApp {
     const currentMinute = now.getMinutes();
     const currentDay = now.getDay();
     
-    const todayWeekZh = WEEKDAYS[currentDay];
-    const tomorrowWeekZh = WEEKDAYS[(currentDay + 1) % 7];
+    // 將星期轉換為資料庫對應的數字 (1=Mon ... 6=Sat, 7=Sun)
+    const todayWeek = currentDay === 0 ? 7 : currentDay;
+    const tomorrowDayIndex = (currentDay + 1) % 7;
+    const tomorrowWeek = tomorrowDayIndex === 0 ? 7 : tomorrowDayIndex;
+
+    const isActivityPeriod = this.isInDateRange();
 
     this.taskProcessor.getVisibleTaskTypes().forEach(type => {
       const group = this.createTaskGroup(
         rows,
         type,
-        todayWeekZh,
-        tomorrowWeekZh,
+        todayWeek,
+        tomorrowWeek,
         currentHour,
         currentMinute,
         currentDay,
-        openStates
+        openStates,
+        isActivityPeriod
       );
       container.appendChild(group);
     });
@@ -207,10 +214,10 @@ class TaskScheduleApp {
       const tMinute = taskTime.getMinutes();
       const tDay = taskTime.getDay();
 
-      const weekZh = WEEKDAYS[tDay];
+      const week = tDay === 0 ? 7 : tDay;
 
       const type = { key: "sengen" };
-      const tasks = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, weekZh);
+      const tasks = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, week);
 
       // 檢查在 4 分鐘前是否有仙幻島任務
       const hasTask = tasks.some(t => {
@@ -275,10 +282,10 @@ class TaskScheduleApp {
   /**
    * 建立單一類型的任務群組 (包含 UI 元素)
    */
-  createTaskGroup(rows, type, todayWeekZh, tomorrowWeekZh, currentHour, currentMinute, currentDay, openStates) {
+  createTaskGroup(rows, type, todayWeek, tomorrowWeek, currentHour, currentMinute, currentDay, openStates, isActivityPeriod) {
     // 獲取今天和明天的任務列表
-    let todayList = this.taskProcessor.getTaskListForWeek(rows, type, todayWeekZh);
-    let tomorrowList = this.taskProcessor.getTaskListForWeek(rows, type, tomorrowWeekZh);
+    let todayList = this.taskProcessor.getTaskListForWeek(rows, type, todayWeek);
+    let tomorrowList = this.taskProcessor.getTaskListForWeek(rows, type, tomorrowWeek);
 
     // 組合列表
     let combinedList = [...todayList];
@@ -307,6 +314,11 @@ class TaskScheduleApp {
           if (item.isNextDay) {
             console.log(`[音效檢查] 跳過明日任務: ${type.key} 於 ${item.time}`);
             return; // 明天的任務，跳過
+          }
+
+          // 特殊期間內，關閉可疑的儀式的原始任務音效
+          if (isActivityPeriod && type.key === 'gishiki') {
+            return;
           }
 
           // 維護中，不播放音效
@@ -363,7 +375,7 @@ class TaskScheduleApp {
     }
 
     // 目前的任務
-    const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem);
+    const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem, isActivityPeriod);
     group.appendChild(curRow);
 
     // 在活動期間外顯示的傳統任務容器

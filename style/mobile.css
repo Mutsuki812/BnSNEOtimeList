@@ -231,4 +231,15 @@
     height: 28px;
     margin: 7px 0;
   }
+
+  /* ─── 即時回報履歷優化 ─── */
+  .report-history-list {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 5px;
+  }
+
+  .hist-loc {
+    max-width: none; /* 在手機版也允許利用剩餘空間換行 */
+  }
 }

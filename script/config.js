@@ -4,17 +4,15 @@
 
 export const CONFIG = {
   // Supabase 設定
+  // 1. SDK 來源
   SUPABASE_CDN: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+  // 2. 專案網址
   SUPABASE_URL: "https://bagzrimxitmegqpmvnfi.supabase.co",
-  SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZ3pyaW14aXRtZWdxcG12bmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjgxMzgsImV4cCI6MjA4OTkwNDEzOH0.G4nS0Q5XmkSQOg2UDddrEUeeOx3lQWdZJigqjmudX14",
+  // 3. Publishable Key
+  SUPABASE_KEY: "sb_publishable_IBRmc1srGQDHE37cn_f-ZQ_-vzy-NdW",
 
   REFRESH_INTERVAL: 60000, // 1分鐘
   HOUR_INTERVAL: 3600000, // 1小時
-
-    EXCEL_URL: "./files/timeList.xlsx",
-  // GAS 時間表資料來源 URL
-  GAS_DATA_URL: "https://script.google.com/macros/s/AKfycbzrg0szQBpHlzMyEpel1_CvXYey-Ps1rCKUyDsRmIBeiImsKs_jbueA-lQjTaH8O47bZg/exec",
-  XLSX_CDN: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
 };
 
 export const TASK_TYPES = [
@@ -46,7 +44,8 @@ export const TEXTS = {
     "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
     "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>" +
     "<spen style=\"color:red\">" +
-    "　<b>畫面/音效出現異常時 煩請強制刷新Ctrl+F5 或刪除網頁Cookie</b><br>" +
+    "　畫面/音效出現異常時 煩請強制刷新Ctrl+F5 或刪除網頁Cookie<br>" +
+    "　使用者記名系統啟用中<br>" +
     "</spen>",
   
   temporaryNotice:

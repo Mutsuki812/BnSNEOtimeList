@@ -622,8 +622,6 @@ body {
 }
 
 .report-history-btn img {
-  width: 24px; /* 可根據圖片大小調整 */
-  height: 24px;
   opacity: 0.7;
   transition: opacity var(--transition-fast);
 }
@@ -696,8 +694,133 @@ body {
   display: none; /* 預設為隱藏 */
 }
 .report-history-item {
-  padding: 2px 0;
-  border-bottom: 1px dashed rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* 改為頂部對齊，避免多行時內容歪掉 */
+  flex-wrap: nowrap; /* 強制單行 */
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.report-history-item:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 左側群組：時間、方式、地點 */
+.hist-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 右側群組：使用者、刪除 */
+.hist-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hist-time {
+  font-family: var(--font-family-time);
+  font-size: 0.8rem;
+  width: 90px; /* 稍微增加寬度確保時間不換行 */
+  flex-shrink: 0;
+  margin-top: 2px; /* 微調高度使其與文字對齊 */
+}
+
+.gray { color: var(--color-text-tertiary); }
+
+/* 佔位符文字顏色 (尚無數據 / 等待回報) */
+.text-placeholder { color: #999999 !important; }
+
+/* 標籤化樣式 */
+.hist-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.70rem;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tag-system { color: #7E9070; border-color: #A3B19B; background: rgba(126, 144, 112, 0.1);}
+.tag-thunder { color: #B58D6D; border-color: #D1B8A3; background: rgba(181, 141, 109, 0.1); }
+.tag-spawned { color: #A67B77; border-color: #C9B2B0; background: rgba(166, 123, 119, 0.1); }
+
+/* 任務類型標籤顏色 (一般回報區) */
+.type-gishiki { color: #6B5B69; border-color: #A08B9D; background-color: #E2D9E0; }
+.type-shirao { color: #5D6B5D; border-color: #92A392; background-color: #DDE2DD; }
+.type-sengen { color: #7A6F5D; border-color: #B2A086; background-color: #EAE3D9; }
+.type-other { color: #666666; border-color: #C2C2C2; background-color: #EBEBEB; }
+
+.hist-loc {
+  white-space: normal; /* 允許換行 */
+  word-break: break-all; /* 確保長字串也能正確斷行 */
+}
+
+/* 使用者名稱標籤樣式 */
+.user-tag {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.icon-delete {
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+/* --- 使用者資訊區塊美化 --- */
+.userInfo {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-xs);
+}
+.user-info-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-xs);
+}
+.user-info-content.unlogged {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.user-info-content.unlogged:hover {
+  background: var(--color-bg-card);
+}
+.user-name-label {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+.rename-btn, .logout-btn {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+.rename-btn:hover, .logout-btn:hover {
+  color: var(--color-accent);
+}
+.logout-separator {
+  color: var(--color-border);
+  font-size: 0.7rem;
 }
 
 /* Prediction Highlight */
@@ -733,7 +856,6 @@ body {
 .pred-row-value {
   font-size: var(--font-size-sm);
   color: #D84315;
-  font-weight: var(--font-weight-bold);
   line-height: 1.5;
   font-family: var(--font-family-content);
 }
@@ -746,9 +868,7 @@ body {
 .pred-row-time {
   font-size: var(--font-size-md);
   line-height: 1.5;
-  font-weight: var(--font-weight-bold);
   font-family: var(--font-family-time);
-  /* background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent); */
   border-radius: var(--radius-sm);
   padding-left: 4px;
 }
@@ -908,3 +1028,69 @@ select:focus-visible {
     --color-border: #333333;
   }
 }
+
+/* ====================================================================
+    彈窗通用樣式 | 
+==================================================================== */
+/* --- 彈窗通用樣式 --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5); z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-box {
+    background-color: #fff; padding: 25px; border-radius: 8px;
+    text-align: center; min-width: 300px; color: #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.modal-box h3 { margin: 0 0 10px; }
+.modal-box p { font-size: 13px; color: #666; margin-bottom: 20px; }
+.modal-text { font-size: 15px; color: #333; margin-bottom: 20px; }
+.modal-input {
+    padding: 10px; width: 80%; margin-bottom: 15px;
+    border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
+}
+.modal-msg { color: red; font-size: 12px; margin-bottom: 15px; height: 1.2em; }
+.modal-btn-group { display: flex; justify-content: center; gap: 10px; }
+
+/* --- 按鈕樣式 --- */
+.btn-cancel { padding: 8px 20px; border: none; background: #eee; border-radius: 4px; cursor: pointer; color: #333; }
+.btn-confirm { padding: 8px 20px; border: none; background: #4CAF50; color: #fff; border-radius: 4px; cursor: pointer; }
+.btn-confirm.danger { background: #d9534f; }
+
+/* --- 線上回報 UI 輔助樣式 --- */
+.flex-row { display: flex; align-items: center; gap: 10px; }
+.flex-row.wrap { flex-wrap: wrap; }
+.gap-5 { gap: 5px; }
+.mt-10 { margin-top: 10px; }
+.label-inline { display: inline-flex; align-items: center; }
+.report-msg { flex: 1; margin: 0; font-size: 12px; }
+.report-msg.error { color: red; }
+.report-msg.success { color: green; }
+.delete-success-msg { padding: 10px; color: green; text-align: center; }
+
+/* --- 任務類型背景顏色 --- */
+.report-submit-btn.type-gishiki { background-color: #A08B9D; color: #F5F1E8;}
+.report-submit-btn.type-shirao { background-color: #92A392; color: #F5F1E8;}
+.report-submit-btn.type-sengen { background-color: #B2A086; color: #F5F1E8;}
+
+/* --- 音效解鎖彈窗 --- */
+.sound-unlock-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10000; cursor: pointer;
+}
+.sound-unlock-modal {
+    background-color: #282c34; color: #e6e6e6; padding: 25px 30px;
+    border-radius: 12px; text-align: center; max-width: 90%; width: 380px;
+    border: 1px solid #444; boxShadow: 0 5px 20px rgba(0,0,0,0.6); cursor: default;
+}
+.sound-unlock-modal h3 { margin: 0 0 15px; font-size: 22px; color: #61dafb; }
+.sound-unlock-modal p { margin: 0 0 25px; line-height: 1.7; font-size: 16px; }
+.sound-unlock-hint { font-size: 13px; color: #999; }
+
+/* --- 其他 --- */
+.icon-vmiddle { vertical-align: middle; }
+#reportMessage.error { color: red; }
+#reportMessage.success { color: green; }
