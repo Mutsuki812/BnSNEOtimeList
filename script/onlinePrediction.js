@@ -19,6 +19,7 @@ export class OnlinePredictionManager {
     this.userManager = userManager;
     this.soundManager = soundManager;
     this.lastReports = {}; // 儲存從 GAS 獲取的最新回報資料
+    this.historyCache = {}; // 儲存歷史紀錄快取，減少畫面閃爍
     // 初始化狀態旗標
     this.isInitialized = false;
     this.openHistoryType = null; // 紀錄當前開啟的歷史紀錄類型
@@ -82,38 +83,96 @@ export class OnlinePredictionManager {
       const reports = {};
       const bossTypes = ['gishiki', 'shirao', 'sengen'];
 
-      bossTypes.forEach(type => {
-        // 優先尋找今日最晚的一筆 (因為已經 order desc，所以取第一筆)
-        const latestToday = todayData.find(d => d.bossType === type);
-        
-        if (latestToday) {
-          reports[type] = {
-            time: latestToday.timeStamp,
-            location: latestToday.locationA,
-            locationA: latestToday.locationA,
-            locationB: latestToday.locationB,
-            weekDay: latestToday.weekDay
-          };
-        } else {
-          // 規則 2: 若今日無資料，顯示昨日最晚一筆
-          const latestYesterday = yesterdayData.find(d => d.bossType === type);
-          if (latestYesterday) {
+      // 定義處理單日數據的內部邏輯
+      const processDayData = (data, weekDay) => {
+        bossTypes.forEach(type => {
+          // 如果已經有資料（今天處理過了），就跳過（針對昨日資料處理時）
+          if (reports[type]) return;
+
+          const bossReports = data.filter(d => d.bossType === type);
+          if (bossReports.length === 0) return;
+
+          // 1. 取得最晚的一筆回報時間作為基準點
+          const latestT = this.timeUtils.timeToMinutes(bossReports[0].timeStamp);
+          
+          // 2. 篩選出屬於「同一場重生事件」的回報 (例如與最晚一筆相差 20 分鐘內)
+          // 這是為了避免把 2 小時前的舊資料跟現在的資料混在一起判定
+          const eventReports = bossReports.filter(r => {
+            const t = this.timeUtils.timeToMinutes(r.timeStamp);
+            return (latestT - t) <= 20;
+          });
+
+          // 3. 透過判定函式計算基準時間
+          const result = this._calculateBaseTime(eventReports);
+          
+          if (result) {
             reports[type] = {
-              time: latestYesterday.timeStamp,
-              location: latestYesterday.locationA,
-              locationA: latestYesterday.locationA,
-              locationB: latestYesterday.locationB,
-              weekDay: latestYesterday.weekDay
+              time: result.baseDate, // 這是一個 Date 物件
+              location: result.targetReport.locationA,
+              locationA: result.targetReport.locationA,
+              locationB: result.targetReport.locationB,
+              weekDay: weekDay,
+              method: result.targetReport.method
             };
           }
-        }
-      });
+        });
+      };
+
+      // 先處理今天，再處理昨天
+      processDayData(todayData, todayWeekDay);
+      processDayData(yesterdayData, yesterdayWeekDay);
 
       this.lastReports = reports;
     } catch (e) {
       console.error("Fetch prediction data error:", e);
       this.lastReports = {};
     }
+  }
+
+  /**
+   * 基準時間判定函式
+   * 權重：系統出字(3) > 打雷中(2) > 王已出(1)
+   * 修正：打雷 -1m, 王已出 -5m
+   * @param {Array} eventReports - 同一場事件的回報集合
+   * @returns {Object|null} 包含計算後的 Date 物件與所選的回報原始資料
+   */
+  _calculateBaseTime(eventReports) {
+    if (!eventReports || eventReports.length === 0) return null;
+
+    const weights = { '系統出字': 3, '打雷中': 2, '王已出': 1 };
+    const offsets = { '系統出字': 0, '打雷中': -1, '王已出': -5 };
+
+    // 1. 找出目前的最高優先級權重
+    let maxWeight = 0;
+    eventReports.forEach(r => {
+      const w = weights[r.method] || 1; // 預設權重為1
+      if (w > maxWeight) maxWeight = w;
+    });
+
+    // 2. 篩選出符合最高權重的所有回報
+    const topPriorityReports = eventReports.filter(r => (weights[r.method] || 1) === maxWeight);
+
+    // 3. 在相同優先級中，取「時間最早」的那一筆 (timeStamp 升序排序)
+    topPriorityReports.sort((a, b) => {
+      return this.timeUtils.timeToMinutes(a.timeStamp) - this.timeUtils.timeToMinutes(b.timeStamp);
+    });
+
+    const targetReport = topPriorityReports[0];
+    
+    // 4. 轉換為 Date 物件
+    const baseDate = this.timeUtils.timeStringToDateToday(targetReport.timeStamp);
+    if (!baseDate) return null;
+
+    // 5. 根據狀態進行偏移修正
+    const offsetMinutes = offsets[targetReport.method] || 0;
+    if (offsetMinutes !== 0) {
+      baseDate.setMinutes(baseDate.getMinutes() + offsetMinutes);
+    }
+
+    return {
+      baseDate,
+      targetReport
+    };
   }
 
   /**
@@ -521,56 +580,72 @@ console.log("end>>>"+endPredTotalMinutes);
 
       if (error) throw error;
 
-      if (historyData && historyData.length > 0) {
-        listDiv.innerHTML = '';
-        historyData.forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'report-history-item';
+      // 更新快取並再次渲染最新數據
+      this.historyCache[typeKey] = historyData || [];
+      this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey]);
 
-          const formattedTime = this._parseAndFormatTime(item.timeStamp);
-          const userName = item.Users ? item.Users.userName : '訪客';
-
-          let methodClass = 'hist-tag';
-          if (item.method === '系統出字') methodClass += ' tag-system';
-          else if (item.method === '打雷中') methodClass += ' tag-thunder';
-          else methodClass += ' tag-spawned';
-
-          let locText = item.locationA || '-';
-          if (typeKey === 'gishiki' && item.locationB && item.locationB !== '-') {
-            locText += ` / ${item.locationB}`;
-          }
-
-          row.innerHTML = `
-            <div class="hist-left">
-              <span class="hist-time gray">${formattedTime}</span>
-              <span class="${methodClass}">${item.method || '王已出'}</span>
-              <span class="hist-loc">${locText}</span>
-            </div>
-            <div class="hist-right">
-              <span class="hist-user user-tag gray" title="提交者">${userName}</span>
-              <span class="hist-actions"></span>
-            </div>
-          `;
-
-          if (currentUserId && item.user_id === currentUserId) {
-            const actionsSpan = row.querySelector('.hist-actions');
-            const delBtn = document.createElement('span');
-            delBtn.innerHTML = '<img src="./images/delete24.png" alt="刪除" class="icon-delete">';
-            delBtn.className = 'hist-del-btn';
-            delBtn.title = "刪除回報";
-            delBtn.onclick = () => this.deleteReport(item, typeKey, listDiv);
-            actionsSpan.appendChild(delBtn);
-          }
-
-          listDiv.appendChild(row);
-        });
-      } else {
-        listDiv.innerHTML = '尚無今日紀錄';
-      }
     } catch (e) {
       console.error(e);
-      listDiv.innerHTML = '載入失敗';
+      // 如果本來就沒快取才顯示失敗，否則保留舊資料
+      if (!this.historyCache[typeKey]) {
+        listDiv.innerHTML = '載入失敗';
+      }
     }
+  }
+
+  /**
+   * 內部方法：將歷史數據陣列渲染至 DOM
+   */
+  _renderHistoryItems(typeKey, listDiv, historyData) {
+    if (!historyData || historyData.length === 0) {
+      listDiv.innerHTML = '尚無今日紀錄';
+      return;
+    }
+
+    const currentUserId = this.userManager.getCurrentUser()?.id;
+    listDiv.innerHTML = '';
+
+    historyData.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'report-history-item';
+
+      const formattedTime = this._parseAndFormatTime(item.timeStamp);
+      const userName = item.Users ? item.Users.userName : '訪客';
+
+      let methodClass = 'hist-tag';
+      if (item.method === '系統出字') methodClass += ' tag-system';
+      else if (item.method === '打雷中') methodClass += ' tag-thunder';
+      else methodClass += ' tag-spawned';
+
+      let locText = item.locationA || '-';
+      if (typeKey === 'gishiki' && item.locationB && item.locationB !== '-') {
+        locText += ` / ${item.locationB}`;
+      }
+
+      row.innerHTML = `
+        <div class="hist-left">
+          <span class="hist-time gray">${formattedTime}</span>
+          <span class="${methodClass}">${item.method || '王已出'}</span>
+          <span class="hist-loc">${locText}</span>
+        </div>
+        <div class="hist-right">
+          <span class="hist-user user-tag gray" title="提交者">${userName}</span>
+          <span class="hist-actions"></span>
+        </div>
+      `;
+
+      if (currentUserId && item.user_id === currentUserId) {
+        const actionsSpan = row.querySelector('.hist-actions');
+        const delBtn = document.createElement('span');
+        delBtn.innerHTML = '<img src="./images/delete24.png" alt="刪除" class="icon-delete">';
+        delBtn.className = 'hist-del-btn';
+        delBtn.title = "刪除回報";
+        delBtn.onclick = () => this.deleteReport(item, typeKey, listDiv);
+        actionsSpan.appendChild(delBtn);
+      }
+
+      listDiv.appendChild(row);
+    });
   }
 
   deleteReport(item, typeKey, listDiv) {
@@ -661,7 +736,6 @@ console.log("end>>>"+endPredTotalMinutes);
       const { error } = await supabase
         .from('spawn_reports')
         .insert([payload]);
-				btnElement.dataset.isSubmitting = 'true';
       
       if (error) {
         throw error;
@@ -670,8 +744,9 @@ console.log("end>>>"+endPredTotalMinutes);
       msgDiv.className = "report-msg success";
       msgDiv.textContent = "回報成功！感謝您的貢獻。";
       
-      // 更新本地緩存並刷新顯示
-      this.updateLocalCache(typeKey, payload);
+      // 回報成功後，重新從資料庫抓取數據並執行「權重判定邏輯」
+      // 這能確保 UI 顯示的是根據優先級判定後最準確的時間點，而非僅顯示自己剛輸入的內容
+      await this.fetchPredictionData();
       this.updateView();
 
     } catch (error) {
@@ -682,37 +757,6 @@ console.log("end>>>"+endPredTotalMinutes);
       btnElement.disabled = false;
       btnElement.textContent = "回報";
 			btnElement.dataset.isSubmitting = 'false';
-    }
-  }
-
-  /**
-   * 暫時更新本地緩存以即時反映 UI
-   */
-  updateLocalCache(typeKey, payload) {
-    const newMinutes = this.timeUtils.timeToMinutes(payload.timeStamp);
-    const cached = this.lastReports[typeKey];
-    
-    // 判斷是否更新顯示的邏輯：
-    // 1. 目前沒有資料
-    // 2. 目前顯示的是昨天的資料 (payload 永遠是今天)
-    // 3. 目前顯示的是今天的資料，且新回報的時間 >= 顯示的時間
-    const isNewerToday = cached && cached.weekDay === payload.weekDay && newMinutes >= this.timeUtils.timeToMinutes(cached.time);
-    const isFirstToday = cached && cached.weekDay !== payload.weekDay;
-
-    if (!cached || isFirstToday || isNewerToday) {
-      if (!this.lastReports[typeKey]) this.lastReports[typeKey] = {};
-      
-      this.lastReports[typeKey].time = payload.timeStamp;
-      this.lastReports[typeKey].weekDay = payload.weekDay;
-    
-      if (typeKey === 'gishiki') {
-        this.lastReports[typeKey].locationA = payload.locationA;
-        this.lastReports[typeKey].locationB = payload.locationB;
-        this.lastReports[typeKey].method = payload.method;
-      } else {
-        this.lastReports[typeKey].method = payload.method;
-        this.lastReports[typeKey].location = payload.locationA;
-      }
     }
   }
 }

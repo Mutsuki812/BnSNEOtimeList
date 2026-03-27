@@ -72,7 +72,7 @@ export class UserManager {
 
     box.innerHTML = `
       <h3>請輸入暱稱</h3>
-      <p>用於管理您的回報紀錄</p>
+      <p>僅用於刪除自己的回報紀錄或留言</p>
       <input type="text" id="loginNameInput" class="modal-input" placeholder="輸入名稱...">
       <div id="loginMsg" class="modal-msg"></div>
       <div class="modal-btn-group">
