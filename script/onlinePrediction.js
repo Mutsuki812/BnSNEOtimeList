@@ -242,10 +242,14 @@ export class OnlinePredictionManager {
       const lastReport = this.lastReports['gishiki'];
       
       if (lastReport && lastReport.time) {
+        const now = this.timeUtils.getNowBySVR();
+        const todayWeekDay = now.getDay() === 0 ? 7 : now.getDay();
+        const yesterdayPrefix = lastReport.weekDay !== todayWeekDay ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
+
         const formattedTime = this._parseAndFormatTime(lastReport.time);
         timeEl.textContent = "上次出現";
         timeEl.classList.add('prediction-label');
-        contentEl.textContent = `${formattedTime} ${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
+        contentEl.innerHTML = `${yesterdayPrefix}${formattedTime} ${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
       } else {
         timeEl.textContent = "尚無數據";
         timeEl.classList.add('prediction-label', 'text-placeholder');
@@ -305,7 +309,7 @@ console.log("end>>>"+endPredTotalMinutes);
         const timeStr = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
         return (totalHours >= 24 && showTomorrow)
-          ? `明天 ${timeStr}`
+          ? `<span style="font-size: 0.8em;">明天</span> ${timeStr}`
           : timeStr;
       };
 
@@ -339,7 +343,8 @@ console.log("end>>>"+endPredTotalMinutes);
       `;
       timeEl.classList.remove('prediction-highlight', 'prediction-label');
 
-      const lastInfo = `${formattedTime} ${lastReport.location || ''}`;
+      const yesterdayPrefix = lastReport.weekDay !== todayWeekDay ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
+      const lastInfo = `${yesterdayPrefix}${formattedTime} ${lastReport.location || ''}`;
       contentEl.innerHTML = `
         <div class="pred-row-info">${lastInfo}</div>
         <div class="${predTimeClass}">${predInfo}</div>
