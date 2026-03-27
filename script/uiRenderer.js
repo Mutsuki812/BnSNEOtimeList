@@ -28,7 +28,7 @@ export class UIRenderer {
     const timeLabel = "台灣時間";
 
     DOMHelper.updateElement("timeBox", `
-      <span class="timeLabel">${timeLabel}</span>
+      <span class="timeLabel admin-trigger" style="cursor: default;">${timeLabel}</span>
       <span class="timeValue">${timeStr}</span>
     `);
   }

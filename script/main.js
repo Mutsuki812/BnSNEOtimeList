@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260326-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260328-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -52,6 +52,16 @@ class TaskScheduleApp {
     this.reportManager.updateAll();
     this.reportManager.loadReports();
     this.startTimers();
+
+    // 綁定隱藏的管理者登入觸發點
+    const timeBox = document.getElementById('timeBox');
+    if (timeBox) {
+      timeBox.addEventListener('click', (e) => {
+        if (e.target.classList.contains('admin-trigger')) {
+          this.userManager.showAdminLoginModal();
+        }
+      });
+    }
 
     // 僅在中文環境下，延遲短時間後顯示音效解鎖提示，引導使用者互動
     // 這樣可以確保音效功能正常運作

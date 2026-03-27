@@ -681,18 +681,17 @@ body {
   cursor: pointer;
 }
 
-/* History List */
 .report-history-list {
-  margin-top: var(--space-sm);
-  padding: var(--space-sm);
+  display: block !important; /* 強制覆蓋 common.css 的 display: none */
   background: rgba(255, 255, 255, 0.5);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
-  max-height: 150px;
-  overflow-y: auto;
-  display: none; /* 預設為隱藏 */
+  border-color: var(--color-border);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
 }
+
 .report-history-item {
   display: flex;
   justify-content: space-between;
@@ -702,6 +701,14 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 0.85rem;
   background: rgba(255, 255, 255, 0.3);
+}
+.report-history-list.open {
+  max-height: 150px; /* 限制高度為 150px */
+  overflow-y: auto;   /* 超過時顯示捲軸 */
+  opacity: 1;
+  padding: var(--space-sm) !important;
+  margin-top: 10px !important;
+  margin-bottom: 5px !important;
 }
 
 .report-history-item:hover {
@@ -775,6 +782,20 @@ body {
   text-align: center;
   white-space: nowrap;
   display: inline-block;
+}
+
+/* 管理者名稱標籤樣式 */
+.admin-tag {
+  background-color: #999999 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  text-align: center;
+  white-space: nowrap;
+  display: inline-block;
+  font-weight: var(--font-weight-bold);
 }
 
 .icon-delete {
@@ -868,7 +889,7 @@ body {
 .pred-row-time {
   font-size: var(--font-size-md);
   line-height: 1.5;
-  font-family: var(--font-family-time);
+  font-family: var(--font-family-content);
   border-radius: var(--radius-sm);
   padding-left: 4px;
 }
@@ -946,7 +967,7 @@ body {
 }
 
 .reportList {
-  max-height: 300px;
+  max-height: 150px; /* 限制高度為 150px */
   overflow-y: auto;
   padding: var(--space-sm);
   margin-top: var(--space-md);
@@ -1044,10 +1065,10 @@ select:focus-visible {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 .modal-box h3 { margin: 0 0 10px; }
-.modal-box p { font-size: 13px; color: #666; margin-bottom: 20px; }
-.modal-text { font-size: 15px; color: #333; margin-bottom: 20px; }
+.modal-box p { font-size: 13px; color: #666; }
+.modal-text { font-size: 15px; color: #333; margin-bottom: 10px;}
 .modal-input {
-    padding: 10px; width: 80%; margin-bottom: 15px;
+    padding: 10px; width: 80%; margin-top: 15px;
     border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
 }
 .modal-msg { color: red; font-size: 12px; margin-bottom: 15px; height: 1.2em; }

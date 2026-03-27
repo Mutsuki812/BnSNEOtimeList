@@ -47,7 +47,7 @@ export class OnlinePredictionManager {
   }
 
   /**
-   * 從 GAS 獲取預測所需的回報數據
+   * 從 Supabase 獲取預測所需的回報數據
    * 規則：
    * 1. 優先抓取今日的最後一筆回報。
    * 2. 如果今日無任何回報，則抓取昨日的最後一筆回報。
@@ -91,6 +91,13 @@ export class OnlinePredictionManager {
 
           const bossReports = data.filter(d => d.bossType === type);
           if (bossReports.length === 0) return;
+
+          // 過濾掉未來時間的回報（針對今日數據），容許 5 分鐘緩衝
+          if (weekDay === todayWeekDay) {
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            const filtered = bossReports.filter(r => this.timeUtils.timeToMinutes(r.timeStamp) <= (nowMins + 5));
+            if (filtered.length === 0 && bossReports.length > 0) return; // 如果今日全是未來時間，則略過，改用昨日數據
+          }
 
           // 1. 取得最晚的一筆回報時間作為基準點
           const latestT = this.timeUtils.timeToMinutes(bossReports[0].timeStamp);
@@ -243,13 +250,15 @@ export class OnlinePredictionManager {
       
       if (lastReport && lastReport.time) {
         const now = this.timeUtils.getNowBySVR();
-        const todayWeekDay = now.getDay() === 0 ? 7 : now.getDay();
-        const yesterdayPrefix = lastReport.weekDay !== todayWeekDay ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
+        const dayOfWeek = now.getDay();
+        const todayWeekDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+        const yesterdayPrefix = (lastReport.weekDay !== todayWeekDay) ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
 
         const formattedTime = this._parseAndFormatTime(lastReport.time);
         timeEl.textContent = "上次出現";
         timeEl.classList.add('prediction-label');
-        contentEl.innerHTML = `${yesterdayPrefix}${formattedTime} ${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
+        const locText = (lastReport.locationA === '-' && lastReport.locationB === '-') ? '-' : `${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
+        contentEl.innerHTML = `${yesterdayPrefix}${formattedTime} ${locText}`;
       } else {
         timeEl.textContent = "尚無數據";
         timeEl.classList.add('prediction-label', 'text-placeholder');
@@ -298,19 +307,29 @@ export class OnlinePredictionManager {
       }
       const reportTotalMinutes = h * 60 + m;
 
+      const isYesterday = lastReport.weekDay !== todayWeekDay;
       const startPredTotalMinutes = reportTotalMinutes + CONSTANTS.PREDICTION_OFFSET_MINUTES.START;
       const endPredTotalMinutes = reportTotalMinutes + CONSTANTS.PREDICTION_OFFSET_MINUTES.END;
-console.log("end>>>"+endPredTotalMinutes);
-      const formatMinutesToTime = (totalMinutes, showTomorrow = true) => {
+
+      const formatMinutesToTime = (totalMinutes, showLabel = true) => {
         const totalHours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
+        const realMinutes = totalMinutes % 60;
         const displayHours = totalHours % 24;
         
-        const timeStr = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        const timeStr = `${String(displayHours).padStart(2, '0')}:${String(realMinutes).padStart(2, '0')}`;
 
-        return (totalHours >= 24 && showTomorrow)
-          ? `<span style="font-size: 0.8em;">明天</span> ${timeStr}`
-          : timeStr;
+        if (!showLabel) return timeStr;
+
+        let label = '';
+        // 以「今天的 00:00」為基準計算相對天數
+        const dayOffset = isYesterday ? -1 : 0;
+        const hoursFromTodayMidnight = totalHours + (dayOffset * 24);
+
+        if (hoursFromTodayMidnight < 0) label = '昨天';
+        else if (hoursFromTodayMidnight >= 48) label = '後天';
+        else if (hoursFromTodayMidnight >= 24) label = '明天';
+
+        return label ? `<span style="font-size: 0.8em;">${label}</span> ${timeStr}` : timeStr;
       };
 
       // 判斷是否已超過預測時間
@@ -343,7 +362,7 @@ console.log("end>>>"+endPredTotalMinutes);
       `;
       timeEl.classList.remove('prediction-highlight', 'prediction-label');
 
-      const yesterdayPrefix = lastReport.weekDay !== todayWeekDay ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
+      const yesterdayPrefix = (lastReport.weekDay !== todayWeekDay) ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
       const lastInfo = `${yesterdayPrefix}${formattedTime} ${lastReport.location || ''}`;
       contentEl.innerHTML = `
         <div class="pred-row-info">${lastInfo}</div>
@@ -396,6 +415,7 @@ console.log("end>>>"+endPredTotalMinutes);
 
     // 如果狀態紀錄為開啟，則自動顯示並加載數據
     if (this.openHistoryType === typeKey) {
+      historyListDiv.classList.add('open');
       this.loadAndRenderHistory(typeKey, historyListDiv);
     }
 
@@ -522,7 +542,7 @@ console.log("end>>>"+endPredTotalMinutes);
     historyBtn.className = 'report-history-btn';
     historyBtn.innerHTML = '<img src="./images/history30.png" alt="今日紀錄">';
     historyBtn.title = "今日紀錄";
-    historyBtn.onclick = () => this.toggleHistory(typeKey, historyListDiv);
+    historyBtn.onclick = (e) => this.toggleHistory(typeKey, historyListDiv, e);
 
     const submitBtn = document.createElement('button');
     submitBtn.textContent = "回報";
@@ -540,24 +560,24 @@ console.log("end>>>"+endPredTotalMinutes);
   /**
    * 切換顯示歷史紀錄
    */
-  async toggleHistory(typeKey, listDiv) {
-    const isCurrentlyHidden = listDiv.style.display === 'none' || !listDiv.style.display;
+  async toggleHistory(typeKey, listDiv, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const isOpening = !listDiv.classList.contains('open');
 
     // 關閉所有其他的歷史紀錄列表
-    document.querySelectorAll('.report-history-list').forEach(otherList => {
-      if (otherList !== listDiv) {
-        otherList.style.display = 'none';
-      }
-    });
+    document.querySelectorAll('.report-history-list').forEach(el => el.classList.remove('open'));
 
-    // 如果原本是隱藏的，就打開它並載入資料
-    if (isCurrentlyHidden) {
+    if (isOpening) {
       this.openHistoryType = typeKey;
-      this.loadAndRenderHistory(typeKey, listDiv);
+      listDiv.classList.add('open');
+      await this.loadAndRenderHistory(typeKey, listDiv);
     } else {
-      // 如果原本是可見的，就將其隱藏
       this.openHistoryType = null;
-      listDiv.style.display = 'none';
+      listDiv.classList.remove('open');
     }
   }
 
@@ -565,10 +585,14 @@ console.log("end>>>"+endPredTotalMinutes);
    * 載入並渲染歷史數據
    */
   async loadAndRenderHistory(typeKey, listDiv) {
-    listDiv.style.display = 'block';
-    listDiv.innerHTML = '載入中...';
+    const hasCache = this.historyCache[typeKey] && this.historyCache[typeKey].length > 0;
 
-    const currentUserId = this.userManager.getCurrentUser()?.id;
+    // 如果有快取，先行渲染以防止畫面閃爍
+    if (hasCache) {
+      this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey], false);
+    } else {
+      listDiv.innerHTML = '<div class="report-loading">載入中...</div>';
+    }
 
     try {
       const supabase = await SupabaseHelper.getClient();
@@ -578,21 +602,26 @@ console.log("end>>>"+endPredTotalMinutes);
 
       const { data: historyData, error } = await supabase
         .from('spawn_reports')
-        .select('*, Users(userName)')
+        .select('*, Users(userName, role)')
         .eq('bossType', typeKey)
         .eq('weekDay', todayWeekDay)
         .order('timeStamp', { ascending: false });
 
       if (error) throw error;
 
-      // 更新快取並再次渲染最新數據
-      this.historyCache[typeKey] = historyData || [];
-      this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey]);
+      const newData = historyData || [];
+      
+      // 比對資料是否有變動，若無變動則不重複渲染 DOM
+      const isSameData = hasCache && JSON.stringify(this.historyCache[typeKey]) === JSON.stringify(newData);
+      
+      if (!isSameData) {
+        this.historyCache[typeKey] = newData;
+        this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey], hasCache);
+      }
 
     } catch (e) {
       console.error(e);
-      // 如果本來就沒快取才顯示失敗，否則保留舊資料
-      if (!this.historyCache[typeKey]) {
+      if (!hasCache) {
         listDiv.innerHTML = '載入失敗';
       }
     }
@@ -601,7 +630,7 @@ console.log("end>>>"+endPredTotalMinutes);
   /**
    * 內部方法：將歷史數據陣列渲染至 DOM
    */
-  _renderHistoryItems(typeKey, listDiv, historyData) {
+  _renderHistoryItems(typeKey, listDiv, historyData, animate = false) {
     if (!historyData || historyData.length === 0) {
       listDiv.innerHTML = '尚無今日紀錄';
       return;
@@ -613,14 +642,18 @@ console.log("end>>>"+endPredTotalMinutes);
     historyData.forEach(item => {
       const row = document.createElement('div');
       row.className = 'report-history-item';
+      if (animate) row.classList.add('history-item-animate');
 
       const formattedTime = this._parseAndFormatTime(item.timeStamp);
-      const userName = item.Users ? item.Users.userName : '訪客';
+      const isAdmin = !!(item.Users && item.Users.role === 'admin'); // 判斷是否為管理者
+      const userName = isAdmin ? '管理者' : (item.Users ? item.Users.userName : ''); // 管理者顯示為 [管理者]，一般使用者顯示其名稱
 
       let methodClass = 'hist-tag';
       if (item.method === '系統出字') methodClass += ' tag-system';
       else if (item.method === '打雷中') methodClass += ' tag-thunder';
       else methodClass += ' tag-spawned';
+
+      const userClass = isAdmin ? 'hist-user admin-tag' : 'hist-user user-tag gray';
 
       let locText = item.locationA || '-';
       if (typeKey === 'gishiki' && item.locationB && item.locationB !== '-') {
@@ -634,7 +667,7 @@ console.log("end>>>"+endPredTotalMinutes);
           <span class="hist-loc">${locText}</span>
         </div>
         <div class="hist-right">
-          <span class="hist-user user-tag gray" title="提交者">${userName}</span>
+          <span class="${userClass}" title="提交者">${userName}</span>
           <span class="hist-actions"></span>
         </div>
       `;
@@ -660,6 +693,13 @@ console.log("end>>>"+endPredTotalMinutes);
         if (!user) return;
 
         const supabase = await SupabaseHelper.getClient();
+        console.log('[DB Delete] spawn_reports:', {
+          timeStamp: item.timeStamp,
+          bossType: item.bossType,
+          weekDay: item.weekDay,
+          user_id: user.id
+        });
+
         // 使用複合主鍵 + user_id 刪除，確保只能刪除自己的資料
         const { error } = await supabase.from('spawn_reports').delete().match({
           timeStamp: item.timeStamp,
@@ -715,8 +755,15 @@ console.log("end>>>"+endPredTotalMinutes);
     // 準備 Payload
     const nowSVR = this.timeUtils.getNowBySVR();
     const dayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
-    // 將 weekday 轉換為數字 (1-7) 以保持資料庫一致性
-    const weekdayNumber = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+    let weekdayNumber = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+    // 跨午夜處理：如果現在是凌晨 (0-3點) 且回報時間是深夜 (21-23點)
+    // 則自動判定該回報屬於「昨天」
+    const [reportH] = timeVal.split(':').map(Number);
+    if (nowSVR.getHours() < 3 && reportH >= 21) {
+      weekdayNumber = (weekdayNumber === 1) ? 7 : weekdayNumber - 1;
+    }
     
     const payload = {
       weekDay: weekdayNumber,
@@ -738,6 +785,8 @@ console.log("end>>>"+endPredTotalMinutes);
 
     try {
       const supabase = await SupabaseHelper.getClient();
+      console.log('[DB Insert] spawn_reports:', payload);
+
       const { error } = await supabase
         .from('spawn_reports')
         .insert([payload]);
@@ -749,9 +798,17 @@ console.log("end>>>"+endPredTotalMinutes);
       msgDiv.className = "report-msg success";
       msgDiv.textContent = "回報成功！感謝您的貢獻。";
       
-      // 回報成功後，重新從資料庫抓取數據並執行「權重判定邏輯」
-      // 這能確保 UI 顯示的是根據優先級判定後最準確的時間點，而非僅顯示自己剛輸入的內容
+      // 1. 立即重新抓取預測基準數據
       await this.fetchPredictionData();
+      
+      // 2. 如果歷史紀錄是開啟的，強制重新載入歷史清單
+      if (this.openHistoryType === typeKey) {
+        const group = document.querySelector(`.group.${typeKey}`);
+        const listDiv = group?.querySelector('.report-history-list');
+        if (listDiv) this.loadAndRenderHistory(typeKey, listDiv);
+      }
+
+      // 3. 更新上方時間顯示
       this.updateView();
 
     } catch (error) {

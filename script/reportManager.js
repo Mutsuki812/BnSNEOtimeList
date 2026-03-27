@@ -148,7 +148,7 @@ export class ReportManager {
   }
 
   /**
-   * 提交回報至 GAS
+   * 提交回報至 Supabase
    */
   async submitReport() {
     const taskType = this.reportTaskTypeEl?.value;
@@ -176,6 +176,8 @@ export class ReportManager {
       this.submitReportBtn.disabled = true; // 防止重複點擊
       this.submitReportBtn.textContent = "傳送中...";
       
+      console.log('[DB Insert] feedback_reports:', payload);
+
       const supabase = await SupabaseHelper.getClient();
       const { error } = await supabase
         .from('feedback_reports')
@@ -203,7 +205,7 @@ export class ReportManager {
   }
 
   /**
-   * 從 GAS 載入現有的回報列表
+   * 從 Supabase 載入現有的回報列表
    */
   async loadReports() {
     if (!this.reportListEl) return;
@@ -212,7 +214,7 @@ export class ReportManager {
       const supabase = await SupabaseHelper.getClient();
       const { data: reports, error } = await supabase
         .from('feedback_reports')
-        .select('*, Users(userName)')
+        .select('*, Users(userName, role)')
         .order('postTime', { ascending: false })
         .limit(20);
 
@@ -232,7 +234,8 @@ export class ReportManager {
       reports.forEach((r) => {
         const div = DOMHelper.createElement("div", "report-history-item");
         const displayTime = r.postTime.substring(5, 16).replace('-', '/').replace('T', ' '); // 顯示 MM/DD HH:mm
-        const userName = r.Users ? r.Users.userName : '訪客';
+        const isAdmin = !!(r.Users && r.Users.role === 'admin');
+        const userName = isAdmin ? '管理者' : (r.Users ? r.Users.userName : ''); // 管理者顯示為 [管理者]，一般使用者顯示其名稱
         
         let respond = '';
         // 檢查是否有管理員回覆
@@ -248,14 +251,19 @@ export class ReportManager {
         else if (r.bossType.includes('仙幻')) typeClass += ' type-sengen';
         else typeClass += ' type-other';
 
+        const userClass = isAdmin ? 'hist-user admin-tag' : 'hist-user user-tag gray';
+        
+        // 判定是否為「其他 - 想說」組合，若是則隱藏 reportType 顯示
+        const reportPrefix = (r.bossType === '其他' && r.reportType === '想說') ? '' : `${r.reportType}: `;
+
         div.innerHTML = `
           <div class="hist-left">
             <span class="hist-time gray">${displayTime}</span>
             <span class="${typeClass}">${r.bossType}</span>
-            <span class="hist-loc">${r.reportType}: ${r.comment} ${respond}</span>
+            <span class="hist-loc">${reportPrefix}${r.comment} ${respond}</span>
           </div>
           <div class="hist-right">
-            <span class="hist-user user-tag gray">${userName}</span>
+            <span class="${userClass}">${userName}</span>
             <span class="hist-actions"></span>
           </div>
         `;
@@ -286,6 +294,8 @@ export class ReportManager {
         if (!user) return;
 
         const supabase = await SupabaseHelper.getClient();
+        console.log('[DB Delete] feedback_reports:', { postTime, user_id: user.id });
+
         // 增加 user_id 檢查，確保只能刪除自己的資料
         const { error } = await supabase.from('feedback_reports').delete().eq('postTime', postTime).eq('user_id', user.id);
         if (error) throw error;
