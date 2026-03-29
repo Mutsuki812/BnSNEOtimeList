@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260328-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260329-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -202,8 +202,6 @@ class TaskScheduleApp {
 
     // 渲染完成後，注入線上預測與回報 UI
     this.onlinePredictionManager.updateView();
-
-    this.checkAndPlayWorldBossSound();
   }
 
   /**
@@ -249,10 +247,14 @@ class TaskScheduleApp {
     const day = now.getDay(); // 0=日, 1=一, ..., 6=六
     const hour = now.getHours();
     const minute = now.getMinutes();
+    const second = now.getSeconds();
 
     let audioSrc = null;
-
     const isWeekend = (day === 0 || day === 6);
+
+    // 只有在每分鐘的前 5 秒內嘗試觸發，確保在分鐘轉換瞬間立即執行
+    // 搭配 SoundManager 內部的 playId (HH:MM) 檢查，同一分鐘內只會播放一次
+    if (second > 5) return;
 
     if (hour === 20) {
       if (minute === 50) audioSrc = './audio/boss10.mp3';
@@ -265,7 +267,7 @@ class TaskScheduleApp {
     }
 
     if (audioSrc) {
-      console.log(`[世界王] 嘗試在伺服器時間 ${hour}:${minute} 播放 ${audioSrc}`);
+      console.log(`[世界王] 精確秒數觸發 (${second}s)：在 ${hour}:${minute} 播放 ${audioSrc}`);
       const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       this.soundManager.playWorldBossSound(audioSrc, playId);
     }
@@ -439,8 +441,11 @@ class TaskScheduleApp {
 
     // 每秒更新一次時間
     this.secondlyIntervalId = setInterval(() => {
-      this.uiRenderer.updateTopTime();
+      // 將音效檢查移至最頂端，優先於 UI 渲染執行，避免阻塞
+      this.checkAndPlayWorldBossSound();
       this.checkPreAlerts();
+      
+      this.uiRenderer.updateTopTime();
     }, 1000);
 
     // 每分鐘更新 (與分鐘開始時同步)
