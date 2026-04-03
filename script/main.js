@@ -354,7 +354,7 @@ class TaskScheduleApp {
                return; // continue to next item in forEach
              }
           }
-          console.log(`[Sound Check] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
+          console.log(`[音效檢查] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
           this.soundManager.playTaskSound(type.key, item);
         }
       }

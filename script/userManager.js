@@ -55,7 +55,7 @@ export class UserManager {
     try {
       const supabase = await SupabaseHelper.getClient();
       const now = new Date().toISOString();
-      console.log('[DB Update] Users.last_online:', { userId, time: now });
+      console.log('[表單更新] 最後連線時間:', { userId, time: now });
       const { data, error } = await supabase
         .from('Users')
         .update({ last_online: now })
@@ -195,7 +195,7 @@ export class UserManager {
 
         if (!user) {
           // 情況 A：新使用者，直接建立並儲存身分
-          console.log('[DB Insert] Users (New User):', { userName: name });
+          console.log('[表單新增] 新的使用者:', { userName: name });
           const { data: newUsers, error } = await supabase.from('Users').insert([{ userName: name }]).select('id, userName, role');
           if (error) throw error;
           user = newUsers[0];
@@ -382,7 +382,7 @@ export class UserManager {
           return;
         }
 
-        console.log('[DB Update] Users.userName:', { id: this.currentUser.id, newName });
+        console.log('[表單更新] 使用者名:', { id: this.currentUser.id, newName });
         const { error } = await supabase.from('Users').update({ userName: newName }).eq('id', this.currentUser.id);
         if (error) throw error;
 

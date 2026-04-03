@@ -176,7 +176,7 @@ export class ReportManager {
       this.submitReportBtn.disabled = true; // 防止重複點擊
       this.submitReportBtn.textContent = "傳送中...";
       
-      console.log('[DB Insert] feedback_reports:', payload);
+      console.log('[表單新增] 一般留言區:', payload);
 
       const supabase = await SupabaseHelper.getClient();
       const { error } = await supabase
@@ -294,7 +294,7 @@ export class ReportManager {
         if (!user) return;
 
         const supabase = await SupabaseHelper.getClient();
-        console.log('[DB Delete] feedback_reports:', { postTime, user_id: user.id });
+        console.log('[表單刪除] 一般留言區:', { postTime, user_id: user.id });
 
         // 增加 user_id 檢查，確保只能刪除自己的資料
         const { error } = await supabase.from('feedback_reports').delete().eq('postTime', postTime).eq('user_id', user.id);

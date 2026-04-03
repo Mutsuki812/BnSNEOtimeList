@@ -693,7 +693,7 @@ export class OnlinePredictionManager {
         if (!user) return;
 
         const supabase = await SupabaseHelper.getClient();
-        console.log('[DB Delete] spawn_reports:', {
+        console.log('[表單刪除] 即時回報區:', {
           timeStamp: item.timeStamp,
           bossType: item.bossType,
           weekDay: item.weekDay,
@@ -785,7 +785,7 @@ export class OnlinePredictionManager {
 
     try {
       const supabase = await SupabaseHelper.getClient();
-      console.log('[DB Insert] spawn_reports:', payload);
+      console.log('[表單新增] 即時回報區:', payload);
 
       const { error } = await supabase
         .from('spawn_reports')

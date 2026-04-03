@@ -171,7 +171,7 @@ export class SoundManager {
    */
   playTaskSound(taskTypeKey, taskItem) {
     if (!this.isSoundEnabled(taskTypeKey)) {
-      console.log(`[Sound] 音效設定為關閉，跳過播放 (${taskTypeKey})`);
+      console.log(`[音效] 音效設定為關閉，跳過播放 (${taskTypeKey})`);
       return;
     }
 
@@ -179,7 +179,6 @@ export class SoundManager {
 
     // 如果該時間點的任務已經播放過，則跳過
     if (this.lastPlayed[taskTypeKey] === taskTime) {
-      // console.log(`[Sound] 此時間點已播放過，跳過 (${taskTime})`);
       return;
     }
 
@@ -200,9 +199,9 @@ export class SoundManager {
       playPromise.catch(error => {
         // 如果是 NotAllowedError (自動播放被阻擋)，則靜默處理或僅顯示 Log，避免控制台報錯干擾
         if (error.name === 'NotAllowedError') {
-          console.log(`[Sound] 自動播放被阻擋 (${taskTypeKey})。等待使用者互動後即可播放。`);
+          console.log(`[音效] 自動播放被阻擋 (${taskTypeKey})。等待使用者互動後即可播放。`);
         } else {
-          console.warn(`[Sound] 播放失敗 (${taskTypeKey})。`, error);
+          console.warn(`[音效] 播放失敗 (${taskTypeKey})。`, error);
         }
       });
     }
@@ -216,7 +215,7 @@ export class SoundManager {
   playWorldBossSound(audioSrc, playId) {
     const taskTypeKey = 'world_boss';
     if (!this.isSoundEnabled(taskTypeKey)) {
-      console.log(`[Sound] 世界王音效設定為關閉，跳過播放`);
+      console.log(`[音效] 世界王音效設定為關閉，跳過播放`);
       return;
     }
 
@@ -235,9 +234,9 @@ export class SoundManager {
     if (playPromise !== undefined) {
       playPromise.catch(error => {
         if (error.name === 'NotAllowedError') {
-          console.log(`[Sound] 自動播放被阻擋 (world_boss)。等待使用者互動後即可播放。`);
+          console.log(`[音效] 自動播放被阻擋 (world_boss)。等待使用者互動後即可播放。`);
         } else {
-          console.warn(`[Sound] 播放失敗 (world_boss)。`, error);
+          console.warn(`[音效] 播放失敗 (world_boss)。`, error);
         }
       });
     }
