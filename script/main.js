@@ -252,9 +252,9 @@ class TaskScheduleApp {
     let audioSrc = null;
     const isWeekend = (day === 0 || day === 6);
 
-    // 只有在每分鐘的前 5 秒內嘗試觸發，確保在分鐘轉換瞬間立即執行
-    // 搭配 SoundManager 內部的 playId (HH:MM) 檢查，同一分鐘內只會播放一次
-    if (second > 5) return;
+    // 考慮到分頁在背景執行時的計時器節流 (Throttling)，將觸發視窗調整為 30 秒
+    // 搭配 SoundManager 內部的 playId (HH:MM) 檢查，同一分鐘內仍只會播放一次
+    if (second > 30) return;
 
     if (hour === 20) {
       if (minute === 50) audioSrc = './audio/boss10.mp3';

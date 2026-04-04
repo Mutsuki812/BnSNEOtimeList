@@ -50,6 +50,7 @@ export class SoundManager {
     this.lastPlayed = {}; // 記錄每個任務類型最後播放的時間，防止重複播放
     // 改為使用單一 Audio 物件並重複使用，解決手機版 Chrome 禁止自動播放新 Audio 物件的問題
     this.audioPlayer = new Audio();
+    this.bossPlayer = new Audio(); // 獨立的世界王播放器，防止與一般任務音效衝突或被中斷
     this.silentSource = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
 
     // 監聽全域互動事件，一旦使用者與頁面互動（點擊、按鍵、觸控），就嘗試解鎖音訊
@@ -72,7 +73,7 @@ export class SoundManager {
    * @returns {boolean}
    */
   isSoundEnabled(taskTypeKey) {
-    // 預設為關閉
+    // 預設為開啟
     return !!this.settings[taskTypeKey];
   }
 
@@ -107,7 +108,14 @@ export class SoundManager {
     // 透過播放一段無聲的音訊來取得瀏覽器的播放權限，這是更可靠的方法。
     this.audioPlayer.src = this.silentSource;
     this.audioPlayer.volume = 0; // 靜音
-    this.audioPlayer.play().then(() => {
+
+    this.bossPlayer.src = this.silentSource;
+    this.bossPlayer.volume = 0; // 靜音
+
+    Promise.all([
+      this.audioPlayer.play(),
+      this.bossPlayer.play()
+    ]).then(() => {
       this.isAudioUnlocked = true;
       console.log('[音效] 音訊已由使用者互動解鎖。');
     }).catch(e => {
@@ -227,9 +235,9 @@ export class SoundManager {
     this.lastPlayed[taskTypeKey] = playId;
     console.log(`[音效] 正在播放世界王提示音，ID ${playId}`);
 
-    this.audioPlayer.src = audioSrc;
-    this.audioPlayer.volume = 1; // 恢復音量
-    const playPromise = this.audioPlayer.play();
+    this.bossPlayer.src = audioSrc;
+    this.bossPlayer.volume = 1; // 恢復音量
+    const playPromise = this.bossPlayer.play();
 
     if (playPromise !== undefined) {
       playPromise.catch(error => {
