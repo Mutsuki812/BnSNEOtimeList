@@ -267,9 +267,15 @@ class TaskScheduleApp {
     }
 
     if (audioSrc) {
-      console.log(`[世界王] 精確秒數觸發 (${second}s)：在 ${hour}:${minute} 播放 ${audioSrc}`);
       const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      this.soundManager.playWorldBossSound(audioSrc, playId);
+
+      // 只有當這一分鐘還沒播過時，才執行 Log 與播放指令
+      if (this.lastPlayedId !== playId) {
+        console.log(`[世界王] 精確秒數觸發 (${second}s)：在 ${hour}:${minute} 播放 ${audioSrc}`);
+        console.log(`[世界王] 成功觸發：在 ${playId} 播放 ${audioSrc}`);
+        this.soundManager.playWorldBossSound(audioSrc, playId);
+        this.lastPlayedId = playId; // 標記這一分鐘已處理
+      }
     }
   }
 
