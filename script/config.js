@@ -16,7 +16,7 @@ export const CONFIG = {
 };
 
 export const TASK_TYPES = [
-  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10, useOnlineSystem: false },
+  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10, useOnlineSystem: true },
   { key: "shirao", label: "白青野王", color: "#7b8d42", offsetMin: 5, useOnlineSystem: true },
   { key: "sengen", label: "仙幻島野王", color: "#B08F3E", offsetMin: 5, useOnlineSystem: true },
 ];
