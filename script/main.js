@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260408-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260408-2';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -300,7 +300,9 @@ class TaskScheduleApp {
   /**
    * 建立單一類型的任務群組 (包含 UI 元素)
    */
-  createTaskGroup(rows, type, todayWeek, tomorrowWeek, currentHour, currentMinute, currentDay, openStates, isActivityPeriod) {
+  createTaskGroup(rows, type, todayWeek, tomorrowWeek, currentHour, currentMinute, currentDay, openStates, isGlobalActivity) {
+    const isOnlineMode = isGlobalActivity && type.useOnlineSystem;
+
     // 獲取今天和明天的任務列表
     let todayList = this.taskProcessor.getTaskListForWeek(rows, type, todayWeek);
     let tomorrowList = this.taskProcessor.getTaskListForWeek(rows, type, tomorrowWeek);
@@ -334,8 +336,9 @@ class TaskScheduleApp {
             return; // 明天的任務，跳過
           }
 
-          // 特殊期間內，關閉可疑的儀式的原始任務音效
-          if (isActivityPeriod && type.key === 'gishiki') {
+          // 如果開啟了線上模式，則「禁止」播放固定班表的音效，改由 OnlinePredictionManager 負責
+          // 以免跟 OnlinePredictionManager 觸發的音效重疊
+          if (isOnlineMode) {
             return;
           }
 
@@ -393,7 +396,7 @@ class TaskScheduleApp {
     }
 
     // 目前的任務
-    const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem, isActivityPeriod);
+    const curRow = this.uiRenderer.createCurrentTaskRow(type, currentItem, isOnlineMode);
     group.appendChild(curRow);
 
     // 在活動期間外顯示的傳統任務容器
@@ -425,10 +428,13 @@ class TaskScheduleApp {
     group.appendChild(onlineWrapper);
 
     // 根據 isInitialized 的狀態切換顯示
-    if (!this.onlinePredictionManager.isInitialized) {
+    // 關鍵修改：只要 useOnlineSystem 是 false，就必須顯示傳統 wrapper
+    if (!this.onlinePredictionManager.isInitialized || !isOnlineMode) {
       onlineWrapper.style.display = 'none';
+      wrapper.style.display = 'block';
     } else {
       wrapper.style.display = 'none';
+      onlineWrapper.style.display = 'block';
     }
 
     return group;

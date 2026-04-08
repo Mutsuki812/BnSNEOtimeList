@@ -2,7 +2,7 @@
    ==== 線上預測與回報系統 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
+import { CONFIG, DATE_RANGES, WEEKDAYS, TASK_TYPES } from './config.js';
 import { DOMHelper, SupabaseHelper } from './utils.js';
 
 const CONSTANTS = {
@@ -221,13 +221,18 @@ export class OnlinePredictionManager {
   updateView() {
     if (!this.isInitialized || !this.isInDateRange()) return;
 
-    this.updatePredictionDisplay("shirao");
-    this.updatePredictionDisplay("sengen");
-    this.updateGishikiDisplay();
-    
-    this.injectReportingUI("gishiki");
-    this.injectReportingUI("shirao");
-    this.injectReportingUI("sengen");
+    // 遍歷所有任務類型，根據 useOnlineSystem 開關決定是否更新 UI
+    TASK_TYPES.forEach(type => {
+      if (!type.useOnlineSystem) return; // 如果沒開啟線上系統，跳過此任務的動態更新
+
+      if (type.key === 'gishiki') {
+        this.updateGishikiDisplay();
+        this.injectReportingUI("gishiki");
+      } else if (type.key === 'shirao' || type.key === 'sengen') {
+        this.updatePredictionDisplay(type.key);
+        this.injectReportingUI(type.key);
+      }
+    });
   }
 
   /**

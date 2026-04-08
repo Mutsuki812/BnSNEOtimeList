@@ -99,10 +99,10 @@ export class UIRenderer {
    * 建立當前時間的任務列
    * @param {object} type - 任務類型定義
    * @param {object} item - 任務項目
-   * @param {boolean} isActivityPeriod - 是否在活動期間
+   * @param {boolean} isOnlineMode - 是否處於線上模式
    * @returns {HTMLElement} - 任務列元素
    */
-  createCurrentTaskRow(type, item, isActivityPeriod = false) {
+  createCurrentTaskRow(type, item, isOnlineMode = false) {
     const row = DOMHelper.createElement("div", `taskRow ${type.key} current`);
     let content = item ? this.taskUtils.getTaskContent(item) : "-------";
     const isMaintenance = item && this.taskUtils.isMaintenanceTask(item);
@@ -132,11 +132,15 @@ export class UIRenderer {
     let soundToggleHtml = '';
     // soundManagerが利用可能な場合のみ表示
     if (this.soundManager) {
-      // 特殊期間內儀式音效無條件關閉
-      const forceOff = isActivityPeriod && type.key === 'gishiki';
-      const isSoundOn = forceOff ? false : this.soundManager.isSoundEnabled(type.key);
+      // 特殊判定：如果是「線上模式」下的「儀式」，強制關閉音效顯示且不允許開啟
+      const isGishikiOnline = isOnlineMode && type.key === 'gishiki';
+      
+      const isSoundOn = isGishikiOnline ? false : this.soundManager.isSoundEnabled(type.key);
       const iconSrc = isSoundOn ? './images/bell32.png' : './images/bellSlash32.png';
-      soundToggleHtml = `<button class="sound-toggle-btn" data-task-type="${type.key}" title="切換音效提示"><img src="${iconSrc}" alt="sound" class="icon-vmiddle"></button> `;
+      const titleText = isGishikiOnline ? "即時回報模式不支援音效預警" : "切換音效提示";
+      const disabledClass = isGishikiOnline ? "disabled-bell" : "";
+
+      soundToggleHtml = `<button class="sound-toggle-btn ${disabledClass}" data-task-type="${type.key}" title="${titleText}"><img src="${iconSrc}" alt="sound" class="icon-vmiddle" style="${isGishikiOnline ? 'opacity: 0.5; filter: grayscale(1);' : ''}"></button> `;
     }
 
     row.innerHTML = `
@@ -172,11 +176,11 @@ export class UIRenderer {
 
         const taskType = soundBtn.dataset.taskType;
 
-        // 如果是活動期間且為可疑的儀式，強制關閉音效且不允許切換圖示
-        if (isActivityPeriod && taskType === 'gishiki') {
+        // 如果是線上模式下的儀式，攔截點擊事件，不執行切換
+        if (isOnlineMode && taskType === 'gishiki') {
           return;
         }
-        // 切換設定
+
         this.soundManager.toggleSound(taskType);
         
         // 更新按鈕圖示

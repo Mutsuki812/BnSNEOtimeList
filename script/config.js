@@ -16,9 +16,9 @@ export const CONFIG = {
 };
 
 export const TASK_TYPES = [
-  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10 },
-  { key: "shirao", label: "白青野王", color: "#7b8d42", offsetMin: 5 },
-  { key: "sengen", label: "仙幻島野王", color: "#B08F3E", offsetMin: 5 },
+  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10, useOnlineSystem: false },
+  { key: "shirao", label: "白青野王", color: "#7b8d42", offsetMin: 5, useOnlineSystem: true },
+  { key: "sengen", label: "仙幻島野王", color: "#B08F3E", offsetMin: 5, useOnlineSystem: true },
 ];
 
 export const REPORT_TASK = ["可疑的儀式","白青野王","仙幻島野王","其他"];
@@ -45,6 +45,7 @@ export const TEXTS = {
     "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br><br>" +
     "<spen style=\"color:red\">" +
     "　畫面/音效出現異常時 煩請強制刷新Ctrl+F5<br>" +
+    "　使用者記名系統啟用中（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
     "　使用者記名系統啟用中（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
     "</spen>",
   
