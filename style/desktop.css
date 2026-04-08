@@ -30,6 +30,20 @@
   }
 }
 
+/* 桌面模式下，並排顯示下拉選單與備註輸入框 */
+@media (min-width: 431px) {
+  .reportForm > div:nth-child(2) {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+  }
+
+  #reportComment {
+    flex: 1;
+    min-width: 0; /* 防止彈性項目因內容過長而溢出 */
+  }
+}
+
 @media (max-width: 539px) and (min-width: 526px) {
 
   /* フォントサイズ調整 */

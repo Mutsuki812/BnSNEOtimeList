@@ -217,22 +217,57 @@ export class OnlinePredictionManager {
 
   /**
    * 更新 UI (由 main.js 的 renderAllGroups 呼叫)
+   * @param {Object} savedStates - 保存的輸入狀態
    */
-  updateView() {
+  updateView(savedStates = {}) {
     if (!this.isInitialized || !this.isInDateRange()) return;
 
     // 遍歷所有任務類型，根據 useOnlineSystem 開關決定是否更新 UI
     TASK_TYPES.forEach(type => {
       if (!type.useOnlineSystem) return; // 如果沒開啟線上系統，跳過此任務的動態更新
 
+      const savedState = savedStates[type.key] || null;
+
       if (type.key === 'gishiki') {
         this.updateGishikiDisplay();
-        this.injectReportingUI("gishiki");
+        this.injectReportingUI("gishiki", savedState);
       } else if (type.key === 'shirao' || type.key === 'sengen') {
         this.updatePredictionDisplay(type.key);
-        this.injectReportingUI(type.key);
+        this.injectReportingUI(type.key, savedState);
       }
     });
+  }
+
+  /**
+   * 儲存目前的輸入狀態，避免渲染時重置
+   */
+  saveInputStates() {
+    const states = {};
+    TASK_TYPES.forEach(type => {
+      const group = document.querySelector(`.group.${type.key}`);
+      if (!group) return;
+      const reportBox = group.querySelector('.online-report-box');
+      if (!reportBox) return;
+
+      const timeInput = reportBox.querySelector('.report-time-input');
+      const state = {
+        time: timeInput ? timeInput.value : null,
+      };
+
+      if (type.key === 'gishiki') {
+        const selects = reportBox.querySelectorAll('.report-select');
+        state.locA = selects[0] ? selects[0].value : null;
+        state.locB = selects[1] ? selects[1].value : null;
+      } else {
+        const select = reportBox.querySelector('.report-select');
+        state.location = select ? select.value : null;
+        
+        const checkedRadio = reportBox.querySelector(`input[name="report-method-${type.key}"]:checked`);
+        state.method = checkedRadio ? checkedRadio.value : null;
+      }
+      states[type.key] = state;
+    });
+    return states;
   }
 
   /**
@@ -384,8 +419,10 @@ export class OnlinePredictionManager {
 
   /**
    * 注入回報區塊
+   * @param {string} typeKey
+   * @param {Object} savedState
    */
-  injectReportingUI(typeKey) {
+  injectReportingUI(typeKey, savedState = null) {
     const group = document.querySelector(`.group.${typeKey}`);
     if (!group) return;
 
@@ -396,7 +433,7 @@ export class OnlinePredictionManager {
     if (wrapper.querySelector('.online-report-box')) return;
 
     const reportBox = DOMHelper.createElement('div', 'online-report-box');
-    const { timeInput, timeControlsRow } = this._createTimeControls();
+    const { timeInput, timeControlsRow } = this._createTimeControls(savedState);
     
     const historyListDiv = DOMHelper.createElement('div', 'report-history-list');
     const { msgDiv, historyBtn, submitBtn, footerRow } = this._createFooterControls(typeKey, historyListDiv);
@@ -405,11 +442,11 @@ export class OnlinePredictionManager {
 
     if (typeKey === 'gishiki') {
       reportBox.appendChild(timeControlsRow);
-      ({ specificInputsRow, extraInputs } = this._createGishikiInputs());
+      ({ specificInputsRow, extraInputs } = this._createGishikiInputs(savedState));
       reportBox.appendChild(specificInputsRow);
     } else {
       // _createBossInputs 會直接修改 timeControlsRow，我們只需要接收它回傳的新元素即可。
-      const bossInputs = this._createBossInputs(typeKey, timeControlsRow);
+      const bossInputs = this._createBossInputs(typeKey, timeControlsRow, savedState);
       ({ specificInputsRow, extraInputs } = bossInputs);
       reportBox.appendChild(timeControlsRow);
       reportBox.appendChild(specificInputsRow);
@@ -431,12 +468,14 @@ export class OnlinePredictionManager {
 
   /**
    * 輔助函式：建立時間輸入相關的 UI
+   * @param {Object} savedState
    */
-  _createTimeControls() {
+  _createTimeControls(savedState) {
     const timeControlsRow = DOMHelper.createElement('div', 'report-form-row flex-row');
 
     const now = this.timeUtils.getNowBySVR();
-    const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    let defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (savedState && savedState.time) defaultTime = savedState.time;
     
     const timeInput = document.createElement('input');
     timeInput.type = 'time';
@@ -461,11 +500,12 @@ export class OnlinePredictionManager {
 
   /**
    * 輔助函式：建立儀式專用的地點輸入 UI
+   * @param {Object} savedState
    */
-  _createGishikiInputs() {
+  _createGishikiInputs(savedState) {
     const specificInputsRow = DOMHelper.createElement('div', 'report-form-row flex-row wrap');
 
-    const createSelect = (label) => {
+    const createSelect = (label, savedVal) => {
       const wrap = DOMHelper.createElement('span', 'report-label label-inline', `${label} `);
       const sel = document.createElement('select');
       sel.className = 'report-select';
@@ -475,12 +515,13 @@ export class OnlinePredictionManager {
         o.textContent = opt;
         sel.appendChild(o);
       });
+      if (savedVal) sel.value = savedVal;
       wrap.appendChild(sel);
       return { wrap, sel };
     };
 
-    const locA = createSelect("地點１");
-    const locB = createSelect("地點２");
+    const locA = createSelect("地點１", savedState?.locA);
+    const locB = createSelect("地點２", savedState?.locB);
     
     specificInputsRow.appendChild(locA.wrap);
     specificInputsRow.appendChild(locB.wrap);
@@ -491,8 +532,11 @@ export class OnlinePredictionManager {
 
   /**
    * 輔助函式：建立野王專用的地點與方式輸入 UI
+   * @param {string} typeKey
+   * @param {HTMLElement} timeControlsRow
+   * @param {Object} savedState
    */
-  _createBossInputs(typeKey, timeControlsRow) {
+  _createBossInputs(typeKey, timeControlsRow, savedState) {
     // 1. 地點
     const locationOptions = typeKey === 'shirao' ? ['白樺林', '風之平原'] : ['知性森林', '力王山脈', '武神荒野'];
     const locSelect = document.createElement('select');
@@ -503,6 +547,7 @@ export class OnlinePredictionManager {
       o.textContent = l;
       locSelect.appendChild(o);
     });
+    if (savedState && savedState.location) locSelect.value = savedState.location;
     timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label', '地點'));
     timeControlsRow.appendChild(locSelect);
 
@@ -523,7 +568,11 @@ export class OnlinePredictionManager {
       radio.name = radioGroupName;
       radio.value = m;
       radio.id = radioId;
-      if (index === 0) radio.checked = true;
+      if (savedState && savedState.method) {
+        if (radio.value === savedState.method) radio.checked = true;
+      } else if (index === 0) {
+        radio.checked = true;
+      }
       radioInputs.push(radio);
       label.appendChild(radio);
       label.appendChild(document.createTextNode(` ${m}`));
@@ -719,8 +768,14 @@ export class OnlinePredictionManager {
         msgDiv.textContent = '刪除成功！';
         listDiv.prepend(msgDiv);
 
-        // 1秒後刷新數據，但不關閉列表
-        setTimeout(() => this.loadAndRenderHistory(typeKey, listDiv), 1000);
+        // 1. 立即重新抓取基準數據並更新當前任務列
+        await this.fetchPredictionData();
+        this.updateView();
+
+        // 2. 1秒後刷新歷史清單，讓使用者有時間看到成功訊息
+        setTimeout(() => {
+          this.loadAndRenderHistory(typeKey, listDiv);
+        }, 1000);
       } catch(e) {
         console.error("刪除失敗", e);
         alert("刪除失敗");

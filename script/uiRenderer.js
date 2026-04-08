@@ -16,20 +16,38 @@ export class UIRenderer {
   }
 
   /**
+   * 更新標題公告
+   */
+  updateTitleNotice() {
+    DOMHelper.updateElement("titleNotice", TEXTS.titleNotice, "block");
+  }
+
+  /**
    * 更新頂部的目前時間顯示
    */
   updateTopTime() {
     const now = this.timeUtils.getNowBySVR();
-    DOMHelper.updateElement("dateLabel", this.timeUtils.formatDateLabel(now));
-
-    const locale = "zh-TW";
-    const options = { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
-    const timeStr = now.toLocaleTimeString(locale, options);
+    const locale = "zh-TW"; // For toLocaleTimeString
+    const timeOptions = { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
+    const timeStr = now.toLocaleTimeString(locale, timeOptions);
     const timeLabel = "台灣時間";
+    
+    const dateFullStr = this.timeUtils.formatDateLabel(now); // e.g., "2024/04/20（日）"
+    const dateParts = dateFullStr.match(/(.*)（(.)）/); // Capture "YYYY/MM/DD" and "日"
+    let dateOnlyStr = dateFullStr;
+    let weekdayHtml = '';
+    if (dateParts && dateParts.length === 3) {
+      dateOnlyStr = dateParts[1]; // "2024/04/20"
+      const weekdayChar = dateParts[2]; // "日"
+      weekdayHtml = `<span class="weekdayCircle">${weekdayChar}</span>`;
+    }
 
     DOMHelper.updateElement("timeBox", `
-      <span class="timeLabel admin-trigger" style="cursor: default;">${timeLabel}</span>
-      <span class="timeValue">${timeStr}</span>
+      <div class="timeLabel admin-trigger" style="cursor: default;">${timeLabel}</div>
+      <div class="datetimeBox">
+        <div class="dateValue">${dateOnlyStr}&nbsp;&nbsp;${weekdayHtml}</div>
+        <div class="timeValue">${timeStr}</div>
+      </div>
     `);
   }
 

@@ -25,6 +25,12 @@
   /* 淺灰色 Light Grey */
   --color-text-disabled: #B3AFA8;
   /* 灰燼色 Ash Grey */
+  --color-text-maintenance: #8B8B8B;
+  /* 維護灰色 Maintenance Grey */
+  --color-text-red: #D24D57;
+  /* 莫蘭迪亮紅 - 警示/錯誤用 Error Red */
+  --color-text-success: #88A08E;
+  /* 莫蘭迪綠 - 成功/正確用 Success Green */
 
   /* =========================
    儀式（紫系）
@@ -63,10 +69,6 @@
   /* 邊框灰色 Border Grey */
   --color-hover: rgba(0, 0, 0, 0.08);
   /* 懸停效果 */
-  --color-maintenance: #8B8B8B;
-  /* 維護灰色 */
-  --color-success: #9FB1A5;
-  /* 甕覗（Kamenozoki） */
 
   /* ━━━ 間距系統 | Spacing System ━━━ */
   --space-2xs: 2px;
@@ -175,7 +177,7 @@ body {
   max-width: var(--layout-max-width);
   margin: var(--space-md) auto;
   padding: var(--layout-padding);
-  gap: var(--space-lg);
+  gap: var(--space-sm);
   transition: max-width 0.3s ease;
 }
 
@@ -198,21 +200,6 @@ body {
   flex-direction: column;
   align-items: flex-start;
   flex: 1;
-  gap: var(--space-sm);
-}
-
-#dateLabel {
-  display: flex;
-  width: 100%;
-  justify-content: flex-start;
-  padding-left: 80px;
-}
-
-.dateLabel {
-  color: var(--color-text-tertiary);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xl);
-  letter-spacing: 0.02em;
 }
 
 /* 時間顯示容器 */
@@ -237,7 +224,7 @@ body {
 }
 
 /* 大型時間數字 */
-.timeBox .timeValue {
+.timeBox .datetimeBox {
   color: var(--color-text-primary);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12));
   font-family: var(--font-family-time);
@@ -248,6 +235,49 @@ body {
   box-shadow: var(--shadow-md);
   letter-spacing: -0.02em;
   backdrop-filter: blur(10px);
+  
+  /* 讓日期和時間垂直堆疊，並垂直置中 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 垂直置中其子元素 (dateValue 和 timeStr) */
+  align-items: flex-end; /* 內容右對齊 */ 
+  line-height: 1; /* 調整行高以緊湊顯示 */
+  padding-top: var(--space-xs); /* 調整內部上邊距 */
+  padding-bottom: var(--space-xs); /* 調整內部下邊距 */
+}
+
+.timeBox .datetimeBox .dateValue {
+  display: flex; /* 讓日期和星期圓圈並排 */
+  align-items: center; /*垂直對齊日期和星期圓圈*/
+  gap: var(--space-xs); /* 日期和星期圓圈之間的間距 */
+  color: var(--color-text-primary); /* 與時間值相同的顏色 */
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-md); /* 略小於時間值 */
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-xs); /* 日期與時間之間的間距 */
+}
+
+/* 時間顯示文字 */
+.timeBox .datetimeBox .timeValue {
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-black);
+  letter-spacing: -0.02em;
+}
+
+/* 星期圓形外框 */
+.timeBox .datetimeBox .dateValue .weekdayCircle {
+  display: inline-flex; /* 使用 flex 讓文字在圓圈內置中 */
+  justify-content: center;
+  align-items: center;
+  width: 1.6em; /* 圓圈大小 */
+  height: 1.6em;
+  border-radius: 50%; /* 圓形 */
+  border: 2px solid var(--color-text-primary); /* 邊框顏色與文字相同 */
+  font-size: var(--font-size-sm); /* 星期文字略小 */
+  flex-shrink: 0; /* 防止圓圈在空間不足時縮小 */
+  font-family: var(--font-family-content);
 }
 
 /* ─── 資訊列 (全天按鈕 + 資料來源) ─── */
@@ -476,7 +506,7 @@ body {
 }
 
 .taskRow .col-content.maintenance {
-  background-color: var(--color-maintenance);
+  background-color: var(--color-text-maintenance);
   color: #D6D5D5;
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
@@ -846,7 +876,7 @@ body {
 
 /* Prediction Highlight */
 .taskRow.current .col-time.prediction-highlight {
-  color: #D84315; /* Deep Orange */
+  color: var(--color-text-red);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-sm);
 }
@@ -862,23 +892,21 @@ body {
 /* 預測標籤 (上次出現 / 無資料狀態下的推算時間) */
 .taskRow.current .col-time.prediction-label {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-normal);
+  font-family: var(--font-family-content);
   color: var(--color-text-secondary);
 }
 
 /* Prediction Multi-row Layout (Online Prediction) */
 .pred-row-label {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
   font-family: var(--font-family-content);
+  color: var(--color-text-secondary);
 }
 
 .pred-row-value {
   font-size: var(--font-size-sm);
-  color: #D84315;
-  line-height: 1.5;
   font-family: var(--font-family-content);
+  color: var(--color-text-red);
 }
 
 .pred-row-info {
@@ -888,8 +916,8 @@ body {
 
 .pred-row-time {
   font-size: var(--font-size-md);
-  line-height: 1.5;
   font-family: var(--font-family-content);
+  line-height: 1.5;
   border-radius: var(--radius-sm);
   padding-left: 4px;
 }
@@ -941,7 +969,7 @@ body {
 }
 
 #reportMessage {
-  color: var(--color-success);
+  color: var(--color-text-success);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
@@ -1071,7 +1099,7 @@ select:focus-visible {
     padding: 10px; width: 80%; margin-top: 15px;
     border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
 }
-.modal-msg { color: red; font-size: 12px; margin-bottom: 15px; height: 1.2em; }
+.modal-msg { color: var(--color-text-red); font-size: 12px; margin-bottom: 15px; height: 1.2em; }
 .modal-btn-group { display: flex; justify-content: center; gap: 10px; }
 
 /* --- 按鈕樣式 --- */
@@ -1086,9 +1114,9 @@ select:focus-visible {
 .mt-10 { margin-top: 10px; }
 .label-inline { display: inline-flex; align-items: center; }
 .report-msg { flex: 1; margin: 0; font-size: 12px; }
-.report-msg.error { color: red; }
-.report-msg.success { color: green; }
-.delete-success-msg { padding: 10px; color: green; text-align: center; }
+.report-msg.error { color: var(--color-text-red); }
+.report-msg.success { color: var(--color-text-success); }
+.delete-success-msg { padding: 10px; color: var(--color-text-success); text-align: center; }
 
 /* --- 任務類型背景顏色 --- */
 .report-submit-btn.type-gishiki { background-color: #A08B9D; color: #F5F1E8;}
@@ -1113,5 +1141,5 @@ select:focus-visible {
 
 /* --- 其他 --- */
 .icon-vmiddle { vertical-align: middle; }
-#reportMessage.error { color: red; }
-#reportMessage.success { color: green; }
+#reportMessage.error { color: var(--color-text-red); }
+#reportMessage.success { color: var(--color-text-success); }

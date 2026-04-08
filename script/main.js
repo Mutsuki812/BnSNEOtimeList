@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260408-2';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260408-3';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -24,7 +24,7 @@ class TaskScheduleApp {
     this.taskProcessor = new TaskDataProcessor(this.timeUtils, this.taskUtils);
     this.soundManager = new SoundManager();
     this.uiRenderer = new UIRenderer(this.timeUtils, this.taskUtils, this.soundManager);
-    this.reportManager = new ReportManager(this.userManager);
+    this.reportManager = new ReportManager(this.userManager, this.timeUtils);
     this.onlinePredictionManager = new OnlinePredictionManager(this.timeUtils, this.userManager, this.soundManager);
 
     // 資料快取
@@ -83,20 +83,20 @@ class TaskScheduleApp {
   /**
    * 通用初始化處理
    */
-  initCommon({ showTemporaryNotice }) {
-    this.uiRenderer.updateRegularNotice();
+  initCommon({ isSpecialPeriod }) {
+    // 標題公告：無條件顯示
+    this.uiRenderer.updateTitleNotice();
 
-    // 限時公告
-    const temporaryNoticeDiv = document.getElementById("temporaryNotice");
-    if (temporaryNoticeDiv) {
-      const shouldShow = showTemporaryNotice;
-      
-      temporaryNoticeDiv.style.display = shouldShow ? "block" : "none";
-
-      if (shouldShow) {
-        this.uiRenderer.updateTemporaryNoticeText();
-      }
+    // 常態公告：特殊期間隱藏，其餘時間顯示
+    if (isSpecialPeriod) {
+      DOMHelper.updateElement("regularNotice", undefined, "none");
+    } else {
+      this.uiRenderer.updateRegularNotice();
     }
+
+    // 限時公告：現在在特殊期間與一般期間皆顯示
+    this.uiRenderer.updateTemporaryNoticeText();
+    DOMHelper.updateElement("temporaryNotice", undefined, "block");
 
     DOMHelper.updateElement("taskContainer", null, "block");
     this.loadTasksAndRender();
@@ -117,14 +117,14 @@ class TaskScheduleApp {
    * 非活動期間的初始化
    */
   initOutDateRange() {
-    this.initCommon({ showTemporaryNotice: false });
+    this.initCommon({ isSpecialPeriod: false });
   }
 
   /**
    * 活動期間內的初始化
    */
   initInDateRange() {
-    this.initCommon({ showTemporaryNotice: true });
+    this.initCommon({ isSpecialPeriod: true });
     // onlinePredictionManager 的初始化已移至 loadTasksAndRender 中。
     // 這是為了防止在資料載入完成前渲染舊 UI 導致畫面閃爍。
   }
@@ -170,6 +170,8 @@ class TaskScheduleApp {
 
     // 儲存展開狀態
     const openStates = this.saveOpenStates(container);
+    // 儲存線上回報系統的輸入狀態
+    const inputStates = this.onlinePredictionManager.saveInputStates();
 
     container.innerHTML = "";
 
@@ -201,7 +203,7 @@ class TaskScheduleApp {
     });
 
     // 渲染完成後，注入線上預測與回報 UI
-    this.onlinePredictionManager.updateView();
+    this.onlinePredictionManager.updateView(inputStates);
   }
 
   /**

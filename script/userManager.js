@@ -1,25 +1,36 @@
-import { DOMHelper, StorageHelper, SupabaseHelper } from './utils.js';
+import { DOMHelper, StorageHelper, SupabaseHelper, CookieHelper } from './utils.js';
 
 export class UserManager {
   constructor() {
     this.storageKey = 'bnsneo_user';
-    this.currentUser = StorageHelper.get(this.storageKey, null);
+    this.tokenKey = 'bnsneo_device_token';
+    this.currentUser = null;
     this.modal = null;
     this.userInfoEl = document.querySelector('.userInfo');
     this.init();
   }
 
   async init() {
-    // 應用程式啟動時，檢查本地儲存的使用者資訊是否仍然有效。
-    // 如果本地有資料且 ID 存在，則去資料庫驗證該使用者是否仍然合法。
-    // 若不合法（例如資料庫中該 ID 已不存在或名稱不符），則清除本地快取。
-    if (this.currentUser && this.currentUser.id) {
+    // 嘗試從本地儲存或 Cookie 恢復使用者資訊
+    let localUser = StorageHelper.get(this.storageKey, null);
+    const deviceToken = CookieHelper.get(this.tokenKey) || (localUser ? localUser.device_token : null);
+
+    if (localUser && deviceToken) {
+      localUser.device_token = deviceToken;
+      this.currentUser = localUser;
+    }
+
+    // 驗證身份是否有效
+    if (this.currentUser && this.currentUser.device_token) {
       const isValid = await this.validateUserWithDB(this.currentUser);
       if (!isValid) {
         this.currentUser = null;
         StorageHelper.remove(this.storageKey);
+        CookieHelper.remove(this.tokenKey);
       } else {
         this.updateLastOnline(this.currentUser.id);
+        // 同步 Cookie，確保長期有效
+        CookieHelper.set(this.tokenKey, this.currentUser.device_token);
       }
     }
     this.renderUserInfo();
@@ -38,12 +49,17 @@ export class UserManager {
       const supabase = await SupabaseHelper.getClient();
       const { data, error } = await supabase
         .from('Users')
-        .select('id, userName')
-        .eq('id', user.id)
+        .select('id, userName, device_token, role')
+        .eq('device_token', user.device_token)
         .single();
       
-      // 如果資料庫找不到該 ID，或找到的 userName 與本地不符，則視為無效。
-      return !!(data && data.userName === user.userName);
+      if (data && data.userName === user.userName) {
+        // 更新本地資料以確保 role 等資訊是最新的
+        this.currentUser = data;
+        StorageHelper.set(this.storageKey, data);
+        return true;
+      }
+      return false;
     } catch (e) { return false; }
   }
 
@@ -84,6 +100,7 @@ export class UserManager {
       this.showLoginModal((user) => {
         this.currentUser = user;
         StorageHelper.set(this.storageKey, user);
+        CookieHelper.set(this.tokenKey, user.device_token);
         this.renderUserInfo();
         resolve(user);
       }, () => {
@@ -101,7 +118,7 @@ export class UserManager {
       this.userInfoEl.innerHTML = `
         <div class="user-info-content">
           <img src="./images/userC32.png" class="user-info-icon" alt="user">
-          <span class="user-name-label">${this.currentUser.userName}</span>
+      <span class="user-name-label"></span>
           <span class="rename-btn" title="修改名稱">✎</span>
           <span class="logout-separator">|</span>
           <span class="logout-btn">登出</span>
@@ -109,6 +126,7 @@ export class UserManager {
       `;
       this.userInfoEl.querySelector('.rename-btn').onclick = () => this.showRenameModal();
       this.userInfoEl.querySelector('.logout-btn').onclick = () => this.logout();
+      this.userInfoEl.querySelector('.user-name-label').textContent = this.currentUser.userName; // 安全地設置文本
     } else {
       this.userInfoEl.innerHTML = `
         <div class="user-info-content unlogged">
@@ -127,6 +145,7 @@ export class UserManager {
     const performLogout = () => {
       this.currentUser = null;
       StorageHelper.remove(this.storageKey);
+      CookieHelper.remove(this.tokenKey);
       this.renderUserInfo();
       window.location.reload();
     };
@@ -189,21 +208,23 @@ export class UserManager {
       try {
         const supabase = await SupabaseHelper.getClient();
         // 1. 檢查該名字是否已被註冊
-        const { data: users } = await supabase.from('Users').select('id, userName, role').eq('userName', name);
+        const { data: users } = await supabase.from('Users').select('id, userName, role, device_token').eq('userName', name);
         
         let user = (users && users.length > 0) ? users[0] : null;
 
         if (!user) {
           // 情況 A：新使用者，直接建立並儲存身分
           console.log('[表單新增] 新的使用者:', { userName: name });
-          const { data: newUsers, error } = await supabase.from('Users').insert([{ userName: name }]).select('id, userName, role');
+          const { data: newUsers, error } = await supabase.from('Users').insert([{ userName: name }]).select('id, userName, role, device_token');
           if (error) throw error;
           user = newUsers[0];
         } else {
-          // 情況 B：名字已存在。比對瀏覽器 localStorage 是否存有與資料庫相同的 ID。
-          // 這是為了防止不同使用者在同一裝置上冒用已存在的名稱。
-          const localData = StorageHelper.get(this.storageKey, null);
-          if (!localData || localData.id !== user.id) {
+          // 情況 B：名字已存在。比對目前的 Token
+          const currentToken = CookieHelper.get(this.tokenKey) || StorageHelper.get(this.storageKey, {})?.device_token;
+          
+          // 修正判斷：只有在瀏覽器持有不同的 Token 時才阻擋（防止冒用）。
+          // 若瀏覽器無 Token (currentToken 為空)，代表是登出後重新登入，應允許通過。
+          if (currentToken && user.device_token && currentToken !== user.device_token) {
             msg.textContent = "此名稱已被他人使用，請換一個。";
             confirmBtn.disabled = false;
             input.disabled = false;
@@ -211,7 +232,9 @@ export class UserManager {
           }
         }
 
+        CookieHelper.set(this.tokenKey, user.device_token);
         this.updateLastOnline(user.id);
+        this.currentUser = user; // 確保當前物件已更新
         close(); onSuccess(user);
       } catch (e) { console.error(e); msg.textContent = "發生錯誤，請重試"; confirmBtn.disabled = false; input.disabled = false; }
     };
@@ -272,7 +295,7 @@ export class UserManager {
         const searchName = name.trim();
         const { data: user, error: userErr } = await supabase
           .from('Users')
-          .select('id, userName, role')
+          .select('id, userName, role, device_token') // 必須選取 device_token
           .eq('userName', searchName)
           .maybeSingle();
 
@@ -307,6 +330,7 @@ export class UserManager {
         // 驗證成功：直接存入該管理者的正式 ID (這會自動更新此裝置的 localStorage)
         await this.updateLastOnline(user.id);
         this.currentUser = user;
+        CookieHelper.set(this.tokenKey, user.device_token); // 管理者登入也需要寫入 Cookie
         StorageHelper.set(this.storageKey, user);
         this.renderUserInfo();
         close();

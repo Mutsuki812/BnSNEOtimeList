@@ -16,7 +16,7 @@ export const CONFIG = {
 };
 
 export const TASK_TYPES = [
-  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10, useOnlineSystem: false },
+  { key: "gishiki", label: "可疑的儀式", color: "#7a4171", offsetMin: 10, useOnlineSystem: true },
   { key: "shirao", label: "白青野王", color: "#7b8d42", offsetMin: 5, useOnlineSystem: true },
   { key: "sengen", label: "仙幻島野王", color: "#B08F3E", offsetMin: 5, useOnlineSystem: true },
 ];
@@ -38,24 +38,31 @@ export const DATE_RANGES = {
 };
 
 export const TEXTS = {
+titleNotice:
+    "<b>仙幻島第３賽季　2026.03.25 - 2026.04.29</b><br>",
+
   regularNotice:
-    "<b>仙幻島第３賽季　2026.03.25 - 2026.04.29</b><br>" +
     "・表記時間 = 系統出字時間<br>" +
     "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
-    "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br><br>" +
-    "<spen style=\"color:red\">" +
-    "　畫面/音效出現異常時 煩請強制刷新Ctrl+F5<br>" +
-    "　使用者記名系統啟用中（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
-    "　使用者記名系統啟用中（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
-    "</spen>",
+    "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>",
   
   temporaryNotice:
-    "<spen style=\"color:red\">" +
-    "</spen>",
+    "<span style=\"color:var(--color-text-red)\">" +
+    "・畫面/音效出現異常時 煩請強制刷新Ctrl+F5<br>" +
+    "・回報或留言需登入名稱（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
+    "・登入系統使用瀏覽器環境綁定 若發生「名稱無法使用」請在最下方留言告知<br>" +
+    "・手機板目前炸掉了 不建議使用<br>" +
+    "</span>",
 
   previousHourHint: {
     gishiki: "可能還沒死，可以找找看",
     shirao: "可能還沒死，可以找找看",
     sengen: "跑圖快的，還不快飛"
-  }
+  },
+
+  Report_regularNotice:
+  "野王重置 當週請使用上方↑↑↑↑↑ 回報<br>",
+
+  Report_temporaryNotice:
+  "有想說的 可以留言在這裡↓↓↓↓↓ 感謝",
 };

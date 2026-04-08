@@ -2,15 +2,16 @@
    ==== 回報功能 ====
    ========================== */
 
-import { CONFIG, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
+import { CONFIG, DATE_RANGES, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
 import { DOMHelper, SupabaseHelper } from "./utils.js";
 
 /**
  * 回報管理器
  */
 export class ReportManager {
-  constructor(userManager) {
+  constructor(userManager, timeUtils) {
     this.userManager = userManager;
+    this.timeUtils = timeUtils;
     this.render();
     this.updateAll();
     this.loadReports();
@@ -31,9 +32,11 @@ export class ReportManager {
         <div class="reportTitle"></div>
         <div class="reportForm">
           <div class="reportText"></div>
-          <select id="reportTaskType" aria-label="任務選擇"></select>
-          <select id="reportType" aria-label="回報類型"></select>
-          <input type="text" id="reportComment" aria-label="備註" placeholder="備註..." autocomplete="off" />
+          <div>
+            <select id="reportTaskType" aria-label="任務選擇"></select>
+            <select id="reportType" aria-label="回報類型"></select>
+            <input type="text" id="reportComment" aria-label="備註" placeholder="備註..." autocomplete="off" />
+          </div>
           <div class="reportContainer">
             <div id="reportMessage" role="status" aria-live="polite"></div>
             <div class="reportButtons"><button id="submitReport" class="report-submit-btn">送出</button></div>
@@ -58,16 +61,31 @@ export class ReportManager {
   attachEventListeners() {
     this.reportTaskTypeEl?.addEventListener("change", () => {
       this.updateReportTypeOptions();
+      this.updateReportCommentPlaceholder();
       this.updateButtonColor();
     });
     this.submitReportBtn?.addEventListener("click", () => this.submitReport());
   }
 
   /**
+   * 檢查是否在活動期間內
+   */
+  isInDateRange() {
+    const now = this.timeUtils.getNowBySVR();
+    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
+    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
+    return now >= start && now <= end;
+  }
+
+  /**
    * 更新回報說明文字
    */
   updateReportText() {
-    const text = "請幫忙填寫儀式或是白青野王的系統提示時間<br>有你的幫忙 能讓數據更完善 感謝";
+    const isActivity = this.isInDateRange();
+    const text = isActivity 
+      ? TEXTS.Report_regularNotice + TEXTS.Report_temporaryNotice 
+      : TEXTS.Report_temporaryNotice;
+
     if (this.reportTextEl) {
       this.reportTextEl.innerHTML = text;
     }
@@ -75,8 +93,9 @@ export class ReportManager {
 
   /**
    * 更新任務類型下拉選單
+   * @param {string} [savedValue] - 保存的選取值
    */
-  updateReportTaskOptions() {
+  updateReportTaskOptions(savedValue) {
     if (!this.reportTaskTypeEl) return;
     
     this.reportTaskTypeEl.innerHTML = "";
@@ -85,12 +104,20 @@ export class ReportManager {
       opt.textContent = task;
       this.reportTaskTypeEl.appendChild(opt);
     });
+
+    // 如果有保存的值且存在於選項中，則還原；否則預設選取「其他」
+    if (savedValue && Array.from(this.reportTaskTypeEl.options).some(opt => opt.value === savedValue)) {
+      this.reportTaskTypeEl.value = savedValue;
+    } else {
+      this.reportTaskTypeEl.value = "其他";
+    }
   }
 
   /**
    * 根據選擇的任務更新回報類型選項
+   * @param {string} [savedValue] - 保存的選取值
    */
-  updateReportTypeOptions() {
+  updateReportTypeOptions(savedValue) {
     if (!this.reportTypeEl || !this.reportTaskTypeEl) return;
     
     const selectedTask = this.reportTaskTypeEl.value;
@@ -101,22 +128,35 @@ export class ReportManager {
     this.reportTypeEl.innerHTML = "";
     options.forEach(optData => {
       const opt = document.createElement("option");
-      opt.textContent = optData;;
+      opt.textContent = optData;
       this.reportTypeEl.appendChild(opt);
     });
+
+    // 如果有保存的值且存在於新選項中，則還原
+    if (savedValue && Array.from(this.reportTypeEl.options).some(opt => opt.value === savedValue)) {
+      this.reportTypeEl.value = savedValue;
+    } else if (selectedTask === "其他") {
+      // 否則，如果目前選取的是「其他」，則預設選取「想說」
+      this.reportTypeEl.value = "想說";
+    }
   }
 
   /**
    * 更新備註欄位的提示文字
    */
   updateReportCommentPlaceholder() {
-    if (this.reportCommentEl) {
-      this.reportCommentEl.placeholder = "五 09:26 地點 / 地點";
-    }
+    if (!this.reportCommentEl || !this.reportTaskTypeEl) return;
     
-    if (this.submitReportBtn) {
-      this.submitReportBtn.textContent = "送出";
+    const selectedTask = this.reportTaskTypeEl.value;
+    let placeholderText = "";
+
+    if (selectedTask === "其他") {
+      placeholderText = "例如：音效太小聲 / 網站有BUG / 建議增加功能";
+    } else {
+      placeholderText = "例如：五 09:26 地點 / 地點";
     }
+    this.reportCommentEl.placeholder = placeholderText;
+    // submitReportBtn 的 textContent 應該在 updateButtonColor 或 submitReport 相關邏輯中處理，這裡不變動
   }
 
   /**
@@ -283,7 +323,7 @@ export class ReportManager {
       });
     } catch (error) {
       console.error("載入回報時發生錯誤:", error);
-      this.reportListEl.innerHTML = `<div class="reportItem" style="color: red;">載入失敗：${error.message}</div>`;
+      this.reportListEl.innerHTML = `<div class="reportItem" style="color: var(--color-text-red);">載入失敗：${error.message}</div>`;
     }
   }
 
@@ -317,9 +357,13 @@ export class ReportManager {
       root.style.display = "block";
     }
 
+    // 在更新前先保存目前的選取狀態
+    const savedTask = this.reportTaskTypeEl?.value;
+    const savedType = this.reportTypeEl?.value;
+
     this.updateReportText();
-    this.updateReportTaskOptions();
-    this.updateReportTypeOptions();
+    this.updateReportTaskOptions(savedTask);
+    this.updateReportTypeOptions(savedType);
     this.updateReportCommentPlaceholder();
     this.updateButtonColor();
   }

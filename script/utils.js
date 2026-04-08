@@ -269,6 +269,34 @@ export class StorageHelper {
 }
 
 /**
+ * Cookie 操作的輔助函式
+ */
+export class CookieHelper {
+  static set(key, value, days = 365) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = "; expires=" + date.toUTCString();
+    // 加上 SameSite=Strict 增加安全性
+    document.cookie = key + "=" + (value || "") + expires + "; path=/; SameSite=Strict";
+  }
+
+  static get(key) {
+    const nameEQ = key + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+  }
+
+  static remove(key) {
+    document.cookie = key + '=; Max-Age=-99999999; path=/;';
+  }
+}
+
+/**
  * Supabase 輔助函式
  */
 export class SupabaseHelper {
