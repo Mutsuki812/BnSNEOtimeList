@@ -7,7 +7,7 @@
   <title>B&S NEO 時間表</title>
 
   <!-- 共通樣式 (所有裝置) -->
-  <link rel="stylesheet" href="./style/common.css?v=20260408-3">
+  <link rel="stylesheet" href="./style/common.css?v=20260413-1">
 
   <!-- 桌面版樣式 (僅寬度 >= 431px) -->
   <link rel="stylesheet" href="style/desktop.css" media="(min-width: 431px)">
@@ -15,7 +15,7 @@
   <!-- 手機版樣式 (僅寬度 <= 430px) -->
   <link rel="stylesheet" href="style/mobile.css" media="(max-width: 430px)">
   <link
-    href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap"
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -43,7 +43,9 @@
     <!-- 整個任務區 -->
     <section id="mainCard" class="mainCard">
       <!-- 任務列表 -->
-      <div id="taskContainer" class="taskContainer"></div>
+      <div id="taskContainer" class="taskContainer">
+        <!-- JS 將在這裡根據區域生成 .region-group 容器 -->
+      </div>
     </section>
 
     <div class="dateInfo" style="text-align: right; font-size:0.8rem; padding-right: 20px;">※資料來源：<a href="https://forum.gamer.com.tw/C.php?bsn=12980&snA=79447" target="_blank">巴哈姆特</a> 特別感謝<a
@@ -54,7 +56,7 @@
     <div id="reportRoot"></div>
   </div>
 
-  <script type="module" src="./script/main.js?v=20260408-3"></script>
+  <script type="module" src="./script/main.js?v=20260413-1"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
   <script>

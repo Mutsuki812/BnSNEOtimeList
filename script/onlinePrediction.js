@@ -656,7 +656,7 @@ export class OnlinePredictionManager {
 
       const { data: historyData, error } = await supabase
         .from('spawn_reports')
-        .select('*, Users(userName, role)')
+        .select('*, Users!user_id(userName, role)')
         .eq('bossType', typeKey)
         .eq('weekDay', todayWeekDay)
         .order('timeStamp', { ascending: false });

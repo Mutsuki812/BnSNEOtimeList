@@ -254,7 +254,7 @@ export class ReportManager {
       const supabase = await SupabaseHelper.getClient();
       const { data: reports, error } = await supabase
         .from('feedback_reports')
-        .select('*, Users(userName, role)')
+        .select('*, Users!user_id(userName, role)')
         .order('postTime', { ascending: false })
         .limit(20);
 

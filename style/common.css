@@ -159,7 +159,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background: var(--color-bg-primary);
+  /* background: var(--color-bg-primary); */
   color: var(--color-text-secondary);
   font-size: var(--font-size-base);
   line-height: 1.6;
