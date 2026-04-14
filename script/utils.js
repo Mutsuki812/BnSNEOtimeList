@@ -70,6 +70,20 @@ export class TimeUtils {
   }
 
   /**
+   * 檢查當前時間是否在任務開始後的 N 分鐘內
+   * @param {string} taskTimeStr - "HH:MM"
+   * @param {number} windowMinutes - 區間長度 (例如 5 代表 0,1,2,3,4 分)
+   */
+  isWithinWindow(taskTimeStr, windowMinutes = 5) {
+    if (!taskTimeStr || taskTimeStr === "--:--") return false;
+    const now = this.getNowBySVR();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const taskMins = this.timeToMinutes(taskTimeStr);
+    
+    return nowMins >= taskMins && nowMins < (taskMins + windowMinutes);
+  }
+
+  /**
    * 標準化從 Excel 讀取的時間。處理數字格式和包含特殊標記的字串
    * @param {string|number} timeStr - 從 Excel 讀取的時間值
    * @returns {{time: string, hasQuestionMark: boolean}} - 包含標準化時間和問號標記的物件

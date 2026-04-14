@@ -117,6 +117,12 @@
   --shadow-lg: 0 8px 28px rgba(58, 53, 51, 0.1);
   /* 目前任務的發光效果 */
   --shadow-glow: 0 0 12px rgba(0, 0, 0, 0.12);
+  /* ━━━ 新擬物化警示系統 ━━━ */
+  --shadow-alert: 
+    inset 2px 2px 5px rgba(255, 255, 255, 0.6), /* 頂部柔光邊緣 */
+    inset -3px -3px 8px rgba(210, 77, 87, 0.3), /* 增強底部紅色反射深度 */
+    0 0 0 3px var(--color-text-red),           /* 邊框加粗至 3px */
+    0 0 40px rgba(210, 77, 87, 0.5);           /* 擴大並加深外部光暈 */
 
   /* ━━━ 圓角系統 | Border Radius ━━━ */
   --radius-sm: 6px;
@@ -402,6 +408,40 @@ body {
 .current {
   color: var(--color-text-primary);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+/* 警示狀態：當前時間在任務時間 0~4 分鐘內 */
+.task-alert-active {
+  border-color: var(--color-text-red) !important;
+  border-left-width: 10px !important; /* 飾條增加到 10px，更具存在感 */
+  background: linear-gradient(90deg, rgba(210, 77, 87, 0.08), rgba(255, 255, 255, 0.95)) !important;
+  box-shadow: var(--shadow-alert) !important;
+  animation: breathe-alert 1.8s infinite ease-in-out; /* 頻率稍微加快，增加緊迫感 */
+  position: relative;
+  z-index: 10; /* 確保發光效果不被遮擋 */
+}
+
+/* 強調警示卡片內的文字顏色 */
+.task-alert-active .col-time, .task-alert-active .col-content {
+  color: var(--color-text-primary) !important;
+}
+
+@keyframes breathe-alert {
+  0% { 
+    box-shadow: var(--shadow-alert); 
+    transform: scale(1);
+    background: linear-gradient(90deg, rgba(210, 77, 87, 0.08), rgba(255, 255, 255, 0.95));
+  }
+  50% { 
+    box-shadow: 0 0 50px rgba(210, 77, 87, 0.65), inset 2px 2px 8px rgba(255,255,255,0.9); 
+    transform: scale(1.015); /* 更有感的縮放 */
+    background: linear-gradient(90deg, rgba(210, 77, 87, 0.15), rgba(255, 255, 255, 1)); /* 背景同步脈動 */
+  }
+  100% { 
+    box-shadow: var(--shadow-alert); 
+    transform: scale(1);
+    background: linear-gradient(90deg, rgba(210, 77, 87, 0.08), rgba(255, 255, 255, 0.95));
+  }
 }
 
 /* 目前儀式 - 紫藤色系 */

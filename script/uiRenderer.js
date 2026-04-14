@@ -98,11 +98,16 @@ export class UIRenderer {
     const timeText = item.time || "--:--";
     const questionMark = item.hasQuestionMark ? ' [?]' : "";
 
+    // 檢查是否處於 4 分鐘警示區間
+    const isAlert = this.timeUtils.isWithinWindow(timeText, 5);
+    const alertClass = isAlert ? "task-alert-active" : "";
+
     let hintText;
     hintText = TEXTS.previousHourHint[type.key];
 
     const longClass = this._getLongClass(content);
 
+    taskRow.className = `previoushour ${alertClass}`;
     taskRow.innerHTML = `
       <span class="previoushour_placeholder">${hintText}</span>
       <span class="col-time gray">${timeText}</span>
@@ -143,6 +148,10 @@ export class UIRenderer {
     }
 
     const longClass = this._getLongClass(content);
+    
+    // 檢查是否處於 4 分鐘警示區間
+    const isAlert = this.timeUtils.isWithinWindow(timeText, 5);
+    const alertClass = isAlert ? "task-alert-active" : "";
 
     const maintenanceClass = isMaintenance ? "maintenance" : "";
     const typeLabel = type.label;
@@ -161,6 +170,7 @@ export class UIRenderer {
       soundToggleHtml = `<button class="sound-toggle-btn ${disabledClass}" data-task-type="${type.key}" title="${titleText}"><img src="${iconSrc}" alt="sound" class="icon-vmiddle" style="${isGishikiOnline ? 'opacity: 0.5; filter: grayscale(1);' : ''}"></button> `;
     }
 
+    row.className = `taskRow ${type.key} current ${alertClass}`;
     row.innerHTML = `
       <div class="sound">${soundToggleHtml}</div>
       <div class="col-type">${typeLabel}</div>

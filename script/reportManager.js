@@ -105,11 +105,12 @@ export class ReportManager {
       this.reportTaskTypeEl.appendChild(opt);
     });
 
-    // 如果有保存的值且存在於選項中，則還原；否則預設選取「其他」
+    // 如果有保存的值且存在於選項中，則還原；否則根據活動期間決定預設值
     if (savedValue && Array.from(this.reportTaskTypeEl.options).some(opt => opt.value === savedValue)) {
       this.reportTaskTypeEl.value = savedValue;
     } else {
-      this.reportTaskTypeEl.value = "其他";
+      const isActivity = this.isInDateRange();
+      this.reportTaskTypeEl.value = isActivity ? "其他" : "仙幻島野王";
     }
   }
 
@@ -135,9 +136,14 @@ export class ReportManager {
     // 如果有保存的值且存在於新選項中，則還原
     if (savedValue && Array.from(this.reportTypeEl.options).some(opt => opt.value === savedValue)) {
       this.reportTypeEl.value = savedValue;
-    } else if (selectedTask === "其他") {
-      // 否則，如果目前選取的是「其他」，則預設選取「想說」
-      this.reportTypeEl.value = "想說";
+    } else {
+      const isActivity = this.isInDateRange();
+      if (selectedTask === "其他") {
+        this.reportTypeEl.value = "想說";
+      } else if (!isActivity && selectedTask === "仙幻島野王") {
+        // 時間外且選中仙幻島時，預設為時間修正
+        this.reportTypeEl.value = "時間修正";
+      }
     }
   }
 
@@ -153,7 +159,7 @@ export class ReportManager {
     if (selectedTask === "其他") {
       placeholderText = "例如：音效太小聲 / 網站有BUG / 建議增加功能";
     } else {
-      placeholderText = "例如：五 09:26 地點 / 地點";
+      placeholderText = "例如：五 09:26 地點";
     }
     this.reportCommentEl.placeholder = placeholderText;
     // submitReportBtn 的 textContent 應該在 updateButtonColor 或 submitReport 相關邏輯中處理，這裡不變動
