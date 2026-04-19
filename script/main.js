@@ -10,6 +10,7 @@ import { ReportManager } from './reportManager.js';
 import { SoundManager } from './soundManager.js';
 import { OnlinePredictionManager } from './onlinePrediction.js';
 import { UserManager } from './userManager.js';
+import { SupplementalManager } from './supplementalManager.js';
 
 /**
  * 主應用程式類別
@@ -17,15 +18,16 @@ import { UserManager } from './userManager.js';
 class TaskScheduleApp {
   constructor() {
     // 初始化依賴項目
-    this.userManager = new UserManager();
     this.timeUtils = new TimeUtils();
     this.taskUtils = new TaskUtils();
     this.excelLoader = new ExcelDataLoader(this.timeUtils);
     this.taskProcessor = new TaskDataProcessor(this.timeUtils, this.taskUtils);
     this.soundManager = new SoundManager();
+    this.userManager = new UserManager(this.soundManager);
     this.uiRenderer = new UIRenderer(this.timeUtils, this.taskUtils, this.soundManager);
     this.reportManager = new ReportManager(this.userManager, this.timeUtils);
     this.onlinePredictionManager = new OnlinePredictionManager(this.timeUtils, this.userManager, this.soundManager);
+    this.supplementalManager = new SupplementalManager(this.timeUtils, this.userManager, this.onlinePredictionManager);
 
     // 資料快取
     this.cachedExcelRows = null;
@@ -42,6 +44,9 @@ class TaskScheduleApp {
    */
   async init() {
     this.uiRenderer.updateTopTime();
+
+    // 優先渲染功能按鈕，不等待 Excel 載入
+    this.renderFunctionalButtons();
 
     if (this.isInDateRange()) {
       this.initInDateRange();
@@ -206,6 +211,47 @@ class TaskScheduleApp {
     this.onlinePredictionManager.updateView(inputStates);
   }
 
+  /**
+   * 渲染功能區 (世界王音效 + 補完計畫)
+   * 獨立於任務列表，確保穩定顯示
+   */
+  renderFunctionalButtons() {
+    const bossSoundEl = document.querySelector('.bossSound');
+    const isActivityPeriod = this.isInDateRange();
+
+    if (bossSoundEl) {
+      bossSoundEl.innerHTML = ''; // 清空重新渲染
+      
+      this.renderWorldBossToggle(bossSoundEl);
+
+      // 補完計畫暫時隱藏 (功能尚未開發完成)
+      // this.supplementalManager.renderEntryButton(bossSoundEl);
+    }
+  }
+
+  /**
+   * 渲染世界王音效切換開關
+   */
+  renderWorldBossToggle(parentEl) {
+    const isEnabled = this.soundManager.isSoundEnabled('world_boss');
+    const container = DOMHelper.createElement('div', 'user-info-content switch-container');
+    container.innerHTML = `
+      <span class="switch-label">世界王鈴聲</span>
+      <label class="neumo-switch">
+        <input type="checkbox" id="wbSoundToggle" ${isEnabled ? 'checked' : ''}>
+        <span class="slider"></span>
+      </label>
+    `;
+    
+    const checkbox = container.querySelector('#wbSoundToggle');
+    checkbox.onchange = () => {
+      this.soundManager.unlockAudio();
+      this.soundManager.toggleSound('world_boss');
+    };
+    
+    parentEl.appendChild(container);
+  }
+  
   /**
    * 檢查並播放預告音效
    */

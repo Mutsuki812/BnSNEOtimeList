@@ -43,8 +43,8 @@ titleNotice:
 
   regularNotice:
     "・表記時間 = 系統出字時間<br>" +
-    "・儀式：出字提示後 3分鐘Boss登場、沒人打 30分鐘後消失。<br>" +
-    "・白青/仙幻島野王：出字提示後 5分鐘Boss登場。<br>",
+    "・儀式：出字提示後 3分鐘Boss登場、沒人打30分鐘後消失。<br>" +
+    "・白青/仙幻島野王：出字提示後5分鐘Boss登場。<br>",
   
   temporaryNotice:
     "<span style=\"color:var(--color-text-red)\">" +

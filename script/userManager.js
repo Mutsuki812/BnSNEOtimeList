@@ -1,7 +1,8 @@
 import { DOMHelper, StorageHelper, SupabaseHelper, CookieHelper } from './utils.js';
 
 export class UserManager {
-  constructor() {
+  constructor(soundManager) {
+    this.soundManager = soundManager;
     this.storageKey = 'bnsneo_user';
     this.tokenKey = 'bnsneo_device_token';
     this.currentUser = null;
@@ -114,11 +115,12 @@ export class UserManager {
    */
   renderUserInfo() {
     if (!this.userInfoEl) return;
+
     if (this.currentUser) {
       this.userInfoEl.innerHTML = `
         <div class="user-info-content">
           <img src="./images/userC32.png" class="user-info-icon" alt="user">
-      <span class="user-name-label"></span>
+          <span class="user-name-label"></span>
           <span class="rename-btn" title="修改名稱">✎</span>
           <span class="logout-separator">|</span>
           <span class="logout-btn">登出</span>

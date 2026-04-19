@@ -159,15 +159,25 @@ export class OnlinePredictionManager {
     // 2. 篩選出符合最高權重的所有回報
     const topPriorityReports = eventReports.filter(r => (weights[r.method] || 1) === maxWeight);
 
-    // 3. 在相同優先級中，取「時間最早」的那一筆 (timeStamp 升序排序)
-    topPriorityReports.sort((a, b) => {
-      return this.timeUtils.timeToMinutes(a.timeStamp) - this.timeUtils.timeToMinutes(b.timeStamp);
+    // 3. 在相同優先級中，多數一致時間 > 時間較早
+    const timeCounts = {};
+    topPriorityReports.forEach(r => {
+      const t = r.timeStamp.substring(0, 5);
+      timeCounts[t] = (timeCounts[t] || 0) + 1;
     });
 
-    const targetReport = topPriorityReports[0];
+    // 找出最大票數
+    const maxVotes = Math.max(...Object.values(timeCounts));
+    // 篩選出獲得最大票數的時間點
+    const consensusTimes = Object.keys(timeCounts).filter(t => timeCounts[t] === maxVotes);
+
+    // 如果有多個時間點同票，取最早的一個
+    consensusTimes.sort((a, b) => this.timeUtils.timeToMinutes(a) - this.timeUtils.timeToMinutes(b));
+    const targetTime = consensusTimes[0];
+    const targetReport = topPriorityReports.find(r => r.timeStamp.startsWith(targetTime));
     
     // 4. 轉換為 Date 物件
-    const baseDate = this.timeUtils.timeStringToDateToday(targetReport.timeStamp);
+    const baseDate = this.timeUtils.timeStringToDateToday(targetTime);
     if (!baseDate) return null;
 
     // 5. 根據狀態進行偏移修正
