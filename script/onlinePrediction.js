@@ -803,6 +803,19 @@ export class OnlinePredictionManager {
       return;
     }
 
+    const nowSVR = this.timeUtils.getNowBySVR();
+    const [reportH, reportM] = timeVal.split(':').map(Number);
+    const nowH = nowSVR.getHours();
+    const nowM = nowSVR.getMinutes();
+
+    // 未來時間判定：排除跨午夜回報昨天的情況（現在 0-3 點且回報時間 21-23 點）後，檢查是否超過目前時間
+    const isReportingYesterday = (nowH < 3 && reportH >= 21);
+    if (!isReportingYesterday && (reportH > nowH || (reportH === nowH && reportM > nowM))) {
+      msgDiv.className = "report-msg error";
+      msgDiv.textContent = "不可輸入未來時間";
+      return;
+    }
+
     if (typeKey === 'gishiki') {
       if (inputs.locA.value === '-' && inputs.locB.value === '-') {
         msgDiv.className = "report-msg error";
@@ -823,15 +836,13 @@ export class OnlinePredictionManager {
     btnElement.textContent = "傳送中...";
 
     // 準備 Payload
-    const nowSVR = this.timeUtils.getNowBySVR();
     const dayOfWeek = nowSVR.getDay(); // 0-6 (日-六)
 
     let weekdayNumber = dayOfWeek === 0 ? 7 : dayOfWeek;
 
     // 跨午夜處理：如果現在是凌晨 (0-3點) 且回報時間是深夜 (21-23點)
     // 則自動判定該回報屬於「昨天」
-    const [reportH] = timeVal.split(':').map(Number);
-    if (nowSVR.getHours() < 3 && reportH >= 21) {
+    if (isReportingYesterday) {
       weekdayNumber = (weekdayNumber === 1) ? 7 : weekdayNumber - 1;
     }
     
