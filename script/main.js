@@ -244,7 +244,7 @@ class TaskScheduleApp {
       this.renderWorldBossToggle(bossSoundEl);
 
       // 補完計畫暫時隱藏 (功能尚未開發完成)
-      this.supplementalManager.renderEntryButton(bossSoundEl);
+      // this.supplementalManager.renderEntryButton(bossSoundEl);
     }
   }
 
