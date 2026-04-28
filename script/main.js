@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260416-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260428-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -36,6 +36,7 @@ class TaskScheduleApp {
     this.hourlyRefreshIntervalId = null;
     this.hourlyRefreshTimeoutId = null;
     this.secondlyIntervalId = null; // 載入操作的序列號，用來處理非同步渲染的競爭問題。
+    this.worker = null;
     this.loadToken = 0;
   }
 
@@ -44,6 +45,7 @@ class TaskScheduleApp {
    */
   async init() {
     this.uiRenderer.updateTopTime();
+    this.initWorker();
 
     // 優先渲染功能按鈕，不等待 Excel 載入
     this.renderFunctionalButtons();
@@ -73,6 +75,31 @@ class TaskScheduleApp {
     setTimeout(() => {
       this.soundManager.showUnlockModal();
     }, 500);
+  }
+
+  /**
+   * 初始化 Web Worker
+   */
+  initWorker() {
+    if (typeof(Worker) !== "undefined") {
+      this.worker = new Worker('./script/worker.js');
+      
+      this.worker.postMessage({
+        type: 'INIT',
+        config: { url: CONFIG.SUPABASE_URL, key: CONFIG.SUPABASE_KEY }
+      });
+
+      this.worker.onmessage = (e) => {
+        const { type } = e.data;
+        if (type === 'DB_UPDATE') {
+          console.log('[Worker] 收到即時更新訊號，重新獲取數據');
+          this.loadTasksAndRender(); // 觸發全域重新渲染
+        } else if (type === 'TICK_MINUTE') {
+          // 來自 Worker 的精準計時，確保網頁佇立時仍準確更新
+          if (this.cachedExcelRows) this.renderAllGroups(this.cachedExcelRows);
+        }
+      };
+    }
   }
 
   /**
@@ -106,16 +133,8 @@ class TaskScheduleApp {
     DOMHelper.updateElement("taskContainer", null, "block");
     this.loadTasksAndRender();
 
-    // 分鐘單位的更新計時器
-    if (this.minuteRefreshIntervalId) {
-      clearInterval(this.minuteRefreshIntervalId);
-    }
-    this.minuteRefreshIntervalId = setInterval(() => {
-      if (this.cachedExcelRows) {
-        this.renderAllGroups(this.cachedExcelRows);
-      }
-    }, CONFIG.REFRESH_INTERVAL);
-    // 分鐘單位的更新計時器由 startTimers 統一管理。
+    // 原本的 minuteRefreshIntervalId 改由 Worker 處理
+    // startTimers() 內僅保留秒級 UI 更新
   }
 
   /**
@@ -225,7 +244,7 @@ class TaskScheduleApp {
       this.renderWorldBossToggle(bossSoundEl);
 
       // 補完計畫暫時隱藏 (功能尚未開發完成)
-      // this.supplementalManager.renderEntryButton(bossSoundEl);
+      this.supplementalManager.renderEntryButton(bossSoundEl);
     }
   }
 
@@ -236,7 +255,7 @@ class TaskScheduleApp {
     const isEnabled = this.soundManager.isSoundEnabled('world_boss');
     const container = DOMHelper.createElement('div', 'user-info-content switch-container');
     container.innerHTML = `
-      <span class="switch-label">世界王鈴聲</span>
+      <span class="switch-label">世界王音效</span>
       <label class="neumo-switch">
         <input type="checkbox" id="wbSoundToggle" ${isEnabled ? 'checked' : ''}>
         <span class="slider"></span>
@@ -247,6 +266,11 @@ class TaskScheduleApp {
     checkbox.onchange = () => {
       this.soundManager.unlockAudio();
       this.soundManager.toggleSound('world_boss');
+
+      // 如果切換後的狀態為開啟，則播放提示音
+      if (checkbox.checked && typeof this.soundManager.playEffect === 'function') {
+        this.soundManager.playEffect('./audio/soundON.mp3');
+      }
     };
     
     parentEl.appendChild(container);
@@ -257,6 +281,9 @@ class TaskScheduleApp {
    */
   checkPreAlerts() {
     if (!this.cachedExcelRows) return;
+    
+    // 特殊期間內，完全禁用基於靜態班表的預警音效
+    if (this.isInDateRange()) return;
 
     const now = this.timeUtils.getNowBySVR();
     const s = now.getSeconds();
@@ -349,6 +376,8 @@ class TaskScheduleApp {
    * 建立單一類型的任務群組 (包含 UI 元素)
    */
   createTaskGroup(rows, type, todayWeek, tomorrowWeek, currentHour, currentMinute, currentDay, openStates, isGlobalActivity) {
+    // 確保 isOnlineMode 判定基準一致
+    const isActivityPeriod = this.isInDateRange(); 
     const isOnlineMode = isGlobalActivity && type.useOnlineSystem;
 
     // 獲取今天和明天的任務列表
@@ -384,9 +413,8 @@ class TaskScheduleApp {
             return; // 明天的任務，跳過
           }
 
-          // 如果開啟了線上模式，則「禁止」播放固定班表的音效，改由 OnlinePredictionManager 負責
-          // 以免跟 OnlinePredictionManager 觸發的音效重疊
-          if (isOnlineMode) {
+          // 只要在特殊期間且該任務有線上系統，就絕對不播放靜態音效
+          if (isActivityPeriod && type.useOnlineSystem) {
             return;
           }
 
@@ -423,12 +451,15 @@ class TaskScheduleApp {
     // 前一小時的任務
     let showPrevious = false;
 
-    if (type.key === "gishiki" || type.key === "shirao") {
-      showPrevious = true;
-    } else if (type.key === "sengen" && previousItem) {
-      const prevMin = parseInt(previousItem.time.split(":")[1], 10);
-      if (prevMin >= 55 && currentMinute <= 5) {
+    // 僅在非線上模式(非特殊期間)顯示前一小時提示
+    if (!isOnlineMode) {
+      if (type.key === "gishiki" || type.key === "shirao") {
         showPrevious = true;
+      } else if (type.key === "sengen" && previousItem) {
+        const prevMin = parseInt(previousItem.time.split(":")[1], 10);
+        if (prevMin >= 55 && currentMinute <= 5) {
+          showPrevious = true;
+        }
       }
     }
 
@@ -499,6 +530,8 @@ class TaskScheduleApp {
     clearTimeout(this.hourlyRefreshTimeoutId);
     clearInterval(this.hourlyRefreshIntervalId);
 
+    const now = this.timeUtils.getNowBySVR();
+
     // 每秒更新一次時間
     this.secondlyIntervalId = setInterval(() => {
       // 將音效檢查移至最頂端，優先於 UI 渲染執行，避免阻塞
@@ -507,24 +540,6 @@ class TaskScheduleApp {
       
       this.uiRenderer.updateTopTime();
     }, 1000);
-
-    // 每分鐘更新 (與分鐘開始時同步)
-    const minuteUpdate = () => {
-      if (this.cachedExcelRows) {
-        this.renderAllGroups(this.cachedExcelRows);
-      }
-    };
-
-    const now = this.timeUtils.getNowBySVR();
-
-    const nextMinute = new Date(now);
-    nextMinute.setMinutes(now.getMinutes() + 1, 0, 0);
-    const msUntilNextMinute = nextMinute.getTime() - now.getTime();
-
-    this.minuteRefreshTimeoutId = setTimeout(() => {
-      minuteUpdate();
-      this.minuteRefreshIntervalId = setInterval(minuteUpdate, CONFIG.REFRESH_INTERVAL);
-    }, msUntilNextMinute);
 
     // 每小時更新 (與小時開始時同步)
     const hourlyUpdate = () => {

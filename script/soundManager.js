@@ -68,6 +68,16 @@ export class SoundManager {
   }
 
   /**
+   * 播放 UI 互動音效（如開啟提示音）
+   * @param {string} path - 音效檔案路徑
+   */
+  playEffect(path) {
+    const audio = new Audio(path);
+    audio.volume = 0.5; // 提示音音量適中即可
+    audio.play().catch(e => console.warn("[音效] UI 效果音播放受阻:", e));
+  }
+
+  /**
    * 檢查指定任務類型的音效是否開啟
    * @param {string} taskTypeKey - 任務類型 Key
    * @returns {boolean}

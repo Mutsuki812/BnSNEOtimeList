@@ -150,7 +150,8 @@ export class UIRenderer {
     const longClass = this._getLongClass(content);
     
     // 檢查是否處於 4 分鐘警示區間
-    const isAlert = this.timeUtils.isWithinWindow(timeText, 5);
+    // 在特殊期間(isOnlineMode)下，靜態班表不應觸發紅色警示效果
+    const isAlert = isOnlineMode ? false : this.timeUtils.isWithinWindow(timeText, 5);
     const alertClass = isAlert ? "task-alert-active" : "";
 
     const maintenanceClass = isMaintenance ? "maintenance" : "";
@@ -180,7 +181,7 @@ export class UIRenderer {
     `;
 
     // タスクの期限切れ判定
-    if (item && !isMaintenance) {
+    if (item && !isMaintenance && !isOnlineMode) {
       const taskDate = this.timeUtils.timeStringToDateToday(item.time);
       const now = this.timeUtils.getNowBySVR();
       const offsetMin = (type.key === 'gishiki') ? 3 : 5;
@@ -213,6 +214,12 @@ export class UIRenderer {
         
         // 更新按鈕圖示
         const isSoundOn = this.soundManager.isSoundEnabled(taskType);
+
+        // 當音效從關閉變為開啟時，播放提示音
+        if (isSoundOn && typeof this.soundManager.playEffect === 'function') {
+          this.soundManager.playEffect('./audio/soundON.mp3');
+        }
+
         const img = soundBtn.querySelector('img');
         if (img) {
           img.src = isSoundOn ? './images/bell32.png' : './images/bellSlash32.png';

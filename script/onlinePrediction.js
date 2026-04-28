@@ -305,6 +305,11 @@ export class OnlinePredictionManager {
         const yesterdayPrefix = (lastReport.weekDay !== todayWeekDay) ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
 
         const formattedTime = this._parseAndFormatTime(lastReport.time);
+        
+        // 動態警示判定：如果回報時間是在今天且在 5 分鐘窗口內
+        const isAlert = (lastReport.weekDay === todayWeekDay) && this.timeUtils.isWithinWindow(formattedTime, 5);
+        currentTaskRow.classList.toggle('task-alert-active', isAlert);
+
         timeEl.textContent = "上次出現";
         timeEl.classList.add('prediction-label');
         const locText = (lastReport.locationA === '-' && lastReport.locationB === '-') ? '-' : `${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
@@ -314,6 +319,7 @@ export class OnlinePredictionManager {
         timeEl.classList.add('prediction-label', 'text-placeholder');
         contentEl.textContent = "等待回報...";
         contentEl.classList.add('text-placeholder');
+        currentTaskRow.classList.remove('task-alert-active');
       }
     }
   }
@@ -347,6 +353,11 @@ export class OnlinePredictionManager {
       // 計算預測時間
       // 規則：回報時間 + 1小時25分 (Start) ~ + 1小時40分 (End)
       const formattedTime = this._parseAndFormatTime(lastReport.time);
+
+      // 動態警示判定：如果回報時間是在今天且在 5 分鐘窗口內
+      const isAlert = (lastReport.weekDay === todayWeekDay) && this.timeUtils.isWithinWindow(formattedTime, 5);
+      currentTaskRow.classList.toggle('task-alert-active', isAlert);
+
       const [h, m] = formattedTime.split(':').map(Number);
 
       if (isNaN(h) || isNaN(m)) {
@@ -400,7 +411,10 @@ export class OnlinePredictionManager {
         predInfo = `${predStartStr} ～ ${predEndStr}`;
 
         // 檢查是否到達啟動音效的時間點
-        if (effectiveCurrentMinutes === startPredTotalMinutes) {
+        // 僅針對白青 (shirao) 與 仙幻島 (sengen) 在預測開始的那一分鐘觸發
+        const isTargetType = (typeKey === 'shirao' || typeKey === 'sengen');
+        if (isTargetType && effectiveCurrentMinutes === startPredTotalMinutes) {
+          console.log(`[預測音效] 觸發預測提醒: ${typeKey} 於推算時間 ${predStartStr}`);
           this.soundManager.playForecastSound(typeKey);
         }
       }
@@ -424,6 +438,7 @@ export class OnlinePredictionManager {
       timeEl.classList.add('prediction-label', 'text-placeholder');
       contentEl.textContent = "等待回報...";
       contentEl.classList.add('text-placeholder');
+      currentTaskRow.classList.remove('task-alert-active');
     }
   }
 

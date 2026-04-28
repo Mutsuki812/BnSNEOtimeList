@@ -12,7 +12,7 @@ export const CONFIG = {
   SUPABASE_KEY: "sb_publishable_IBRmc1srGQDHE37cn_f-ZQ_-vzy-NdW",
 
   REFRESH_INTERVAL: 60000, // 1分鐘
-  HOUR_INTERVAL: 3600000, // 1小時
+  HOUR_INTERVAL:  3600000, // 1小時
 };
 
 export const TASK_TYPES = [
@@ -33,13 +33,13 @@ export const MAINTENANCE_PATTERN = /例行維護中/;
 export const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 export const DATE_RANGES = {
-  start: new Date('2026-04-17T15:00:00+08:00'),
-  end: new Date('2026-04-22T05:59:59+08:00')
+  start: new Date('2026-04-29T15:00:00+08:00'),
+  end: new Date('2026-05-06T05:59:59+08:00')
 };
 
 export const TEXTS = {
 titleNotice:
-    "<b>仙幻島第３賽季　2026.03.25 - 2026.04.29</b><br>",
+    "<b>仙幻島第４賽季　2026.04.29 - 2026.05.27</b><br>",
 
   regularNotice:
     "・表記時間 = 系統出字時間<br>" +
@@ -48,15 +48,16 @@ titleNotice:
   
   temporaryNotice:
     "<span style=\"color:var(--color-text-red)\">" +
-    "・畫面/音效出現異常時 煩請強制刷新Ctrl+F5<br>" +
+    // "・畫面/音效出現異常時 煩請強制刷新Ctrl+F5<br>" +
+    "・該系統極致仰賴各位回報者的準確度 如有錯誤的回報 請記得自行刪除<br>" +
     "・回報或留言需登入名稱（點擊回報左側的時鐘 可以查看或刪除歷史紀錄）<br>" +
-    "・登入系統使用瀏覽器環境綁定 若發生「名稱無法使用」請在最下方留言告知<br>" +
+    // "・登入系統使用瀏覽器環境綁定 若發生「名稱無法使用」請在最下方留言告知<br>" +
     "・手機板目前炸掉了 不建議使用<br>" +
     "</span>",
 
   previousHourHint: {
     gishiki: "可能還沒死，可以找找看",
-    shirao: "可能還沒死，可以找找看",
+    shirao: "跑圖快的，還不快飛",
     sengen: "跑圖快的，還不快飛"
   },
 
