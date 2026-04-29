@@ -33,12 +33,12 @@ export const MAINTENANCE_PATTERN = /例行維護中/;
 export const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 export const DATE_RANGES = {
-  start: new Date('2026-04-29T15:00:00+08:00'),
+  start: new Date('2026-04-29T05:00:00+08:00'),
   end: new Date('2026-05-06T05:59:59+08:00')
 };
 
 export const TEXTS = {
-titleNotice:
+  titleNotice:
     "<b>仙幻島第４賽季　2026.04.29 - 2026.05.27</b><br>",
 
   regularNotice:

@@ -116,19 +116,22 @@ class TaskScheduleApp {
    * 通用初始化處理
    */
   initCommon({ isSpecialPeriod }) {
-    // 標題公告：無條件顯示
+    // 標題公告：常態顯示
     this.uiRenderer.updateTitleNotice();
 
-    // 常態公告：特殊期間隱藏，其餘時間顯示
+    // 常態公告：僅在特殊期間外顯示
     if (isSpecialPeriod) {
       DOMHelper.updateElement("regularNotice", undefined, "none");
     } else {
       this.uiRenderer.updateRegularNotice();
     }
 
-    // 限時公告：現在在特殊期間與一般期間皆顯示
-    this.uiRenderer.updateTemporaryNoticeText();
-    DOMHelper.updateElement("temporaryNotice", undefined, "block");
+    // 限時公告：僅在特殊期間內顯示
+    if (isSpecialPeriod) {
+      this.uiRenderer.updateTemporaryNoticeText();
+    } else {
+      DOMHelper.updateElement("temporaryNotice", undefined, "none");
+    }
 
     DOMHelper.updateElement("taskContainer", null, "block");
     this.loadTasksAndRender();

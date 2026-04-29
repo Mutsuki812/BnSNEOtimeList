@@ -16,13 +16,6 @@ export class UIRenderer {
   }
 
   /**
-   * 更新標題公告
-   */
-  updateTitleNotice() {
-    DOMHelper.updateElement("titleNotice", TEXTS.titleNotice, "block");
-  }
-
-  /**
    * 更新頂部的目前時間顯示
    */
   updateTopTime() {
@@ -52,6 +45,13 @@ export class UIRenderer {
   }
 
   /**
+   * 更新標題公告
+   */
+  updateTitleNotice() {
+    DOMHelper.updateElement("titleNotice", TEXTS.titleNotice, "block");
+  }
+
+  /**
    * 更新常態公告
    */
   updateRegularNotice() {
@@ -62,7 +62,7 @@ export class UIRenderer {
    * 更新限時公告
    */
   updateTemporaryNoticeText() {
-    DOMHelper.updateElement("temporaryNotice", TEXTS.temporaryNotice);
+    DOMHelper.updateElement("temporaryNotice", TEXTS.temporaryNotice, "block");
   }
 
   /**
