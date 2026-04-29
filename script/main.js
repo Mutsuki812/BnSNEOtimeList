@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260428-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260629-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';

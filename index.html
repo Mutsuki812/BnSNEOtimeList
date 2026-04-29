@@ -7,7 +7,7 @@
   <title>B&S NEO 時間表</title>
 
   <!-- 共通樣式 (所有裝置) -->
-  <link rel="stylesheet" href="./style/common.css?v=20260428-1">
+  <link rel="stylesheet" href="./style/common.css?v=20260629-1">
 
   <!-- 桌面版樣式 (僅寬度 >= 431px) -->
   <link rel="stylesheet" href="style/desktop.css" media="(min-width: 431px)">
@@ -25,14 +25,17 @@
     <!-- 日期與時間 -->
     <header id="topBar">
       <div id="topLeft">
+        <div id="titleNotice" class="titleNotice"></div>
         <div id="dateLabel" class="dateLabel"></div>
         <div id="timeBox" class="timeBox"></div>
       </div>
     </header>
 
-    <!-- 說明公告 -->
+    <!-- 常態公告 -->
+     <div id="titleNotice" class="titleNotice"></div>
+    <!-- 特殊期間外公告 -->
     <div id="regularNotice" class="regularNotice"></div>
-    <!-- 限時公告 -->
+    <!-- 特殊期間內公告 -->
     <div id="temporaryNotice" class="temporaryNotice"></div>
     
     <div class="infoBar">
@@ -49,15 +52,15 @@
       </div>
     </section>
 
-    <div class="thxsInfo" style="text-align: right; font-size:0.8rem; padding-right: 20px;">※資料來源：<a href="https://forum.gamer.com.tw/C.php?bsn=12980&snA=79447" target="_blank">巴哈姆特</a> 特別感謝<a
-        href="https://home.gamer.com.tw/profile/index.php?&owner=nobody9999" target="_blank">不起眼的路人</a>及各位巴哈使用者的時間地點提供
+    <div class="thxsInfo" style="text-align: right; font-size:0.8rem; padding-right: 20px;">
+      ※感謝每個熱心回報、提供修正的玩家 沒有你們就沒有這個時間表了！🙏 
     </div>
 
     <!-- 回報區 -->
     <div id="reportRoot"></div>
   </div>
 
-  <script type="module" src="./script/main.js?v=20260428-1"></script>
+  <script type="module" src="./script/main.js?v=20260629-1"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
   <script>
