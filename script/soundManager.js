@@ -110,28 +110,33 @@ export class SoundManager {
    * 這應該在第一次使用者互動（例如點擊）時呼叫。
    * 現代瀏覽器要求使用者先與頁面互動，才能播放音訊。
    */
-  unlockAudio() {
+  async unlockAudio() {
     if (this.isAudioUnlocked) {
       return;
     }
-    // 建立一個 Web Audio Context 並嘗試恢復它。
-    // 透過播放一段無聲的音訊來取得瀏覽器的播放權限，這是更可靠的方法。
-    this.audioPlayer.src = this.silentSource;
-    this.audioPlayer.volume = 0; // 靜音
+    
+    try {
+      // 建立一個 Web Audio Context 並嘗試恢復它。
+      // 透過播放一段無聲的音訊來取得瀏覽器的播放權限，這是更可靠的方法。
+      this.audioPlayer.src = this.silentSource;
+      this.audioPlayer.volume = 0; // 靜音
+      this.audioPlayer.currentTime = 0; // 重置播放位置
 
-    this.bossPlayer.src = this.silentSource;
-    this.bossPlayer.volume = 0; // 靜音
+      this.bossPlayer.src = this.silentSource;
+      this.bossPlayer.volume = 0; // 靜音
+      this.bossPlayer.currentTime = 0; // 重置播放位置
 
-    Promise.all([
-      this.audioPlayer.play(),
-      this.bossPlayer.play()
-    ]).then(() => {
+      await Promise.all([
+        this.audioPlayer.play(),
+        this.bossPlayer.play()
+      ]);
+      
       this.isAudioUnlocked = true;
       console.log('[音效] 音訊已由使用者互動解鎖。');
-    }).catch(e => {
+    } catch (e) {
       // 在某些極端情況下，即使是互動後也可能解鎖失敗
       console.warn('[音效] 透過播放靜音音訊解鎖失敗。', e);
-    });
+    }
   }
 
   /**
@@ -189,39 +194,57 @@ export class SoundManager {
    */
   playTaskSound(taskTypeKey, taskItem) {
     if (!this.isSoundEnabled(taskTypeKey)) {
-      console.log(`[音效] 音效設定為關閉，跳過播放 (${taskTypeKey})`);
+      console.log(`[音效] 設定為關閉，跳過播放 (${taskTypeKey})`);
       return;
     }
 
-    const taskTime = taskItem.time;
+    // 如果音訊還未解鎖，則不播放（等待使用者互動）
+    if (!this.isAudioUnlocked) {
+      console.log(`[音效] 音訊未解鎖，跳過播放 (${taskTypeKey})`);
+      return;
+    }
+
+    const taskTime = taskItem.time || '';
+    const playId = `${taskTypeKey}_${taskTime}`;
 
     // 如果該時間點的任務已經播放過，則跳過
-    if (this.lastPlayed[taskTypeKey] === taskTime) {
+    if (this.lastPlayed[playId]) {
+      console.log(`[音效] 已播放 ${playId}.`);
       return;
     }
 
-    this.lastPlayed[taskTypeKey] = taskTime;
+    this.lastPlayed[playId] = true;
     console.log(`[音效] 正在播放 ${taskTypeKey} 的提示音，時間點 ${taskTime}`);
 
-    let audioSrc = `./audio/${taskTypeKey}.mp3`; // 預設音效 (gishiki 會用這個)
+    let audioSrc = `./audio/${taskTypeKey}.mp3`;
     
     if (SOUND_MAP[taskTypeKey] && taskItem.content && SOUND_MAP[taskTypeKey][taskItem.content]) {
       audioSrc = SOUND_MAP[taskTypeKey][taskItem.content];
     }
 
+    // 重置 Audio 元素狀態
+    this.audioPlayer.pause();
+    this.audioPlayer.currentTime = 0;
     this.audioPlayer.src = audioSrc;
     this.audioPlayer.volume = 1; // 恢復音量
+
     const playPromise = this.audioPlayer.play();
 
     if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        // 如果是 NotAllowedError (自動播放被阻擋)，則靜默處理或僅顯示 Log，避免控制台報錯干擾
-        if (error.name === 'NotAllowedError') {
-          console.log(`[音效] 自動播放被阻擋 (${taskTypeKey})。等待使用者互動後即可播放。`);
-        } else {
-          console.warn(`[音效] 播放失敗 (${taskTypeKey})。`, error);
-        }
-      });
+      playPromise
+        .then(() => {
+          console.log(`[音效] ${taskTypeKey} 播放成功`);
+        })
+        .catch(error => {
+          // 如果是 NotAllowedError (自動播放被阻擋)，則靜默處理或僅顯示 Log，避免控制台報錯干擾
+          if (error.name === 'NotAllowedError') {
+            console.log(`[音效] 自動播放被阻擋 (${taskTypeKey})。等待使用者互動後即可播放。`);
+          } else if (error.name === 'NotSupportedError') {
+            console.warn(`[音效] 音訊格式不支援或來源無效 (${taskTypeKey})。`, error);
+          } else {
+            console.warn(`[音效] 播放失敗 (${taskTypeKey})。`, error);
+          }
+        });
     }
   }
 
@@ -237,26 +260,42 @@ export class SoundManager {
       return;
     }
 
-    // 如果該時間點的音效已經播放過，則跳過
-    if (this.lastPlayed[taskTypeKey] === playId) {
+    // 如果音訊還未解鎖，則不播放（等待使用者互動）
+    if (!this.isAudioUnlocked) {
+      console.log(`[音效] 音訊未解鎖，跳過播放 (world_boss)`);
       return;
     }
 
-    this.lastPlayed[taskTypeKey] = playId;
+    // 如果該時間點的音效已經播放過，則跳過
+    if (this.lastPlayed[playId]) {
+      return;
+    }
+
+    this.lastPlayed[playId] = true;
     console.log(`[音效] 正在播放世界王提示音，ID ${playId}`);
 
+    // 重置 Audio 元素狀態
+    this.bossPlayer.pause();
+    this.bossPlayer.currentTime = 0;
     this.bossPlayer.src = audioSrc;
     this.bossPlayer.volume = 1; // 恢復音量
+
     const playPromise = this.bossPlayer.play();
 
     if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        if (error.name === 'NotAllowedError') {
-          console.log(`[音效] 自動播放被阻擋 (world_boss)。等待使用者互動後即可播放。`);
-        } else {
-          console.warn(`[音效] 播放失敗 (world_boss)。`, error);
-        }
-      });
+      playPromise
+        .then(() => {
+          console.log(`[音效] world_boss 播放成功`);
+        })
+        .catch(error => {
+          if (error.name === 'NotAllowedError') {
+            console.log(`[音效] 自動播放被阻擋 (world_boss)。等待使用者互動後即可播放。`);
+          } else if (error.name === 'NotSupportedError') {
+            console.warn(`[音效] 音訊格式不支援或來源無效 (world_boss)。`, error);
+          } else {
+            console.warn(`[音效] 播放失敗 (world_boss)。`, error);
+          }
+        });
     }
   }
 
@@ -266,17 +305,31 @@ export class SoundManager {
   playSengenPreAlert() {
     if (!this.isSoundEnabled('sengen')) return;
 
+    if (!this.isAudioUnlocked) {
+      console.log('[音效] 音訊未解鎖，跳過播放 (sengen_pre)');
+      return;
+    }
+
     const now = new Date();
-    const timeTag = `${now.getHours()}:${now.getMinutes()}`;
+    const timeTag = `sengen_pre_${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
     
-    if (this.lastPlayed['sengen_pre'] === timeTag) return;
-    this.lastPlayed['sengen_pre'] = timeTag;
+    if (this.lastPlayed[timeTag]) return;
+    this.lastPlayed[timeTag] = true;
 
     console.log('[音效] 正在播放仙幻島預告音效');
+    
+    // 重置 Audio 元素狀態
+    this.audioPlayer.pause();
+    this.audioPlayer.currentTime = 0;
     this.audioPlayer.src = './audio/sengen10.mp3';
     this.audioPlayer.volume = 1;
+    
     this.audioPlayer.play().catch(e => {
-      console.warn('[音效] 預告音效播放失敗', e);
+      if (e.name === 'NotAllowedError') {
+        console.log('[音效] 預告音效自動播放被阻擋，等待使用者互動');
+      } else {
+        console.warn('[音效] 預告音效播放失敗', e);
+      }
     });
   }
 
@@ -287,17 +340,31 @@ export class SoundManager {
   playForecastSound(taskTypeKey) {
     if (!this.isSoundEnabled(taskTypeKey)) return;
 
+    if (!this.isAudioUnlocked) {
+      console.log(`[音效] 音訊未解鎖，跳過播放 (${taskTypeKey}_forecast)`);
+      return;
+    }
+
     const now = new Date();
-    const timeTag = `forecast_${taskTypeKey}_${now.getHours()}:${now.getMinutes()}`;
+    const timeTag = `forecast_${taskTypeKey}_${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
     
     if (this.lastPlayed[timeTag]) return;
     this.lastPlayed[timeTag] = true;
 
     console.log(`[音效] 正在播放 ${taskTypeKey} 的預報音效`);
+    
+    // 重置 Audio 元素狀態
+    this.audioPlayer.pause();
+    this.audioPlayer.currentTime = 0;
     this.audioPlayer.src = `./audio/${taskTypeKey}Forecast.mp3`;
     this.audioPlayer.volume = 1;
+    
     this.audioPlayer.play().catch(e => {
-      console.warn(`[音效] ${taskTypeKey} 預報音效播放失敗`, e);
+      if (e.name === 'NotAllowedError') {
+        console.log(`[音效] ${taskTypeKey} 預報音效自動播放被阻擋`);
+      } else {
+        console.warn(`[音效] ${taskTypeKey} 預報音效播放失敗`, e);
+      }
     });
   }
 }

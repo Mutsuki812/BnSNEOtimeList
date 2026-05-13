@@ -414,7 +414,7 @@ export class OnlinePredictionManager {
         // 僅針對白青 (shirao) 與 仙幻島 (sengen) 在預測開始的那一分鐘觸發
         const isTargetType = (typeKey === 'shirao' || typeKey === 'sengen');
         if (isTargetType && effectiveCurrentMinutes === startPredTotalMinutes) {
-          console.log(`[預測音效] 觸發預測提醒: ${typeKey} 於推算時間 ${predStartStr}`);
+          console.log(`[預測音效] 觸發預報提示: ${typeKey} 預計開始時間 ${predStartStr}`);
           this.soundManager.playForecastSound(typeKey);
         }
       }

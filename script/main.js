@@ -2,7 +2,7 @@
    ==== 主應用程式 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260629-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260513-1';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -38,6 +38,9 @@ class TaskScheduleApp {
     this.secondlyIntervalId = null; // 載入操作的序列號，用來處理非同步渲染的競爭問題。
     this.worker = null;
     this.loadToken = 0;
+    
+    // 記錄最後播放的時間，防止世界王音效重複播放
+    this.lastPlayedId = null;
   }
 
   /**
@@ -92,7 +95,7 @@ class TaskScheduleApp {
       this.worker.onmessage = (e) => {
         const { type } = e.data;
         if (type === 'DB_UPDATE') {
-          console.log('[Worker] 收到即時更新訊號，重新獲取數據');
+          console.log('[即時更新] 收到資料庫異動訊號，重新獲取數據');
           this.loadTasksAndRender(); // 觸發全域重新渲染
         } else if (type === 'TICK_MINUTE') {
           // 來自 Worker 的精準計時，確保網頁佇立時仍準確更新
@@ -177,7 +180,7 @@ class TaskScheduleApp {
 
     // 在 await 之後，檢查是否有新的載入請求已開始。若有，則中止本次渲染。
     if (currentToken !== this.loadToken) {
-      console.log(`渲染操作已中止 (Token: ${currentToken})，因為已有新的載入請求 (Token: ${this.loadToken})。`);
+      console.log(`[渲染] 操作已中止 (序號: ${currentToken})，已有新的載入請求 (序號: ${this.loadToken})。`);
       return;
     }
 
@@ -283,10 +286,16 @@ class TaskScheduleApp {
    * 檢查並播放預告音效
    */
   checkPreAlerts() {
-    if (!this.cachedExcelRows) return;
+    if (!this.cachedExcelRows) {
+      console.log('[預警檢查] 無快取 Excel 資料，跳過預警。');
+      return;
+    }
     
     // 特殊期間內，完全禁用基於靜態班表的預警音效
-    if (this.isInDateRange()) return;
+    if (this.isInDateRange()) {
+      console.log('[預警檢查] 處於活動期間，跳過靜態班表預警。');
+      return;
+    }
 
     const now = this.timeUtils.getNowBySVR();
     const s = now.getSeconds();
@@ -318,6 +327,52 @@ class TaskScheduleApp {
   }
 
   /**
+   * 檢查並播放靜態班表音效 (儀式、白青、仙幻島)
+   * 只有在非活動期間，或該任務未啟用線上系統時才播放
+   */
+  checkStaticTaskSounds() {
+    if (!this.cachedExcelRows) return;
+
+    const now = this.timeUtils.getNowBySVR();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const second = now.getSeconds();
+
+    // 只在進入新分鐘的 0-5 秒內檢查，避免重複觸發
+    if (second > 5) return;
+
+    const currentDay = now.getDay();
+    const todayWeek = currentDay === 0 ? 7 : currentDay;
+    const isActivityPeriod = this.isInDateRange();
+
+    this.taskProcessor.getVisibleTaskTypes().forEach(type => {
+      // 活動期間且該任務有線上系統，不播放靜態音效 (符合需求：活動期間儀式不播放)
+      if (isActivityPeriod && type.useOnlineSystem) return;
+
+      const todayList = this.taskProcessor.getTaskListForWeek(this.cachedExcelRows, type, todayWeek);
+      todayList.forEach(item => {
+        if (item.time) {
+          const [h, m] = item.time.split(":").map(Number);
+          if (h === currentHour && m === currentMinute) {
+            // 維護中不播放
+            if (this.taskUtils.isMaintenanceTask(item)) return;
+
+            // 世界王時間抑制
+            const isTargetTask = ['gishiki', 'shirao', 'sengen'].includes(type.key);
+            if (isTargetTask) {
+              const isWeekend = (currentDay === 0 || currentDay === 6);
+              const isDailySuppressionTime = (currentHour === 20 && currentMinute >= 50 && currentMinute <= 59);
+              const isWeekendSuppressionTime = (isWeekend && currentHour === 14 && currentMinute >= 50 && currentMinute <= 59);
+              if (isDailySuppressionTime || isWeekendSuppressionTime) return;
+            }
+            this.soundManager.playTaskSound(type.key, item);
+          }
+        }
+      });
+    });
+  }
+
+  /**
    * 檢查並播放世界王提示音
    */
   checkAndPlayWorldBossSound() {
@@ -330,9 +385,17 @@ class TaskScheduleApp {
     let audioSrc = null;
     const isWeekend = (day === 0 || day === 6);
 
-    // 考慮到分頁在背景執行時的計時器節流 (Throttling)，將觸發視窗調整為 30 秒
-    // 搭配 SoundManager 內部的 playId (HH:MM) 檢查，同一分鐘內仍只會播放一次
-    if (second > 30) return;
+    // 判斷播放ID (HH:MM 格式)
+    const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    
+    // 如果這一分鐘已經播放過，則跳過
+    if (this.lastPlayedId === playId) {
+      return;
+    }
+
+    // 考慮到分頁在背景執行時的計時器節流 (Throttling)，只在進入新分鐘的 0-5 秒內觸發
+    // 這確保了即使瀏覽器佇立，仍能在正確的時間播放
+    if (second > 5) return;
 
     if (hour === 20) {
       if (minute === 50) audioSrc = './audio/boss10.mp3';
@@ -345,15 +408,11 @@ class TaskScheduleApp {
     }
 
     if (audioSrc) {
-      const playId = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-
-      // 只有當這一分鐘還沒播過時，才執行 Log 與播放指令
-      if (this.lastPlayedId !== playId) {
-        console.log(`[世界王] 精確秒數觸發 (${second}s)：在 ${hour}:${minute} 播放 ${audioSrc}`);
-        console.log(`[世界王] 成功觸發：在 ${playId} 播放 ${audioSrc}`);
-        this.soundManager.playWorldBossSound(audioSrc, playId);
-        this.lastPlayedId = playId; // 標記這一分鐘已處理
-      }
+      // 標記這一分鐘已處理，避免重複播放
+      this.lastPlayedId = playId;
+      console.log(`[世界王] 精確秒數觸發 (${second}s)：在 ${hour}:${minute} 播放 ${audioSrc}`);
+      console.log(`[世界王] 成功觸發：在 ${playId} 播放 ${audioSrc}`);
+      this.soundManager.playWorldBossSound(audioSrc, playId);
     }
   }
 
@@ -404,49 +463,6 @@ class TaskScheduleApp {
     // 任務分類
     const { previousItem, currentItem, nextItems, remainingItems, isInMaintenance } =
       this.taskProcessor.categorizeTasksByTime(combinedList, currentHour, currentMinute);
-
-    // 音效播放檢查：如果存在當前任務且音效尚未播放，則進行播放。
-    combinedList.forEach(item => {
-      if (item.time) {
-        const [h, m] = item.time.split(":").map(Number);
-        if (h === currentHour && m === currentMinute) {
-          // 只有今天的任務才播放音效，避免播放到明天同一時間的任務
-          if (item.isNextDay) {
-            console.log(`[音效檢查] 跳過明日任務: ${type.key} 於 ${item.time}`);
-            return; // 明天的任務，跳過
-          }
-
-          // 只要在特殊期間且該任務有線上系統，就絕對不播放靜態音效
-          if (isActivityPeriod && type.useOnlineSystem) {
-            return;
-          }
-
-          // 維護中，不播放音效
-          if (this.taskUtils.isMaintenanceTask(item)) {
-            return; // continue to next item in forEach
-          }
-
-          // 在世界王出現的時間 (每日 20:50-59, 週末 14:50-59) 暫停儀式/白青/仙幻島的音效
-          const isTargetTask = ['gishiki', 'shirao', 'sengen'].includes(type.key);
-          if (isTargetTask) {
-            const day = currentDay; // 0 = Sunday, 6 = Saturday
-            const hour = currentHour;
-            const minute = currentMinute;
-            const isWeekend = (day === 0 || day === 6);
-
-             const isDailySuppressionTime = (hour === 20 && minute >= 50 && minute <= 59);
-             const isWeekendSuppressionTime = (isWeekend && hour === 14 && minute >= 50 && minute <= 59);
- 
-             if (isDailySuppressionTime || isWeekendSuppressionTime) {
-               console.log(`[音效檢查] 因世界王時間，抑制 ${type.key} 在 ${hour}:${minute} 的音效。`);
-               return; // continue to next item in forEach
-             }
-          }
-          console.log(`[音效檢查] 時間吻合! 任務: ${type.key}, 時間: ${item.time}`);
-          this.soundManager.playTaskSound(type.key, item);
-        }
-      }
-    });
 
     // 建立群組元素
     const group = DOMHelper.createElement("div", `group ${type.key}`);
@@ -539,6 +555,7 @@ class TaskScheduleApp {
     this.secondlyIntervalId = setInterval(() => {
       // 將音效檢查移至最頂端，優先於 UI 渲染執行，避免阻塞
       this.checkAndPlayWorldBossSound();
+      this.checkStaticTaskSounds();
       this.checkPreAlerts();
       
       this.uiRenderer.updateTopTime();
