@@ -1,8 +1,7 @@
 /* ==========================
    ==== 主應用程式 ====
    ========================== */
-
-import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js?v=20260520-1';
+import { CONFIG, DATE_RANGES, WEEKDAYS } from './config.js';
 import { TimeUtils, TaskUtils, DOMHelper } from './utils.js';
 import { ExcelDataLoader, TaskDataProcessor } from './taskProcessor.js';
 import { UIRenderer } from './uiRenderer.js';
@@ -39,6 +38,7 @@ class TaskScheduleApp {
     this.worker = null;
     this.loadToken = 0;
     
+    this.alertStatusLogged = false; // 記錄是否已輸出過狀態日誌
     // 記錄最後播放的時間，防止世界王音效重複播放
     this.lastPlayedId = null;
   }
@@ -287,18 +287,27 @@ class TaskScheduleApp {
    */
   checkPreAlerts() {
     if (!this.cachedExcelRows) {
-      console.log('[預警檢查] 無快取 Excel 資料，跳過預警。');
+      if (!this.alertStatusLogged) {
+        console.log('[預警檢查] 尚未獲取 Excel 快取，靜默等待中...');
+        this.alertStatusLogged = true;
+      }
       return;
     }
     
     // 特殊期間內，完全禁用基於靜態班表的預警音效
     if (this.isInDateRange()) {
-      console.log('[預警檢查] 處於活動期間，跳過靜態班表預警。');
+      if (!this.alertStatusLogged) {
+        console.log('[預警檢查] 活動期間：已禁用靜態班表預警，啟用即時預測模式。');
+        this.alertStatusLogged = true;
+      }
       return;
     }
 
     const now = this.timeUtils.getNowBySVR();
     const s = now.getSeconds();
+
+    // 若成功執行到此（非活動期間且有資料），重置日誌旗標以便下次切換狀態時再次提醒
+    this.alertStatusLogged = false;
 
     // 仙幻島 (sengen) 野王出現前10秒提示 (任務時間 + 4分50秒)
     if (s === 50) {
