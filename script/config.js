@@ -34,7 +34,7 @@ export const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 export const DATE_RANGES = {
   start: new Date('2026-05-20T11:00:00+08:00'),
-  end: new Date('2026-05-27T05:59:59+08:00')
+  end: new Date('2026-05-27T04:59:59+08:00')
 };
 
 export const TEXTS = {
