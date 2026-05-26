@@ -33,13 +33,13 @@ export const MAINTENANCE_PATTERN = /例行維護中/;
 export const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 export const DATE_RANGES = {
-  start: new Date('2026-05-20T11:00:00+08:00'),
-  end: new Date('2026-05-27T04:59:59+08:00')
+  start: new Date('2026-05-27T11:00:00+08:00'),
+  end: new Date('2026-06-03T05:59:59+08:00')
 };
 
 export const TEXTS = {
   titleNotice:
-    "<b>仙幻島第４賽季　2026.04.29 - 2026.05.27</b><br>",
+    "<b>仙幻島第5賽季　2026.05.27 - 2026.06.24</b><br>",
 
   regularNotice:
     "・表記時間 = 系統出字時間<br>" +
@@ -57,7 +57,7 @@ export const TEXTS = {
 
   previousHourHint: {
     gishiki: "可能還沒死，可以找找看",
-    shirao: "跑圖快的，還不快飛",
+    shirao: "可能還沒死，可以找找看",
     sengen: "跑圖快的，還不快飛"
   },
 
