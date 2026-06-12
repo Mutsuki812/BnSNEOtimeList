@@ -24,8 +24,7 @@ export class SupplementalManager {
     if (parentEl.querySelector('.supplemental-trigger')) return;
 
     const btn = document.createElement('div');
-    btn.className = 'user-info-content unlogged supplemental-trigger'; // 加入 unlogged 類別以繼承 hover 效果
-    // 調整 HTML 順序：圖示在前，文字在後，與登入按鈕保持一致
+    btn.className = 'user-info-content unlogged supplemental-trigger';
     btn.innerHTML = `
       <img src="./images/data.gif" class="user-info-icon" alt="supplemental" width="18px" height="18px">
       <span class="login-btn">補完計畫</span>
@@ -257,7 +256,7 @@ export class SupplementalManager {
       this.loadGridData();
     } catch (e) {
       msg.className = "modal-msg error";
-      msg.textContent = e.code === '23505' ? "該時段已存在紀錄" : "提交失敗";
+      msg.textContent = e.code === '23505' ? "該時段已存在記録" : "提交失敗";
     }
   }
 

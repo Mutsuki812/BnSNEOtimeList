@@ -2,7 +2,7 @@
    ==== 線上預測與回報系統 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS, TASK_TYPES } from './config.js';
+import { CONFIG, DATE_RANGES, WEEKDAYS, TASK_TYPES, MVP_CONFIG } from './config.js';
 import { DOMHelper, SupabaseHelper } from './utils.js';
 
 const CONSTANTS = {
@@ -10,7 +10,7 @@ const CONSTANTS = {
     START: 85, // +1h 25m
     END: 100,  // +1h 40m
   },
-  GISHIKI_LOCATIONS: ['-', '黑森林', '巨岩海岸', '孤村', '土門客棧', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
+  GISHIKI_LOCATIONS: ['-', '黒森林', '巨岩海岸', '孤村', '土門客桟', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
 };
 
 export class OnlinePredictionManager {
@@ -19,10 +19,10 @@ export class OnlinePredictionManager {
     this.userManager = userManager;
     this.soundManager = soundManager;
     this.lastReports = {}; // 儲存從 GAS 獲取的最新回報資料
-    this.historyCache = {}; // 儲存歷史紀錄快取，減少畫面閃爍
+    this.historyCache = {}; // 儲存歷史記録快取，減少畫面閃爍
     // 初始化狀態旗標
     this.isInitialized = false;
-    this.openHistoryType = null; // 紀錄當前開啟的歷史紀錄類型
+    this.openHistoryType = null; // 記録當前開啟的歷史記録類型
   }
 
   /**
@@ -103,7 +103,6 @@ export class OnlinePredictionManager {
           const latestT = this.timeUtils.timeToMinutes(bossReports[0].timeStamp);
           
           // 2. 篩選出屬於「同一場重生事件」的回報 (例如與最晚一筆相差 20 分鐘內)
-          // 這是為了避免把 2 小時前的舊資料跟現在的資料混在一起判定
           const eventReports = bossReports.filter(r => {
             const t = this.timeUtils.timeToMinutes(r.timeStamp);
             return (latestT - t) <= 20;
@@ -256,7 +255,7 @@ export class OnlinePredictionManager {
     TASK_TYPES.forEach(type => {
       const group = document.querySelector(`.group.${type.key}`);
       if (!group) return;
-      const reportBox = group.querySelector('.online-report-box');
+      const reportBox = group.querySelector('.online-box');
       if (!reportBox) return;
 
       const timeInput = reportBox.querySelector('.report-time-input');
@@ -312,7 +311,18 @@ export class OnlinePredictionManager {
 
         timeEl.textContent = "上次出現";
         timeEl.classList.add('prediction-label');
-        const locText = (lastReport.locationA === '-' && lastReport.locationB === '-') ? '-' : `${lastReport.locationA || '-'}/${lastReport.locationB || '-'}`;
+        
+        // 優化顯示邏輯：僅在雙地點皆有時顯示斜線
+        let locText = lastReport.locationA || '-';
+        if (lastReport.locationB && lastReport.locationB !== '-') {
+          const totalLen = (lastReport.locationA || "").length + (lastReport.locationB || "").length;
+          // 總字數 10 以上才在斜線後換行，否則保持單行顯示以增加美觀度
+          const separator = totalLen >= 10 ? ' /<br>' : ' / ';
+          locText = `${lastReport.locationA}${separator}${lastReport.locationB}`;
+        } else if (locText === '-') {
+          locText = '位置未知';
+        }
+
         contentEl.innerHTML = `${yesterdayPrefix}${formattedTime} ${locText}`;
       } else {
         timeEl.textContent = "尚無數據";
@@ -414,7 +424,7 @@ export class OnlinePredictionManager {
         // 僅針對白青 (shirao) 與 仙幻島 (sengen) 在預測開始的那一分鐘觸發
         const isTargetType = (typeKey === 'shirao' || typeKey === 'sengen');
         if (isTargetType && effectiveCurrentMinutes === startPredTotalMinutes) {
-          console.log(`[預測音效] 觸發預報提示: ${typeKey} 預計開始時間 ${predStartStr}`);
+          console.log(`[預測音效] 觸發預測提醒: ${typeKey} 於推算時間 ${predStartStr}`);
           this.soundManager.playForecastSound(typeKey);
         }
       }
@@ -455,10 +465,10 @@ export class OnlinePredictionManager {
     if (!wrapper) return;
 
     // 避免重複注入
-    if (wrapper.querySelector('.online-report-box')) return;
+    if (wrapper.querySelector('.online-box')) return;
 
-    const reportBox = DOMHelper.createElement('div', 'online-report-box');
-    const { timeInput, timeControlsRow } = this._createTimeControls(savedState);
+    const reportBox = DOMHelper.createElement('div', 'online-box');
+    const { timeInput, timeControlsRow } = this._createTimeControls(typeKey, savedState);
     
     const historyListDiv = DOMHelper.createElement('div', 'report-history-list');
     const { msgDiv, historyBtn, submitBtn, footerRow } = this._createFooterControls(typeKey, historyListDiv);
@@ -477,10 +487,10 @@ export class OnlinePredictionManager {
       reportBox.appendChild(specificInputsRow);
     }
 
-    reportBox.appendChild(historyListDiv);
     reportBox.appendChild(footerRow);
+    reportBox.appendChild(historyListDiv);
 
-    // 如果狀態紀錄為開啟，則自動顯示並加載數據
+    // 如果狀態記録為開啟，則自動顯示並加載數據
     if (this.openHistoryType === typeKey) {
       historyListDiv.classList.add('open');
       this.loadAndRenderHistory(typeKey, historyListDiv);
@@ -493,9 +503,10 @@ export class OnlinePredictionManager {
 
   /**
    * 輔助函式：建立時間輸入相關的 UI
+   * @param {string} typeKey
    * @param {Object} savedState
    */
-  _createTimeControls(savedState) {
+  _createTimeControls(typeKey, savedState) {
     const timeControlsRow = DOMHelper.createElement('div', 'report-form-row flex-row');
 
     const now = this.timeUtils.getNowBySVR();
@@ -510,13 +521,13 @@ export class OnlinePredictionManager {
     const nowBtn = document.createElement('button');
     nowBtn.textContent = "現在";
     nowBtn.type = "button";
-    nowBtn.className = "report-now-btn";
+    nowBtn.className = `${typeKey} now-btn`;
     nowBtn.onclick = () => {
       const n = this.timeUtils.getNowBySVR();
       timeInput.value = `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
     };
 
-    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label', '時間'));
+    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label time', '時間'));
     timeControlsRow.appendChild(timeInput);
     timeControlsRow.appendChild(nowBtn);
 
@@ -528,7 +539,7 @@ export class OnlinePredictionManager {
    * @param {Object} savedState
    */
   _createGishikiInputs(savedState) {
-    const specificInputsRow = DOMHelper.createElement('div', 'report-form-row flex-row wrap');
+    const specificInputsRow = DOMHelper.createElement('div', 'report-form-row location');
 
     const createSelect = (label, savedVal) => {
       const wrap = DOMHelper.createElement('span', 'report-label label-inline', `${label} `);
@@ -573,12 +584,11 @@ export class OnlinePredictionManager {
       locSelect.appendChild(o);
     });
     if (savedState && savedState.location) locSelect.value = savedState.location;
-    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label', '地點'));
+    timeControlsRow.appendChild(DOMHelper.createElement('span', 'report-label location', '地點'));
     timeControlsRow.appendChild(locSelect);
 
     // 2. 出現方式
     const specificInputsRow = DOMHelper.createElement('div', 'report-form-row');
-    specificInputsRow.style.marginTop = '10px';
     const methodOptions = ['系統出字', '打雷中', '王已出'];
     const radioGroupName = `report-method-${typeKey}`;
     const methodContainer = DOMHelper.createElement('div', 'report-radio-container');
@@ -613,21 +623,19 @@ export class OnlinePredictionManager {
    * 輔助函式：建立包含送出按鈕的頁尾 UI
    */
   _createFooterControls(typeKey, historyListDiv) {
-    const footerRow = DOMHelper.createElement('div', 'report-form-row flex-row mt-10 gap-5');
+    const footerRow = DOMHelper.createElement('div', 'report-form-row events');
 
     const msgDiv = DOMHelper.createElement('div', 'report-msg');
 
     const historyBtn = document.createElement('button');
     historyBtn.className = 'report-history-btn';
-    historyBtn.innerHTML = '<img src="./images/history30.png" alt="今日紀錄">';
-    historyBtn.title = "今日紀錄";
+    historyBtn.innerHTML = '<img src="./images/history30_c.png" alt="今日記録" data-icon-light="./images/history30_c.png" data-icon-dark="./images/history30_w.png">';
+    historyBtn.title = "今日記録";
     historyBtn.onclick = (e) => this.toggleHistory(typeKey, historyListDiv, e);
 
     const submitBtn = document.createElement('button');
     submitBtn.textContent = "回報";
-    submitBtn.className = "report-submit-btn";
-    // 根據任務類型添加對應的背景顏色類別
-    submitBtn.classList.add(`type-${typeKey}`);
+    submitBtn.className = `${typeKey} submit-btn`;
 
     footerRow.appendChild(msgDiv);
     footerRow.appendChild(historyBtn);
@@ -637,7 +645,7 @@ export class OnlinePredictionManager {
   }
 
   /**
-   * 切換顯示歷史紀錄
+   * 切換顯示歷史記録
    */
   async toggleHistory(typeKey, listDiv, event) {
     if (event) {
@@ -647,7 +655,7 @@ export class OnlinePredictionManager {
 
     const isOpening = !listDiv.classList.contains('open');
 
-    // 關閉所有其他的歷史紀錄列表
+    // 關閉所有其他的歷史記録列表
     document.querySelectorAll('.report-history-list').forEach(el => el.classList.remove('open'));
 
     if (isOpening) {
@@ -711,7 +719,7 @@ export class OnlinePredictionManager {
    */
   _renderHistoryItems(typeKey, listDiv, historyData, animate = false) {
     if (!historyData || historyData.length === 0) {
-      listDiv.innerHTML = '尚無今日紀錄';
+      listDiv.innerHTML = '尚無今日記録';
       return;
     }
 
@@ -722,7 +730,7 @@ export class OnlinePredictionManager {
       const row = document.createElement('div');
       row.className = 'report-history-item';
       if (animate) row.classList.add('history-item-animate');
-
+      
       const formattedTime = this._parseAndFormatTime(item.timeStamp);
       const isAdmin = !!(item.Users && item.Users.role === 'admin'); // 判斷是否為管理者
       const userName = isAdmin ? '管理者' : (item.Users ? item.Users.userName : ''); // 管理者顯示為 [管理者]，一般使用者顯示其名稱
@@ -732,33 +740,42 @@ export class OnlinePredictionManager {
       else if (item.method === '打雷中') methodClass += ' tag-thunder';
       else methodClass += ' tag-spawned';
 
-      const userClass = isAdmin ? 'hist-user admin-tag' : 'hist-user user-tag gray';
+      let userClass = isAdmin ? 'hist-user admin-tag' : 'hist-user user-tag gray';
+      
+      // MVP 樣式注入邏輯
+      if (!isAdmin) {
+        if (userName === MVP_CONFIG.first) userClass += " is-mvp-1";
+        else if (userName === MVP_CONFIG.second) userClass += " is-mvp-2";
+      }
 
+      // 優化歷史記録顯示：只有在 A 有值且 B 也有值時才顯示斜線
       let locText = item.locationA || '-';
-      if (typeKey === 'gishiki' && item.locationB && item.locationB !== '-') {
-        locText += ` / ${item.locationB}`;
+      if (typeKey === 'gishiki') {
+        if (item.locationB && item.locationB !== '-') {
+          locText = `${item.locationA}&nbsp;/&nbsp;${item.locationB}`;
+        }
       }
 
       row.innerHTML = `
         <div class="hist-left">
-          <span class="hist-time gray">${formattedTime}</span>
+          <span class="hist-time">${formattedTime}</span>
           <span class="${methodClass}">${item.method || '王已出'}</span>
           <span class="hist-loc">${locText}</span>
         </div>
         <div class="hist-right">
           <span class="${userClass}" title="提交者">${userName}</span>
-          <span class="hist-actions"></span>
+          <span class="hist-del"></span>
         </div>
       `;
 
       if (currentUserId && item.user_id === currentUserId) {
-        const actionsSpan = row.querySelector('.hist-actions');
+        const actionsSpan = row.querySelector('.hist-del'); // 修正選擇器
         const delBtn = document.createElement('span');
-        delBtn.innerHTML = '<img src="./images/delete24.png" alt="刪除" class="icon-delete">';
+        delBtn.innerHTML = '<img src="./images/delete24_c.png" alt="刪除" class="icon-delete" data-icon-light="./images/delete24_c.png" data-icon-dark="./images/delete24_w.png">';
         delBtn.className = 'hist-del-btn';
         delBtn.title = "刪除回報";
         delBtn.onclick = () => this.deleteReport(item, typeKey, listDiv);
-        actionsSpan.appendChild(delBtn);
+        if (actionsSpan) actionsSpan.appendChild(delBtn);
       }
 
       listDiv.appendChild(row);
@@ -766,7 +783,7 @@ export class OnlinePredictionManager {
   }
 
   deleteReport(item, typeKey, listDiv) {
-    this.userManager.showConfirmModal("確定刪除此紀錄？", async () => {
+    this.userManager.showConfirmModal("確定刪除此記録？", async () => {
       try {
         const user = this.userManager.getCurrentUser();
         if (!user) return;
@@ -869,8 +886,23 @@ export class OnlinePredictionManager {
     };
 
     if (typeKey === 'gishiki') {
-      payload.locationA = inputs.locA.value;
-      payload.locationB = inputs.locB.value;
+      let locA = inputs.locA.value;
+      let locB = inputs.locB.value;
+
+      // 資料正規化邏輯
+      // 1. 如果兩個地點相同，視為只有一個地點
+      if (locA === locB) {
+        locB = '-';
+      }
+      
+      // 2. 自動移位：確保有效資料優先存入 locationA
+      if (locA === '-' && locB !== '-') {
+        locA = locB;
+        locB = '-';
+      }
+
+      payload.locationA = locA;
+      payload.locationB = locB;
       payload.method = "系統出字";
     } else {
       const selectedMethod = inputs.methodRadios.find(radio => radio.checked);
@@ -897,7 +929,7 @@ export class OnlinePredictionManager {
       // 1. 立即重新抓取預測基準數據
       await this.fetchPredictionData();
       
-      // 2. 如果歷史紀錄是開啟的，強制重新載入歷史清單
+      // 2. 如果歷史記録是開啟的，強制重新載入歷史清單
       if (this.openHistoryType === typeKey) {
         const group = document.querySelector(`.group.${typeKey}`);
         const listDiv = group?.querySelector('.report-history-list');

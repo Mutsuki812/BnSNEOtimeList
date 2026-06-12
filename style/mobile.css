@@ -1,14 +1,16 @@
-/* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\mobile.css */
+/* ============================================================
+   行動裝置響應式樣式
+   針對裝置 <= 430px 的最佳化 (行動優先覆蓋樣式)
+   ============================================================ */
 
-/* ====================================================================
-   📱 モバイル版スタイル | Mobile Styles
-   430px以下のデバイスに適用
-==================================================================== */
-@media (max-width: 430px) {
+@media (max-width: 599px) {
 
-  /* ─── CSS変数上書き（モバイル版） ─── */
+  /* ========================================================
+   行動裝置 CSS 變數覆蓋
+   ======================================================== */
+
   :root {
-    /* フォントサイズ調整 */
+    /* 針對小螢幕的字體大小調整 */
     --font-size-xs: 0.7rem;
     /* 11px */
     --font-size-sm: 0.8rem;
@@ -28,7 +30,7 @@
     --font-size-4xl: 2.2rem;
     /* 35px */
 
-    /* 間隔調整 */
+    /* 間距調整 */
     --space-xs: 3px;
     --space-sm: 6px;
     --space-md: 10px;
@@ -36,22 +38,28 @@
     --space-xl: 16px;
     --space-2xl: 20px;
 
-    /* レイアウト調整 */
+    /* 佈局調整 */
     --layout-padding: var(--space-sm);
   }
 
-  /* ─── メインコンテナ ─── */
+  /* ========================================================
+   主要容器 (行動裝置)
+   ======================================================== */
+
   #app {
     margin: var(--space-sm) auto;
     padding: var(--space-sm);
-    gap: var(--space-md);
+    gap: var(--space-);
   }
 
-  /* ─── 上部ツールバー ─── */
+  /* ========================================================
+   頂部欄 (行動裝置垂直堆疊)
+   ======================================================== */
+
   #topBar {
     flex-direction: column;
     gap: var(--space-md);
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
   }
 
   #topLeft {
@@ -59,65 +67,67 @@
     align-items: stretch;
   }
 
-  /* 日付 曜日 */
   #dateLabel {
     justify-content: center;
     text-align: center;
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
     padding-left: 70px;
   }
 
-  /* 時間ブロック */
   .timeBox {
-    justify-content: center;
+    justify-content: flex-start;
     gap: var(--space-sm);
   }
 
-  /* ─── メインカード ─── */
+  /* ========================================================
+   主要卡片 (行動裝置)
+   ======================================================== */
+
   .mainCard {
-    padding: var(--space-md);
-    gap: var(--space-md);
+    padding: var(--space-xs);
+    gap: var(--space-xs);
   }
 
   .taskContainer {
-    gap: var(--space-md);
+    gap: var(--space-xs);
     padding-right: 0;
   }
 
-  /* ─── タスク行 ─── */
+  /* ========================================================
+   任務列 (行動裝置網格調整)
+   針對小螢幕最佳化的網格欄位
+   ======================================================== */
+
   .taskRow {
-    /* グリッドレイアウトを最適化し、コンテンツに十分なスペースを確保して圧縮を防ぐ */
-    grid-template-columns: 30px 90px 50px 17px auto;
-    /* 時間 | 内容 | マーク | タイプ/アイコン */
-    min-height: 44px;
-    gap: var(--space-base);
-    /* 可読性を高めるために間隔を増やす */
-    align-items: center; /* すべての列が垂直方向に中央揃えになるようにする */
+    grid-template-columns: 30px 85px 55px 0px auto;
+    min-height: 35px;
+    gap: var(--space-xs);
+    align-items: center;
   }
 
-  /* ? */
-  .col-questionMark{
+  .taskRow .gishiki .onlinePrediction {
+    grid-template-columns: 0px 85px 55px 0px auto;
+  }
+
+  .col-questionMark {
     font-size: var(--font-size-2xs);
   }
 
-  /* ====================================================================
-   ⭐ 前の1時間のタスク | PreviousHour Task Styles
-==================================================================== */
-/* 前の1時間のタスク（スタイルは残りのタスクと同じ、文字はグレー） */
-.previoushour {
-  display: grid;
-  grid-template-columns: 135px 50px 0px auto;
-}
+  /* ========================================================
+   上一小時任務 (行動裝置)
+   ======================================================== */
 
-  /* 現在のタスク */
-  /* 無効なセレクタを修正し、現在のタスクのタイプテキストスタイルを統一設定 */
-  .taskRow.current .col-type {
-    font-size: var(--font-size-md);
+  .previoushour {
+    display: grid;
+    grid-template-columns: 135px 50px 0px auto;
   }
 
-  .col-type {
+  /* ========================================================
+   當前任務 (行動裝置字體大小)
+   ======================================================== */
+
+  .taskRow.current .col-typeLabel  {
     font-size: var(--font-size-md);
-    /* バランスをとるために基本フォントサイズを調整 */
   }
 
   .taskRow.current .col-time,
@@ -125,14 +135,9 @@
     font-size: var(--font-size-md);
   }
 
-  /* 儀式 (Gishiki) 專用縮小處理 */
+  /* 儀式 (Gishiki) 特定大小 */
   .taskRow.gishiki .col-content {
-    font-size: var(--font-size-base);
-  }
-
-  .taskRow.gishiki .col-content.long11,
-  .taskRow.gishiki .col-content.long12 {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-md);
   }
 
   .taskRow.gishiki .col-content.long13,
@@ -141,7 +146,7 @@
     font-size: var(--font-size-base);
   }
 
-  /* 次のタスク */
+  /* 即將到來/剩餘任務 */
   .taskWrapper .col-time,
   .taskWrapper .col-content,
   .remainingContainer .col-time,
@@ -149,43 +154,109 @@
     font-size: var(--font-size-md);
   }
 
+  /* ========================================================
+   維護狀態 (行動裝置)
+   調整維護列的網格
+   ======================================================== */
+
   .taskRow:has(.col-time.maintenance) {
-    /* 新しいグリッド定義に合わせて、メンテナンスメッセージ（2列目）が正しく埋まるようにする */
     grid-template-columns: 30px 90px 0 0 auto;
     padding: var(--space-xs);
   }
 
-  /* ─── メンテナンス状態調整 ─── */
   .taskRow .col-content.maintenance {
     text-align: center;
     font-size: var(--font-size-md);
     padding: var(--space-xs);
     width: 100%;
-    /* グリッドセルを埋めるようにする */
   }
 
-  /* ─── 折りたたみブロック ─── */
+  /* ========================================================
+   剩餘任務摺疊面板 (行動裝置)
+   調整小螢幕的最大高度
+   ======================================================== */
+
   .remainingContainer.open {
     max-height: 1500px;
   }
 
-  /* グループ */
+  /* ========================================================
+   分組樣式 (行動裝置)
+   ======================================================== */
+
   .group {
     padding: var(--space-sm);
     gap: var(--space-xs);
   }
 
-  /* ボタン */
+  /* ========================================================
+   按鈕 (行動裝置)
+   更大的觸控目標以方便互動
+   ======================================================== */
+
   .showBtn {
     padding: var(--space-xs) var(--space-md);
     font-size: var(--font-size-xs);
   }
 
-  /* ─── 報告ブロック ─── */
-  .reportSection {
-    margin-top: var(--space-lg);
-    margin-left: var(--space-sm);
+  /* ========================================================
+   即時回報卡片 (行動裝置)
+   調整即時回報卡片的網格佈局
+   ======================================================== */
+
+.report-form-row.flex-row{
+    display: grid;
+    grid-template-areas:
+      "labelTime time button"
+      "label select .";
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    border-radius: var(--radius-sm);
+}
+
+  /* 儀式 */
+  .group.gishiki .report-form-row.flex-row {
+    grid-template-areas: "labelTime time button";
+    grid-template-columns: auto 1fr auto;
   }
+
+  .report-label.time {
+    grid-area: labelTime;
+  }
+
+  .report-time-input {
+    grid-area: time;
+  }
+
+  .group.gishiki .now-btn,
+  .gishiki .now-btn {
+    grid-area: button;
+  }
+
+  .group.gishiki .report-form-row.location {
+    align-items: center;
+    border-radius: var(--radius-sm);
+    gap: var(--space-sm);
+  }
+
+  .report-label.label-inline {
+    align-items: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .report-form-row.events {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: end;
+    gap: var(--space-sm);
+  }
+
+
+
+
+  /* ========================================================
+   留言區段 (行動裝置)
+   ======================================================== */
 
   .reportText {
     font-size: var(--font-size-xs);
@@ -197,49 +268,246 @@
   .reportForm button {
     padding: var(--space-sm);
     font-size: var(--font-size-sm);
+    width: 60px;
   }
 
-  .reportContainer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
+  .reportFields {
+    display: grid;
+    grid-template-columns:
+      auto auto 1fr auto;
+
+    grid-template-areas:
+      "task type message message"
+      "input input input button";
+
+    gap: 8px;
+    align-items: center;
   }
 
-  .reportButtons {
+  #reportTaskType,
+  #reportType {
     width: 100%;
+    min-width: 0;
   }
 
-  .reportButtons button {
+  #reportComment {
+    grid-area: input;
+    min-width: 0;
     width: 100%;
-    padding: var(--space-md);
   }
 
   #reportMessage {
-    text-align: center;
-    font-size: var(--font-size-xs);
+    grid-area: message;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    min-width: 0;
+    justify-self: end;
   }
 
-  .reportList {
-    padding: var(--space-xs);
-    margin-top: var(--space-sm);
-    max-height: 200px;
+  .reportButtons {
+    justify-self: end;
   }
 
-  /* 効果音アイコン縮小 */
+  .report-submit-btn {
+    background: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-lg);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    margin-left: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .report-submit-btn:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .report-submit-btn:disabled {
+    background: var(--color-text-disabled);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ========================================================
+   留言卡片 (行動裝置)
+   調整留言卡片的網格佈局
+   ======================================================== */
+
+  .msg-main {
+    display: grid;
+    grid-template-columns:
+      80px auto;
+
+    grid-template-areas:
+      "time type nameRes"
+      "text text text";
+
+    gap: 5px;
+    align-items: center;
+  }
+
+  .msg-time {
+    grid-area: time;
+  }
+
+  .msg-type {
+    grid-area: type;
+    width: 75px;
+  }
+
+  .msg-text {
+    grid-area: text;
+  }
+
+  .msg-nameRes {
+    grid-area: nameRes;
+    display: flex;
+    justify-content: right;
+    gap: var(--space-xs);
+  }
+
+  .msg-respond {
+    grid-area: respond;
+    display: inline-block;
+  }
+
+  .msg-actions {
+    grid-area: actions;
+    display: inline-block;
+  }
+
+  .msg-user {
+    grid-area: user;
+    display: inline-block;
+  }
+
+  /* 刪除按鈕 */
+  .msg-del-btn {
+    cursor: pointer;
+    opacity: 1;
+    /* 預設顯示，不再隱藏 */
+    transition: opacity var(--transition-fast);
+    display: flex;
+    align-items: center;
+  }
+
+  .msg-del-btn:hover {
+    opacity: 1 !important;
+  }
+
+
+  /* ========================================================
+   聲音圖示 (行動裝置)
+   在行動裝置上較小
+   ======================================================== */
+
   .sound-toggle-btn img {
     width: 28px;
     height: 28px;
     margin: 7px 0;
   }
 
-  /* ─── 即時回報履歷優化 ─── */
-  .report-history-list {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    padding: 5px;
+  /* ========================================================
+   歷史清單 (行動裝置)
+   針對小螢幕最佳化
+   ======================================================== */
+
+  .report-history-item {
+    display: grid;
+    grid-template-areas:"left right";
   }
 
-  .hist-loc {
-    max-width: none; /* 在手機版也允許利用剩餘空間換行 */
+  .hist-left {
+    grid-area: left;
+    display: flex;
+    align-items: center;
   }
+
+  .hist-time{ grid-area: time; width:40px;}
+  .hist-tag{ grid-area: tag; width:60px;}
+  .hist-loc{ grid-area: loc;padding-left: 3px;}
+
+  .hist-right {
+    grid-area: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .hist-user { display: inline-flex; align-items: center; }
+  .hist-del { display: flex; align-items: center; }
+
+  /* ========================================================
+   彈窗 (行動裝置)
+   在小螢幕上使用全寬彈窗
+   ======================================================== */
+
+  .modal-box {
+    min-width: 80vw;
+    max-width: 90vw;
+  }
+
+  .sound-unlock-modal {
+    width: 85vw;
+    max-width: 340px;
+  }
+
+  /* ========================================================
+   表單 (行動裝置)
+   將表單元素垂直堆疊
+   ======================================================== */
+
+  .report-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .report-form-row>* {
+    width: 100%;
+  }
+
+  /* ========================================================
+   無障礙功能：觸控目標
+   確保按鈕至少為 44x44px 以利觸控
+   ======================================================== */
+
+  button,
+  .report-submit-btn,
+  .report-now-btn,
+  .showBtn {
+    min-width: 44px;
+  }
+
+  /* ========================================================
+   公用類別 (行動裝置覆蓋)
+   ======================================================== */
+
+  .text-placeholder {
+    color: var(--color-text-tertiary) !important;
+  }
+
+  /* ========================================================
+   效能最佳化 (行動裝置)
+   在舊裝置上減少動畫
+   ======================================================== */
+
+  @media (max-width: 430px) and (prefers-reduced-motion: reduce) {
+
+    .taskRow.current,
+    .group,
+    .remainingContainer {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
 }

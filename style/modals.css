@@ -1,0 +1,310 @@
+/* ============================================================
+   彈窗與對話框 (Modals & Dialogs)
+   對應 userManager.js 中各 Modal 方法產生的 DOM 結構：
+   - showLoginModal()   → .modal-overlay > .modal-box
+   - showRenameModal()  → .modal-overlay > .modal-box
+   - showAdminLoginModal() → .modal-overlay > .modal-box（含雙欄位表單）
+   - showConfirmModal() → .modal-overlay > .modal-box（含 .btn-danger 變體）
+   - showUnlockModal()  → .sound-unlock-overlay > .sound-unlock-box（音訊解鎖）
+   ============================================================ */
+
+/* ========================================================
+   彈窗遮罩 (.modal-overlay)
+   覆蓋整個視窗的半透明深色層，阻擋背景互動。
+   點擊遮罩區域（非 modal-box）可關閉彈窗。
+   ======================================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.unlogged-click {
+  cursor: pointer;  /* 未登入時點擊遮罩以觸發登入 */
+}
+
+/* ========================================================
+   音效彈窗本體
+   所有彈窗的通用容器樣式。
+   ======================================================== */
+
+.sound-unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+.sound-unlock-modal {
+  background-color: #282c34;
+  color: #e6e6e6;
+  padding: 25px 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 90%;
+  width: 380px;
+  border: 1px solid #444;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+  cursor: default;
+}
+
+.sound-unlock-modal h3 {
+  margin: 0 0 15px;
+  font-size: 22px;
+  color: #61dafb;
+}
+
+.sound-unlock-modal p {
+  margin: 0 0 25px;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+/* 確認 Modal 的主要訊息文字（字體比輔助說明大） */
+.sound-unlock-hint {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ========================================================
+   登入彈窗
+   所有彈窗的通用容器樣式。
+   ======================================================== */
+
+.modal-box {
+  background-color: var(--color-bg-modal);
+  padding: 25px;
+  border-radius: 8px;
+  text-align: center;
+  min-width: 300px;
+  color: var(--color-text-modal-primary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  max-width: 90vw;
+}
+
+.modal-box h3 {
+  margin: 0 0 10px;
+  font-size: var(--font-size-lg);
+}
+
+.modal-box p {
+  font-size: 13px;
+  color: var(--color-text-modal-secondary);
+  margin: 0;
+}
+
+.modal-text {
+  font-size: 15px;
+  color: var(--color-text-modal-primary);
+  margin-bottom: 10px;
+}
+
+/* ========================================================
+   彈窗表單元素
+   用於登入、改名、管理者登入等 Modal 的輸入欄位
+   ======================================================== */
+
+/* 單行文字 / 密碼輸入框 */
+.modal-input {
+  padding: 10px;
+  width: 80%;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(196, 168, 136, 0.25);
+}
+
+/* 管理者登入的雙欄位垂直排列容器（名稱 + 密碼） */
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ========================================================
+   彈窗狀態訊息 (.modal-msg)
+   用於登入中、錯誤提示等即時狀態顯示
+   ======================================================== */
+
+.modal-msg {
+  color: var(--color-text-red);  /* 預設紅色，通常顯示錯誤 */
+  font-size: 12px;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+
+.modal-msg.success {
+  color: var(--color-text-success);
+}
+
+.modal-msg.error {
+  color: var(--color-text-red);
+}
+
+/* ========================================================
+   彈窗按鈕組 (.modal-btn-group)
+   水平排列的取消 / 確認按鈕對
+   ======================================================== */
+
+.modal-btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 取消按鈕：低優先度視覺權重 */
+.btn-cancel {
+  padding: 8px 20px;
+  border: none;
+  background: var(--color-bg-btn-cancel);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text-btn-cancel);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel:hover {
+  background: #ddd;
+  transform: translateY(-1px);
+}
+
+/* 確認按鈕：綠色，正向操作 */
+.btn-confirm {
+  padding: 8px 20px;
+  border: none;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+  transition: all var(--transition-fast);
+}
+
+.btn-confirm:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.btn-confirm:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 危險操作按鈕（如刪除）：紅色警示，對應 showConfirmModal(isDanger=true) */
+.btn-danger {
+  padding: 8px 20px;
+  border: none;
+  background: #d9534f;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+  transition: all var(--transition-fast);
+}
+
+.btn-danger:hover {
+  background: #c9302c;
+  transform: translateY(-1px);
+}
+
+/* ========================================================
+   音訊解鎖提示 (.sound-unlock-overlay)
+   對應 soundManager.js 的 showUnlockModal()。
+   在使用者首次互動前顯示，點擊後呼叫 unlockAudio() 解鎖自動播放。
+   ======================================================== */
+
+.sound-unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+/* 解鎖提示框：深色主題，與主介面形成對比 */
+.sound-unlock-box {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 25px 30px;
+  text-align: center;
+  max-width: 90%;
+  width: 380px;
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.sound-unlock-box p {
+  margin: 0 0 20px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
+}
+
+
+
+/* ========================================================
+   載入狀態（彈窗內）
+   在非同步操作（如 Supabase 查詢）進行中時顯示旋轉動畫
+   ======================================================== */
+
+.modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.modal-loading::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================================
+   無障礙功能：彈窗焦點管理
+   確保鍵盤使用者的焦點被正確引導至彈窗內部
+   ======================================================== */
+
+/* 彈窗內有元素獲得焦點時，為 modal-box 加上明顯外框 */
+.modal-overlay:focus-within .modal-box {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 0;
+}

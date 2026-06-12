@@ -1,0 +1,478 @@
+/* ============================================================
+   任務列與容器
+   對應 uiRenderer.js 產生的 DOM 結構：
+   - .group            → createTaskGroup() 產生的任務群組容器
+   - .taskRow.current  → createCurrentTaskRow() 產生的當前任務列
+   - .previoushour     → createPreviousHourTaskRow() 產生的前一小時提示列
+   - .taskRow          → createTaskRow() 產生的一般任務列（接下來 2h / 其他時間）
+   - .remainingContainer → 可折疊的「其他時間」容器
+   - .groupFooter / .showBtn → 展開/收合按鈕
+   ============================================================ */
+
+/* ========================================================
+   主要卡片容器
+   用於包裝整個應用程式的主要內容區域
+   ======================================================== */
+
+.mainCard {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, var(--color-bg-main-card-start) 0%, var(--color-bg-main-card-end) 100%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  gap: var(--space-md);
+  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+}
+
+/* 任務容器：包含所有任務群組的垂直列表 */
+.taskContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ========================================================
+   任務群組 (.group)
+   由 createTaskGroup() 建立，每種野王/活動類型各一個。
+   class 組成：.group.{type.key}（例如 .group.gishiki）
+   ======================================================== */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-group);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+.group:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ========================================================
+   任務列基礎樣式 (.taskRow)
+   行動優先的網格佈局，對應 uiRenderer.js 的 innerHTML 結構：
+   [佔位 span] [.placeholder] [.col-time] [.col-questionMark] [.col-content]
+   ======================================================== */
+
+.taskRow {
+  display: grid;
+  grid-template-columns: var(--grid-task-row-mobile);
+  align-items: center;
+  min-height: 48px;           /* 符合觸控目標最小高度（WCAG 建議 44px+） */
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+/* 欄位基礎樣式 */
+.taskRow .col-type {
+  text-align: left;
+}
+
+.taskRow .col-time {
+  text-align: right;
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-base);
+}
+
+.taskRow .col-content {
+  font-family: var(--font-family-content);
+  font-size: var(--font-size-base);
+}
+
+.taskRow .col-questionMark {
+  font-size: var(--font-size-xs);
+  color: #999;
+}
+
+/* ========================================================
+   前一小時任務列 (.previoushour)
+   由 createPreviousHourTaskRow() 建立。
+   顯示在當前任務列上方，提示玩家上一個 Boss 可能尚未消失。
+   包含提示文字 (.previoushour_placeholder) 與灰色時間/地點。
+   ======================================================== */
+
+.previoushour {
+  display: grid;
+  grid-template-columns: var(--grid-previous-mobile);
+  align-items: center;
+  min-height: 48px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  background: linear-gradient(90deg, var(--color-bg-previous-from), var(--color-bg-previous-to));
+}
+
+.previoushour .col-time {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-base);
+  text-align: right;
+}
+
+.previoushour .col-content,
+.previoushour .col-questionMark {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family-content);
+  font-size: var(--font-size-base);
+}
+
+/* 提示文字（如「可能還沒死，可以找找看」），來自 config.js 的 TEXTS.previousHourHint */
+.previoushour .previoushour_placeholder {
+  font-size: var(--font-size-xs);
+}
+
+.previoushour:hover {
+  background: var(--color-hover);
+  transform: translateX(2px);
+}
+
+/* ========================================================
+   當前任務列 (.taskRow.current)
+   由 createCurrentTaskRow() 建立，每個群組最顯眼的一列。
+   依任務類型（gishiki / shirao / sengen）套用不同主題色。
+   ======================================================== */
+
+.taskRow.current {
+  color: var(--color-text-primary);
+  height: 48px;
+}
+
+/* 可疑的儀式 (gishiki) — 藤紫色調 */
+.taskRow.gishiki.current {
+  background: linear-gradient(90deg, var(--color-gishiki-bg), var(--color-gishiki-row-end));
+  border-left: 5px solid var(--color-gishiki);
+  font-size: var(--font-size-xl);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-gishiki);
+}
+
+/* 白青野王 (shirao) — 青綠色調 */
+.taskRow.shirao.current {
+  background: linear-gradient(90deg, var(--color-shirao-bg), var(--color-shirao-row-end));
+  border-left: 5px solid var(--color-shirao);
+  font-size: var(--font-size-xl);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-shirao);
+}
+
+/* 仙幻島野王 (sengen) — 暖金色調 */
+.taskRow.sengen.current {
+  background: linear-gradient(90deg, var(--color-sengen-bg), var(--color-sengen-row-end));
+  border-left: 5px solid var(--color-sengen);
+  font-size: var(--font-size-xl);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-sengen);
+}
+
+/* 當前任務列的時間與內容欄樣式 */
+.taskRow.current .col-time {
+  text-align: right;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-lg);
+}
+
+.taskRow.current .col-content {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-content);
+  font-size: var(--font-size-lg);
+}
+
+/* 灰色狀態：當前時段無任務，或資料時間已過時顯示 */
+.taskRow.current .col-time.gray,
+.taskRow.current .col-content.gray {
+  color: var(--color-text-tertiary);
+}
+
+.taskRow.current .col-time.gray {
+  font-family: var(--font-family-time);
+}
+
+.taskRow.current .col-content.gray {
+  font-family: var(--font-family-content);
+}
+
+/* 地點文字長度響應式縮放
+   由 uiRenderer.js 的 _getLongClass() 依字元數附加 class */
+.taskRow .col-content.long,
+.taskRow .col-content.gray.long { font-size: var(--font-size-lg) !important; }
+
+.taskRow .col-content.very-long,
+.taskRow .col-content.gray.very-long { font-size: 1.1rem !important; }
+
+/* ========================================================
+   警示狀態 (.task-alert-active)
+   當任務時間落在「距離出現 5 分鐘內」時套用。
+   由 timeUtils.isWithinWindow() 判斷，isOnlineMode 下靜態班表不觸發。
+   ======================================================== */
+
+.task-alert-active {
+  border-color: var(--color-text-red) !important;
+  border-left-width: 10px !important;
+  background: linear-gradient(90deg, var(--alert-bg-base), var(--alert-bg-end-base)) !important;
+  box-shadow: var(--shadow-alert) !important;
+  animation: breathe-alert 1.8s infinite ease-in-out;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* 左端から広がるグロー光 */
+.task-alert-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 65%;
+  height: 100%;
+  background: radial-gradient(ellipse at left center, var(--alert-edge-glow) 0%, transparent 80%);
+  animation: alert-edge-glow 1.8s ease-in-out infinite;
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+.task-alert-active .col-time,
+.task-alert-active .col-content {
+  color: var(--color-text-primary) !important;
+}
+
+/* タイム文字のグロー脈動 */
+.task-alert-active .col-time {
+  animation: alert-time-glow 1.8s ease-in-out infinite;
+}
+
+/* ── メインの呼吸アニメーション ── */
+@keyframes breathe-alert {
+  0%, 100% {
+    box-shadow: var(--shadow-alert);
+    transform: scale(1);
+    background: linear-gradient(90deg, var(--alert-bg-base), var(--alert-bg-end-base));
+  }
+  50% {
+    box-shadow: var(--alert-shadow-pulse);
+    transform: scale(1.02);
+    background: linear-gradient(90deg, var(--alert-bg-pulse), var(--alert-bg-end-pulse));
+  }
+}
+
+/* ── 左端グロー拡張 ── */
+@keyframes alert-edge-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scaleX(0.65);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.1);
+  }
+}
+
+/* ── タイム文字 text-shadow 脈動 ── */
+@keyframes alert-time-glow {
+  0%, 100% {
+    text-shadow: none;
+  }
+  50% {
+    text-shadow:
+      0 0 6px var(--alert-time-glow-color),
+      0 0 14px var(--alert-time-glow-color);
+  }
+}
+
+/* ========================================================
+   接下來 2 小時的任務容器 (.taskWrapper)
+   由 createTaskGroup() 建立，包含 nextItems 的任務列。
+   活動期間且啟用線上系統時，此容器會被隱藏（display:none），
+   改由 .onlineWrapper 顯示線上回報 UI。
+   ======================================================== */
+
+.taskWrapper {
+  border-radius: var(--radius-md);
+  border-left: 5px solid var(--color-border);
+  margin-top: 5px;
+}
+
+.taskWrapper,
+.remainingContainer .taskRow {
+  background: linear-gradient(90deg, var(--color-bg-task-wrapper-from), var(--color-bg-task-wrapper-to));
+  color: var(--color-text-primary);
+}
+
+.taskWrapper .col-time,
+.remainingContainer .col-time {
+  text-align: right;
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.taskWrapper .col-content,
+.remainingContainer .col-content {
+  font-family: var(--font-family-content);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.placeholder,
+.taskWrapper .col-time,
+.remainingContainer .col-time {
+  text-align: right;
+}
+
+/* 「明天」標籤：跨日任務的日期提示（由 isNextDay 旗標控制） */
+.tomorrow {
+  font-size: var(--font-size-xs);
+}
+
+/* ========================================================
+   維護時段樣式
+   當任務內容符合 MAINTENANCE_PATTERN（例行維護中）時套用。
+   維護任務使用灰色背景填色，並調整網格欄位隱藏問號欄。
+   ======================================================== */
+
+.taskRow:has(.col-time.maintenance) {
+  grid-template-columns: 60px 125px 80px 0 1fr;  /* 問號欄寬度縮至 0 */
+  padding: var(--space-xs);
+}
+
+.taskRow .col-content.maintenance {
+  background-color: var(--color-text-maintenance);
+  color: #D6D5D5;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-md);
+}
+
+/* ========================================================
+   音效欄位容器 (.col-sound)
+   對應 uiRenderer.js 的 createCurrentTaskRow() 注入的 <span class="col-sound">。
+   使用 flex 讓內部圖示垂直水平置中。
+   ======================================================== */
+
+.col-sound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 音效切換圖示 (.sound-toggle-icon)
+   點擊後呼叫 soundManager.toggleSound()，尺寸固定不變動。 */
+
+.sound-toggle-icon {
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  width: 32px;
+  height: 32px;
+}
+
+.sound-toggle-icon:hover {
+  opacity: 0.7;
+}
+
+/* ========================================================
+   群組頁尾與展開/收合按鈕
+   由 createFooterWithButton() 建立。
+   點擊 .showBtn 切換 .remainingContainer 的 .open class。
+   ======================================================== */
+
+.groupFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+}
+
+.showBtn {
+  background: rgba(146, 138, 133, 0.1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) var(--space-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.showBtn:hover {
+  background: rgba(146, 138, 133, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ========================================================
+   其他時間折疊容器 (.remainingContainer)
+   預設收合（max-height: 0 / opacity: 0）。
+   .showBtn 點擊後切換 .open class 以展開。
+   ======================================================== */
+
+.remainingContainer {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--transition-slow), opacity var(--transition-base);
+}
+
+.remainingContainer.open {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ========================================================
+   線上預測系統顯示樣式
+   對應 onlinePrediction.js 注入的預測時間文字。
+   僅在活動期間（isInDateRange）且 useOnlineSystem = true 時顯示。
+   ======================================================== */
+
+/* 預測時間標籤（如「預測時間」）：替換原本的靜態班表時間欄 */
+.taskRow.current .col-time.prediction-label {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-content);
+  color: var(--color-text-secondary);
+}
+
+/* 預測時間數值：以紅色顯示，表示即將出現 */
+.taskRow.current .col-time.prediction-highlight {
+  color: var(--color-text-red);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+/* 預測地點內容：帶有淡橘色漸層背景強調 */
+.taskRow.current .col-content.prediction-highlight {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  background: linear-gradient(to right, rgba(255, 87, 34, 0.05), transparent);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-xs);
+}
+
+/* 預測資訊的多行文字佈局 */
+.pred-row-label {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-content);
+  color: var(--color-text-secondary);
+}
+
+.pred-row-value {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-content);
+  color: var(--color-text-red);
+}
+
+.pred-row-info {
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+
+.pred-row-time {
+  font-size: var(--font-size-md);
+  font-family: var(--font-family-content);
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  padding-left: 4px;
+}

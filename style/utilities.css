@@ -1,0 +1,225 @@
+/* ============================================================
+   響應式公用類別與佈局輔助
+   網格系統、間距工具、彈性佈局輔助
+   ============================================================ */
+
+/* ========================================================
+   彈性佈局 (Flexbox) 公用類別
+   ======================================================== */
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.flex-row.wrap {
+  flex-wrap: wrap;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ========================================================
+   間距 (Gap) 公用類別 (用於 flex/grid)
+   ======================================================== */
+
+.gap-2xs { gap: var(--space-2xs); }
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+.gap-xl { gap: var(--space-xl); }
+.gap-5 { gap: 5px; }  /* 自定義：用於特定佈局 */
+
+/* ========================================================
+   外邊距 (Margin) 公用類別
+   ======================================================== */
+
+.m-0 { margin: 0; }
+.m-auto { margin: auto; }
+.mt-0 { margin-top: 0; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mb-0 { margin-bottom: 0; }
+.mb-5 { margin-bottom: 5px; }
+.ml-auto { margin-left: auto; }
+.mr-auto { margin-right: auto; }
+
+/* ========================================================
+   內邊距 (Padding) 公用類別
+   ======================================================== */
+
+.p-0 { padding: 0; }
+.p-sm { padding: var(--space-sm); }
+.p-md { padding: var(--space-md); }
+.p-lg { padding: var(--space-lg); }
+.px-sm { padding-left: var(--space-sm); padding-right: var(--space-sm); }
+.py-sm { padding-top: var(--space-sm); padding-bottom: var(--space-sm); }
+
+/* ========================================================
+   對齊公用類別
+   ======================================================== */
+
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+
+.items-start { align-items: flex-start; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+
+/* ========================================================
+   顯示 (Display) 公用類別
+   ======================================================== */
+
+.block { display: block; }
+.inline { display: inline; }
+.inline-block { display: inline-block; }
+.inline-flex { display: inline-flex; }
+.hidden { display: none; }
+
+/* ========================================================
+   寬度與高度公用類別
+   ======================================================== */
+
+.w-full { width: 100%; }
+.w-auto { width: auto; }
+.h-full { height: 100%; }
+.h-auto { height: auto; }
+.min-w-0 { min-width: 0; }  /* 修復彈性佈局溢出問題 */
+
+/* ========================================================
+   溢出 (Overflow) 公用類別
+   ======================================================== */
+
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-y-auto { overflow-y: auto; }
+.overflow-x-hidden { overflow-x: hidden; }
+.text-truncate { 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+/* ========================================================
+   可見性公用類別
+   ======================================================== */
+
+.invisible { visibility: hidden; }
+.visible { visibility: visible; }
+
+/* 僅限螢幕閱讀器 (用於無障礙功能) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ========================================================
+   不透明度公用類別
+   ======================================================== */
+
+.opacity-50 { opacity: 0.5; }
+.opacity-70 { opacity: 0.7; }
+.opacity-100 { opacity: 1; }
+
+/* ========================================================
+   垂直對齊
+   ======================================================== */
+
+.v-middle { vertical-align: middle; }
+.v-top { vertical-align: top; }
+.v-bottom { vertical-align: bottom; }
+
+/* ========================================================
+   游標公用類別
+   ======================================================== */
+
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }
+.cursor-not-allowed { cursor: not-allowed; }
+
+/* ========================================================
+   指標事件 (Pointer Events)
+   ======================================================== */
+
+.pointer-events-none { pointer-events: none; }
+.pointer-events-auto { pointer-events: auto; }
+
+/* ========================================================
+   彈性增長/收縮
+   ======================================================== */
+
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-grow { flex-grow: 1; }
+
+/* ========================================================
+   顏色公用類別
+   ======================================================== */
+
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.text-disabled { color: var(--color-text-disabled); }
+.text-red { color: var(--color-text-red); }
+.text-success { color: var(--color-text-success); }
+.text-placeholder { color: var(--color-text-tertiary); }
+
+.bg-primary { background-color: var(--color-bg-primary); }
+.bg-secondary { background-color: var(--color-bg-secondary); }
+.bg-card { background-color: var(--color-bg-card); }
+
+/* ========================================================
+   邊框公用類別
+   ======================================================== */
+
+.border { border: 1px solid var(--color-border); }
+.border-t { border-top: 1px solid var(--color-border); }
+.border-b { border-bottom: 1px solid var(--color-border); }
+.border-l { border-left: 1px solid var(--color-border); }
+.border-r { border-right: 1px solid var(--color-border); }
+.border-none { border: none; }
+
+/* ========================================================
+   圓角公用類別
+   ======================================================== */
+
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: 50%; }
+
+/* ========================================================
+   陰影公用類別
+   ======================================================== */
+
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* ========================================================
+   清除浮動 (Clearfix，用於舊版瀏覽器相容性)
+   ======================================================== */
+
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}

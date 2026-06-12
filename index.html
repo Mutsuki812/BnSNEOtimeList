@@ -6,27 +6,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>B&S NEO 時間表</title>
 
-  <!-- 共通樣式 (所有裝置) -->
-  <link rel="stylesheet" href="./style/common.css?v=20260520-1">
+  <!-- 主題還原：必須在 CSS 載入前執行，防止 FOUC -->
+  <script>(function(){var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')})();</script>
 
-  <!-- 桌面版樣式 (僅寬度 >= 431px) -->
-  <link rel="stylesheet" href="style/desktop.css" media="(min-width: 431px)">
+  <script type="module" src="./script/main.js?v=20260612-1"></script>
+  <script type="module" src="./script/theme-switch.js?v=20260612-1"></script>
+  <link rel="stylesheet" href="./style/main.css?v=20260612-1">
 
-  <!-- 手機版樣式 (僅寬度 <= 430px) -->
-  <link rel="stylesheet" href="style/mobile.css" media="(max-width: 430px)">
   <link
-    href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap"
-    rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kosugi+Maru&family=M+PLUS+1p:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&family=Zen+Maru+Gothic:wght@300;400;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
   <div id="app">
-    <!-- 日期與時間 -->
+
     <header id="topBar">
+      <!-- 日期與時間 -->
       <div id="topLeft">
         <div id="dateLabel" class="dateLabel"></div>
         <div id="timeBox" class="timeBox"></div>
+      </div>
+      <!-- 登入,模式轉換與世界王音效 -->
+      <div id="topRight">
+        <div class="userInfo"></div>
+        <div class="modeToggle"></div>
+        <div class="bossSound"></div>
       </div>
     </header>
 
@@ -37,11 +42,9 @@
     <!-- 特殊期間內公告 -->
     <div id="temporaryNotice" class="temporaryNotice"></div>
     
-    <div class="infoBar">
-      <div class="userInfo"></div>
-      <div class="bossSound"></div>
+    <!-- <div class="infoBar">
       <div class="dateInfo"></div>
-    </div>
+    </div> -->
 
     <!-- 整個任務區 -->
     <section id="mainCard" class="mainCard">
@@ -51,15 +54,14 @@
       </div>
     </section>
 
-    <div class="thxsInfo" style="text-align: right; font-size:0.8rem; padding-right: 20px;">
-      ※感謝每個熱心回報、提供修正的玩家 沒有你們就沒有這個時間表了！🙏 
+    <div class="thxsInfo" style="text-align: right; font-size:0.9rem; padding-right: 20px;">
+      🙏 感謝每位熱心回報、提供修正的玩家<br>沒有你們就沒有這個時間表了
     </div>
 
-    <!-- 回報區 -->
+    <!-- 留言區 -->
     <div id="reportRoot"></div>
   </div>
 
-  <script type="module" src="./script/main.js?v=20260520-1"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZDSL0ZW37"></script>
   <script>

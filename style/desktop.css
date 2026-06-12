@@ -1,61 +1,277 @@
-/* c:\Users\mutsu\Pictures\BnSNEOtimeList\style\desktop.css */
+/* ============================================================
+   桌上型電腦響應式樣式
+   針對大螢幕最佳化 (>= 1024px)
+   ======================================================== */
 
-/* ====================================================================
-   🖥️ デスクトップとタブレットのレスポンシブデザイン | Desktop & Tablet Responsive Styles
-   432px以上のデバイスに適用
-==================================================================== */
+@media (min-width: 600px) {
 
-@media (min-width: 450px) {
-  /* 画面幅が450pxを超える場合、「すべて」オプションを表示 */
-  .filterLabel:has(input[value="all"]) { display: flex; }
+/* ========================================================
+   佈局最佳化 (桌上型電腦)
+   針對桌上型顯示器使用更寬的容器
+   ======================================================== */
+
+#app {
+  max-width: 600px;
+  /* 如果設計允許，增加最大寬度 */
 }
 
-@media (max-width: 560px) and (min-width: 431px) {
+/* ========================================================
+   任務列網格 (桌上型電腦)
+   更寬的網格欄位以提高可讀性
+   ======================================================== */
 
-  /* フォントサイズ調整 */
-  .col-content.long12 {
-    font-size: 1.125rem;
+.taskRow {
+  grid-template-columns: 60px 125px 80px 20px 1.5fr;
+}
+
+.previoushour { /* 前一小時 */
+  grid-template-columns: 200px 80px 20px 1.5fr;
+}
+
+/* ========================================================
+   字體大小 (桌上型電腦)
+   更大、更易讀的文字
+   ======================================================== */
+
+:root {
+  --font-size-lg: 1.3rem;
+}
+
+.long13 {
+  font-size: var(--font-size-base);
+}
+
+.long14 {
+  font-size: var(--font-size-xs);
+}
+
+.long15 {
+  font-size: var(--font-size-md);
+}
+
+/* ========================================================
+   懸停與互動狀態 (桌上型電腦)
+   增強滑鼠互動的視覺回饋
+   ======================================================== */
+
+.taskRow:not(.current):hover {
+  background: var(--color-hover);
+  transform: translateX(2px);
+}
+
+.group:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.showBtn:hover {
+  background: rgba(146, 138, 133, 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========================================================
+   按鈕行為 (桌上型電腦)
+   懸停時的游標回饋
+   ======================================================== */
+
+button:hover {
+  cursor: pointer;
+}
+
+.report-submit-btn {
+background: var(--color-accent);
+border: none;
+border-radius: var(--radius-sm);
+padding: var(--space-xs) var(--space-lg);
+font-size: var(--font-size-sm);
+font-weight: var(--font-weight-bold);
+cursor: pointer;
+transition: all var(--transition-base);
+margin-left: 0;
+box-shadow: var(--shadow-sm);
+}
+
+.report-submit-btn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.report-submit-btn:disabled {
+  background: var(--color-text-disabled);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ========================================================
+   表單佈局 (桌上型電腦)
+   最佳化的表單元素間距
+   ======================================================== */
+
+.report-form-row {
+  gap: var(--space-md);
+}
+
+/* ========================================================
+   彈窗最佳化 (桌上型電腦)
+   桌上型電腦尺寸的彈窗
+   ======================================================== */
+
+.modal-box {
+  max-width: 600px;
+  min-width: 400px;
+}
+
+.sound-unlock-modal {
+  width: 420px;
+}
+
+/* ========================================================
+   回報區段 (桌上型電腦)
+   更有效利用水平空間
+   ======================================================== */
+
+.reportContainer {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reportButtons {
+  margin-left: auto;
+}
+
+/* ========================================================
+   捲軸樣式 (桌上型電腦)
+   針對 webkit 瀏覽器的自定義捲軸
+   ======================================================== */
+
+.reportList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reportList::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.reportList::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.reportList::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-disabled);
+}
+
+/* ========================================================
+   提示框與延伸資訊 (桌上型電腦)
+   更多螢幕空間可顯示額外資訊
+   ======================================================== */
+
+[title] {
+  /* cursor: help; */
+}
+
+/* ========================================================
+   動畫增強 (桌上型電腦)
+   在效能較好的裝置上使用更平滑的動畫
+   ======================================================== */
+
+:root {
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.taskRow.current {
+  animation: desktopPulse 2s ease-in-out infinite;
+}
+
+@keyframes desktopPulse {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
   }
 }
 
-@media (max-width: 557px) and (min-width: 540px) {
+/* ========================================================
+   佈局微調 (桌上型電腦)
+   針對大螢幕調整間距
+   ======================================================== */
 
-  /* フォントサイズ調整 */
-  .col-content.long13 {
-    font-size: 0.95rem;
+.timeBox {
+  gap: var(--space-lg);
+}
+
+.infoBar {
+  padding: 0 var(--space-xl);
+  gap: var(--space-xl);
+}
+
+/* ========================================================
+   圖示大小 (桌上型電腦)
+   圖示略大，提高可視性
+   ======================================================== */
+
+.user-info-icon {
+  /* width: 28px;
+  height: 28px; */
+}
+
+.sound-toggle-btn img {
+  /* width: 36px;
+  height: 36px; */
+  border: none;
+}
+
+/* ========================================================
+   無障礙功能增強 (桌上型電腦)
+   更好的鍵盤導覽支援
+   ======================================================== */
+
+button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ========================================================
+   效能考量 (桌上型電腦)
+   在舊裝置上減少動畫以提升效能
+   ======================================================== */
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .taskRow.current {
+    animation: none;
   }
 
-  .col-content.long12 {
-    font-size: 1rem
+  * {
+    transition: none !important;
   }
 }
 
-/* 桌面模式下，並排顯示下拉選單與備註輸入框 */
-@media (min-width: 431px) {
-  .reportForm > div:nth-child(2) {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-  }
+}  /* End of min-width: 1024px media query */
 
-  #reportComment {
-    flex: 1;
-    min-width: 0; /* 防止彈性項目因內容過長而溢出 */
-  }
+/* ========================================================
+   ULTRA-WIDE SCREENS (>= 1440px)
+   Optional enhancements for very large displays
+   ======================================================== */
+
+@media (min-width: 1440px) {
+
+#app {
+  max-width: 600px;  /* 超寬螢幕略寬 */
 }
 
-@media (max-width: 539px) and (min-width: 526px) {
+.taskRow {
+  min-height: 56px;  /* 稍微加高以提升舒適度 */
+}
 
-  /* フォントサイズ調整 */
-  .col-content.long11 {
-    font-size: 1.15rem;
-  }
-
-  .col-content.long13 {
-    font-size: 0.95rem;
-  }
-
-  .col-content.long12 {
-    font-size: 1rem
-  }
 }

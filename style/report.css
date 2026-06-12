@@ -1,0 +1,773 @@
+/* ============================================================
+   回報與留言系統
+   對應 reportManager.js 的 render() 產生的靜態留言區，
+   以及 onlinePrediction.js 的 injectReportingUI() 產生的即時回報區。
+
+   主要 DOM 結構（留言區，由 reportManager.render() 產生）：
+   #reportRoot > .reportSection
+     .reportTitle
+     .reportForm > .reportText + .reportFields
+       #reportTaskType / #reportType / #reportComment
+       #reportMessage / .reportButtons > #submitReport
+     .reportLog > #reportList
+       .report-message-item > .msg-card > .msg-main + .msg-admin（可選）
+
+   即時回報區（由 onlinePrediction.injectReportingUI() 注入）：
+   .online-box：每個 .group 內的即時回報表單容器
+   ============================================================ */
+
+/* ========================================================
+   留言區段主容器 (.reportSection)
+   ======================================================== */
+
+.reportSection {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-base);
+}
+
+.reportSection:hover {
+  box-shadow: var(--shadow-sm);
+  background: var(--color-bg-secondary);
+}
+
+/* ========================================================
+   留言標題 (.reportTitle)
+   ======================================================== */
+
+.reportTitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-md);
+  letter-spacing: 0.5px;
+}
+
+/* ========================================================
+   說明文字 (.reportText)
+   由 reportManager.updateReportText() 注入，依活動期間顯示不同內容：
+   - 活動期間：TEXTS.Report_temporaryNotice
+   - 非活動期間：TEXTS.Report_regularNotice
+   ======================================================== */
+
+.reportText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--space-md);
+}
+
+/* ========================================================
+   回報表單容器 (.reportForm)
+   ======================================================== */
+
+.reportForm {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================================
+   表單輸入元素（通用）
+   涵蓋留言區的下拉選單、文字輸入，
+   以及即時回報區的時間輸入 (.report-time-input) 與地點下拉 (.report-select)
+   ======================================================== */
+
+.reportForm select,
+.reportForm input[type="text"],
+.report-time-input,
+.report-select {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  height: 32px;
+}
+
+.reportForm select:focus,
+.reportForm input[type="text"]:focus,
+.report-time-input:focus,
+.report-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(196, 168, 136, 0.2);
+  background: var(--color-bg-card);
+}
+
+#reportTaskType,
+#reportType {
+  min-width: 100px;
+}
+
+/* 時間輸入框：使用等寬時間字體 */
+.report-time-input {
+  font-family: var(--font-family-time);
+  min-width: 80px;
+}
+
+/* 地點選擇下拉：使用內容字體 */
+.report-select {
+  font-family: var(--font-family-content);
+  min-width: 100px;
+}
+
+/* ========================================================
+   表單欄位網格佈局 (.reportFields)
+   四欄網格：[任務類型] [回報類型] [輸入框] [送出按鈕]
+   第二列：[訊息顯示區（跨欄）]
+   ======================================================== */
+
+.reportFields {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-areas:
+    "task type input input"
+    ". . message button";
+  gap: var(--space-md);
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+#reportTaskType  { grid-area: task; }
+#reportType      { grid-area: type; }
+#reportComment   { grid-area: input;   min-width: 0; }
+#reportMessage   { grid-area: message; text-align: right; justify-self: end; }
+.reportButtons   { grid-area: button;  justify-self: end; }
+
+/* ========================================================
+   狀態訊息顯示 (#reportMessage)
+   由 reportManager.showMessage() 更新：
+   - 預設：空白
+   - 傳送中：無特殊樣式
+   - 成功：.success（綠色）
+   - 失敗：.error（紅色）
+   ======================================================== */
+
+#reportMessage {
+  font-size: var(--font-size-xs);
+  min-height: 1.5em;
+  line-height: 1.5em;
+  transition: color var(--transition-fast);
+}
+
+#reportMessage.error {
+  color: var(--color-text-red);
+  font-weight: var(--font-weight-medium);
+}
+
+#reportMessage.success {
+  color: var(--color-text-success);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ========================================================
+   提交按鈕
+   基礎樣式與任務類型顏色變體（莫蘭迪色系）。
+   .report-submit-btn 對應留言區的 #submitReport 按鈕。
+   .now-btn / .submit-btn 對應即時回報區（onlinePrediction 注入）。
+   按鈕顏色由 reportManager.updateButtonColor() 動態切換 class。
+   ======================================================== */
+
+.now-btn,
+.submit-btn,
+.report-submit-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.now-btn:hover:not(:disabled),
+.submit-btn:hover:not(:disabled),
+.report-submit-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.now-btn:active:not(:disabled),
+.submit-btn:active:not(:disabled),
+.report-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.now-btn:disabled,
+.submit-btn:disabled,
+.report-submit-btn:disabled {
+  background: var(--color-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 任務類型顏色變體：對應 reportManager.updateButtonColor() 動態附加的 class */
+
+/* 可疑的儀式 */
+.type-gishiki,
+.gishiki .now-btn,
+.gishiki .submit-btn {
+  background-color: var(--color-gishiki-btn);
+  color: var(--color-text-on-theme-btn);
+  box-shadow: 0 4px 12px var(--color-gishiki-bg);
+}
+.type-gishiki:hover:not(:disabled),
+.gishiki .now-btn:hover:not(:disabled),
+.gishiki .submit-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 16px var(--color-gishiki-bg);
+}
+
+/* 白青野王 */
+.type-shirao,
+.shirao .now-btn,
+.shirao .submit-btn {
+  background-color: var(--color-shirao-btn);
+  color: var(--color-text-on-theme-btn);
+  box-shadow: 0 4px 12px var(--color-shirao-bg);
+}
+.type-shirao:hover:not(:disabled),
+.shirao .now-btn:hover:not(:disabled),
+.shirao .submit-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 16px var(--color-shirao-bg);
+}
+
+/* 仙幻島野王 */
+.type-sengen,
+.sengen .now-btn,
+.sengen .submit-btn {
+  background-color: var(--color-sengen-btn);
+  color: var(--color-text-on-theme-btn);
+  box-shadow: 0 4px 12px var(--color-sengen-bg);
+}
+.type-sengen:hover:not(:disabled),
+.sengen .now-btn:hover:not(:disabled),
+.sengen .submit-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 16px var(--color-sengen-bg);
+}
+
+/* 其他：預設強調色（Light: cream #F5F1E8 on brown, Dark: dark #090d18 on cyan） */
+.type-other {
+  background-color: var(--color-accent);
+  color: #090d18;
+}
+
+/* ========================================================
+   回報記録日誌容器 (.reportLog / #reportList)
+   由 reportManager.loadReports() 填充，以新到舊順序排列。
+   ======================================================== */
+
+.reportLog {
+  margin-top: var(--space-lg);
+}
+
+.reportList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-height: 300px;
+  overflow-y: auto;
+  padding: var(--space-md);
+  background: linear-gradient(135deg, var(--color-bg-reportlist-start), var(--color-bg-reportlist-end));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  scroll-behavior: smooth;
+}
+
+/* 自定義捲軸（webkit） */
+.reportList::-webkit-scrollbar       { width: 6px; }
+.reportList::-webkit-scrollbar-track { background: transparent; }
+.reportList::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.reportList::-webkit-scrollbar-thumb:hover { background: var(--color-text-disabled); }
+
+/* ========================================================
+   留言項目 (.report-message-item)
+   由 reportManager.loadReports() 的 forEach 產生。
+   ======================================================== */
+
+.report-message-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片本體 */
+.msg-card {
+  background: var(--color-bg-group);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-base);
+}
+
+.msg-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  background: var(--color-bg-card);
+}
+
+/* 主要內容列（Flex 橫向排列各欄位） */
+.msg-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  min-width: 0;  /* 防止 flex 子元素溢出 */
+}
+
+/* 時間顯示（MM/DD HH:mm，由 loadReports() 格式化） */
+.msg-time {
+  font-family: var(--font-family-time);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  min-width: 70px;
+  padding-top: 5px;
+}
+
+/* 任務類型標籤（可疑的儀式 / 白青野王 / 仙幻島野王） */
+.msg-type {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+/* 任務類型顏色標籤 */
+.msg-type.type-gishiki {
+  color: var(--color-gishiki);
+  border-color: var(--color-gishiki-light);
+  background: var(--color-gishiki-bg);
+}
+.msg-type.type-shirao {
+  color: var(--color-shirao);
+  border-color: var(--color-shirao-light);
+  background: var(--color-shirao-bg);
+}
+.msg-type.type-sengen {
+  color: var(--color-sengen);
+  border-color: var(--color-sengen-light);
+  background: var(--color-sengen-bg);
+}
+.msg-type.type-other {
+  display: none;  /* 「其他」類型不顯示任務標籤 */
+}
+
+/* 留言主文字 */
+.msg-text {
+  color: var(--color-text-primary);
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+/* 使用者名稱與動作按鈕的橫向容器 */
+.msg-nameRes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.msg-nameRes-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* 管理者回應圖示（感謝圖示） */
+.msg-respond {
+  flex-shrink: 0;
+}
+
+/* 使用者名稱標籤（膠囊形） */
+.msg-user {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-light);
+  white-space: nowrap;
+}
+
+/* 一般使用者樣式 */
+.msg-user.user-tag {
+  background: linear-gradient(135deg, var(--color-bg-main-card-start) 0%, var(--color-bg-main-card-end) 100%);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+.msg-user.user-tag:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* 灰色（非 MVP 一般使用者） */
+.msg-user.gray {
+  color: var(--color-text-secondary);
+}
+
+/* 管理者標籤 */
+.msg-user.admin-tag {
+  background: var(--color-bg-admin-tag);
+  color: var(--color-text-admin-tag);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: var(--font-weight-bold);
+}
+
+/* MVP 榮譽標籤：皇冠圖示（對應 config.js 的 MVP_CONFIG 設定）
+   is-mvp-1：第一名（金色）
+   is-mvp-2：第二名（銀色） */
+.user-tag.is-mvp-1::before,
+.user-tag.is-mvp-2::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin-right: 4px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+.user-tag.is-mvp-1::before { background-image: url('../images/crown-g.png'); }
+.user-tag.is-mvp-2::before { background-image: url('../images/crown-s.png'); }
+
+.msg-user.user-tag.is-mvp-1 {
+  border: 1px solid var(--color-sengen-light);
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFFDF7 100%);
+  color: var(--color-sengen);
+  font-weight: var(--font-weight-medium);
+}
+.msg-user.user-tag.is-mvp-2 {
+  border: 1px solid #D1D8DD;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  color: #7F8C8D;
+  font-weight: var(--font-weight-medium);
+}
+
+/* 刪除按鈕（僅顯示在本人的留言上） */
+.msg-del-btn {
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.report-message-item:hover .msg-del-btn { opacity: 0.7; }
+.msg-del-btn:hover { opacity: 1 !important; }
+
+/* 管理者回覆區塊（僅在 r.adminResponse 有值時顯示） */
+.msg-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-sm) 0;
+}
+
+.msg-admin {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding-top: var(--space-xs);
+}
+
+.admin-badge {
+  background: var(--color-text-secondary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.admin-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
+}
+
+/* ========================================================
+   即時回報系統 (.online-box)
+   由 onlinePrediction.injectReportingUI() 注入至每個 .group 內。
+   活動期間（isInDateRange）且 useOnlineSystem=true 時顯示。
+   ======================================================== */
+
+.online-box {
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 光澤疊加層（Light Mode：奶油質感；Dark Mode：transparent） */
+.online-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, var(--color-online-box-overlay) 100%);
+  pointer-events: none;
+}
+
+.online-box:hover {
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 回報表單的橫向排列容器 */
+.report-form-row,
+.report-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+  z-index: 1;
+}
+
+  .report-form-row.events {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: end;
+    gap: var(--space-sm);
+    border-radius: var(--radius-sm);
+  }
+
+/* 欄位標籤文字 */
+.report-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* 即時回報訊息顯示 */
+.report-msg {
+  font-size: var(--font-size-xs);
+  min-height: 1.5em;
+  margin-top: var(--space-xs);
+  line-height: 1.5em;
+  transition: color var(--transition-fast);
+}
+.report-msg.error   { color: var(--color-text-red);     font-weight: var(--font-weight-medium); }
+.report-msg.success { color: var(--color-text-success);  font-weight: var(--font-weight-medium); }
+
+/* ========================================================
+   即時回報的單選按鈕組（出現方式選擇）
+   ======================================================== */
+
+.report-radio-container {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.report-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  gap: var(--space-sm);
+  user-select: none;
+}
+
+.report-radio-label input[type="radio"] {
+  cursor: pointer;
+}
+
+/* ========================================================
+   歷史記録ボタン（.report-history-btn）
+   ======================================================== */
+
+.report-history-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+
+.report-history-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.report-history-btn:hover {
+  opacity: 0.75;
+}
+
+.report-history-btn img {
+  display: block;
+}
+
+/* ========================================================
+   歷史記録列表（即時回報系統）
+   由 onlinePrediction.loadAndRenderHistory() 填充。
+   ======================================================== */
+
+.report-history-list {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--transition-slow), opacity var(--transition-base);
+}
+
+.report-history-list.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.report-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+/* 左側 */
+.hist-left {
+ display: flex;
+ align-items: center;
+ gap: var(--space-sm);
+ flex: 1;
+ overflow: hidden;
+ flex-wrap: wrap;
+ min-width: 0;
+}
+
+/* 右側 */
+.hist-right {
+ display: flex;
+ align-items: center;
+ gap: var(--space-sm);
+ flex-shrink: 0;
+ margin-left: var(--space-md);
+}
+
+/* 歷史記録的各欄位 */
+.hist-time { width: 70px; font-family: var(--font-family-time); font-size: var(--font-size-xs); }
+.hist-tag  { width: 70px; }
+.hist-loc  { flex: 1; padding-left: 20px; }
+
+/* 歷史記録的標籤樣式（回報方式分類） */
+.hist-tag {
+  padding: var(--space-2xs) var(--space-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+.hist-tag.tag-system  { background: rgba(100, 149, 237, 0.15); color: #4a6fa5; border: 1px solid rgba(100, 149, 237, 0.3); }
+.hist-tag.tag-thunder { background: rgba(255, 193, 7, 0.15);   color: #856404; border: 1px solid rgba(255, 193, 7, 0.3); }
+.hist-tag.tag-spawned { background: rgba(210, 77, 87, 0.15);   color: #a0373e; border: 1px solid rgba(210, 77, 87, 0.3); }
+
+/* 歷史記録的使用者標籤 */
+.hist-user {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.hist-user.user-tag {
+  background: linear-gradient(135deg, var(--color-bg-main-card-start) 0%, var(--color-bg-main-card-end) 100%);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-card);
+}
+.hist-user.user-tag.is-mvp-1 {
+  border: 1px solid var(--color-sengen-light);
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFFDF7 100%);
+  color: var(--color-sengen);
+  font-weight: var(--font-weight-medium);
+}
+.hist-user.user-tag.is-mvp-2 {
+  border: 1px solid #D1D8DD;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  color: #7F8C8D;
+  font-weight: var(--font-weight-medium);
+}
+.hist-user.admin-tag {
+  background: var(--color-bg-admin-tag);
+  color: var(--color-text-admin-tag);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 歷史記録的刪除按鈕（hover 才顯示） */
+.hist-del-btn {
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+.report-history-item:hover .hist-del-btn { opacity: 0.7; }
+.hist-del-btn:hover { opacity: 1 !important; }
+
+/* 刪除成功提示訊息 */
+.delete-success-msg {
+  padding: var(--space-md);
+  color: var(--color-text-success);
+  text-align: center;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  font-weight: var(--font-weight-medium);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================================
+   Dark Mode 覆蓋
+   ======================================================== */
+
+[data-theme="dark"] .msg-user.user-tag.is-mvp-1,
+[data-theme="dark"] .hist-user.user-tag.is-mvp-1 {
+  background: transparent;
+  border-color: var(--color-sengen);
+  color: var(--color-sengen);
+}
+
+[data-theme="dark"] .msg-user.user-tag.is-mvp-2,
+[data-theme="dark"] .hist-user.user-tag.is-mvp-2 {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1.5px solid rgba(192, 210, 230, 0.70);
+  color: #c0d4e8;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.35);
+}

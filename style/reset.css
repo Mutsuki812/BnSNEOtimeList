@@ -1,0 +1,191 @@
+/* ============================================================
+   重置與基礎樣式 (Reset & Base Styles)
+   全域重置與基礎 HTML 元素樣式
+   ============================================================ */
+
+/* ========================================================
+   全域重置
+   ======================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  overflow-x: hidden;
+  font-family: var(--font-family-content);
+
+  background: var(--body-bg);
+  background-attachment: fixed;
+  background-blend-mode: soft-light;
+}
+
+/* ========================================================
+   應用程式主要容器
+   ======================================================== */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  max-width: var(--layout-max-width);
+  margin: var(--space-md) auto;
+  /* padding: var(--layout-padding); */
+  gap: var(--space-sm);
+  transition: max-width 0.3s ease;
+}
+
+/* ========================================================
+   字體基礎樣式
+   ======================================================== */
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-md); }
+h6 { font-size: var(--font-size-base); }
+
+p {
+  margin: 0;
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* ========================================================
+   表單元素基礎
+   ======================================================== */
+
+input,
+select,
+button,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-disabled);
+}
+
+/* ========================================================
+   清單樣式
+   ======================================================== */
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ========================================================
+   圖片樣式
+   ======================================================== */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ========================================================
+   無障礙功能：焦點狀態
+   ======================================================== */
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* 為滑鼠使用者移除焦點外框 (選用) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========================================================
+   無障礙功能：減少動態效果
+   ======================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ========================================================
+   無障礙功能：高對比模式
+   ======================================================== */
+
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: #000000;
+    --color-text-secondary: #1a1a1a;
+    --color-border: #333333;
+  }
+}
+
+/* ========================================================
+   列印樣式
+   ======================================================== */
+
+@media print {
+  body {
+    background: white;
+  }
+  
+  a {
+    text-decoration: underline;
+  }
+  
+  /* 隱藏互動元素 */
+  button,
+  .reportButtons,
+  .showBtn {
+    display: none !important;
+  }
+}

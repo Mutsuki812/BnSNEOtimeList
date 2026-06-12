@@ -1,0 +1,109 @@
+/* ============================================================
+   CSS 主要入口點 (style/main.css)
+   集中式 @import，HTML 中只需引入此單一檔案。
+
+   載入順序（順序至關重要，不可任意調換）：
+   1. variables.css  → CSS 自定義屬性，所有其他檔案依賴此檔案
+   2. reset.css      → 全域重置，消除瀏覽器預設樣式差異
+   3. utilities.css  → 可複用公用類別（flex / gap / color 等）
+   4. 組件 CSS       → 各功能區塊的具體樣式（可任意順序）
+   5. 響應式 CSS     → 行動裝置與桌機的覆蓋樣式（必須最後載入）
+   ============================================================ */
+
+/* ========================================================
+   1. 設計標記 (Design Tokens)
+   CSS 自定義屬性：顏色、間距、字體、陰影、圓角、動畫
+   ======================================================== */
+
+@import "./variables.css";
+
+/* ========================================================
+   2. 全域重置
+   HTML 元素 box-sizing 重置、body 背景、基礎字型
+   ======================================================== */
+
+@import "./reset.css";
+
+/* ========================================================
+   3. 公用類別
+   可複用的輔助類別：flexbox 佈局、gap、margin、color、border
+   ======================================================== */
+
+@import "./utilities.css";
+
+/* ========================================================
+   4. 組件樣式（共 4 個組件）
+   ======================================================== */
+
+/* 頂部導覽：時間顯示、使用者資訊、音效開關、公告區段 */
+@import "./top-bar.css";
+
+/* 任務列與容器：.group、.taskRow、.previoushour、警示動畫、折疊面板 */
+@import "./task-row.css";
+
+/* 彈窗與對話框：登入/改名/確認 Modal、音訊解鎖提示 */
+@import "./modals.css";
+
+/* 回報與留言系統：留言表單、記録列表、即時回報區、歷史記録 */
+@import "./report.css";
+
+/* ========================================================
+   5. 響應式樣式（行動優先策略）
+   ======================================================== */
+
+/* 行動裝置（≤ 430px）：小螢幕的覆蓋樣式，觸控目標最佳化 */
+@import "./mobile.css";
+
+/* 桌上型電腦（≥ 1024px）：大螢幕增強效果、動畫、寬螢幕佈局 */
+@import "./desktop.css";
+
+/* ============================================================
+   CSS 架構說明
+
+   對應 JS 模組結構：
+   ┌─────────────────────────────────────────────────┐
+   │ top-bar.css    ← uiRenderer.js (updateTopTime)  │
+   │                ← userManager.js (renderUserInfo) │
+   │                ← main.js (renderWorldBossToggle) │
+   │                                                  │
+   │ task-row.css   ← uiRenderer.js (createTaskRow    │
+   │                   createCurrentTaskRow 等)        │
+   │                ← main.js (createTaskGroup)        │
+   │                ← onlinePrediction.js（預測顯示）  │
+   │                                                  │
+   │ modals.css     ← userManager.js (showLoginModal  │
+   │                   showRenameModal 等)             │
+   │                ← soundManager.js (showUnlockModal)│
+   │                                                  │
+   │ report.css     ← reportManager.js (render)       │
+   │                ← onlinePrediction.js (online-box) │
+   └─────────────────────────────────────────────────┘
+
+   斷點策略（行動優先）：
+   - 基礎：0px+    → 行動裝置（無媒體查詢）
+   - 覆蓋：≤ 430px → mobile.css 的部分修正
+   - 增強：≥ 1024px → desktop.css 大螢幕強化
+
+   CSS 自定義屬性規範：
+   - 顏色   → --color-*
+   - 間距   → --space-*
+   - 字體   → --font-*
+   - 陰影   → --shadow-*
+   - 圓角   → --radius-*
+   - 過渡   → --transition-*
+   - 網格   → --grid-*
+
+   命名慣例：
+   - 組件容器：名詞（.group、.taskRow、.msg-card）
+   - 狀態修飾：形容詞（.current、.open、.task-alert-active）
+   - 元素欄位：col-前綴（.col-time、.col-content）
+   - JS 注入點：由 JS class 命名決定，CSS 保持同步
+
+   檔案大小預算（壓縮前）：
+   - variables.css：~3KB
+   - reset.css：~3KB
+   - utilities.css：~8KB
+   - 各組件 CSS：~3-6KB
+   - mobile.css / desktop.css：~5KB
+   - 總計目標：~35-40KB
+   ============================================================ */
