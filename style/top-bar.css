@@ -131,11 +131,6 @@
   gap: var(--space-sm);
   flex-wrap: wrap;
   justify-content: flex-end;
-
-  /* display: flex;             
-  flex-direction: column;    
-  align-items: flex-end;         
-  border: 1px solid #ccc; */
 }
 
 
@@ -186,8 +181,6 @@
 
 /* 使用者/訪客圖示 */
 .user-info-icon {
-  /* width: 24px;
-  height: 24px; */
   flex-shrink: 0;
 }
 
@@ -230,7 +223,6 @@
 .theme-toggle-btn {
   display: flex;
   align-items: center;
-  background: var(--color-bg-pill);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   padding: 4px 8px;
@@ -240,6 +232,7 @@
   transition: all var(--transition-base);
   font-family: inherit;
   line-height: 1;
+  background: var(--color-bg-pill);
 }
 
 .theme-toggle-btn:hover {
@@ -271,7 +264,6 @@
   align-items: center;
   gap: 10px;
   border: none;
-  background: transparent;
   box-shadow: none;
 }
 
@@ -279,7 +271,6 @@
 .switch-label {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-  font-weight: var(--font-weight-bold);
 }
 
 /* ========================================================

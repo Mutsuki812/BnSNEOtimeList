@@ -11,38 +11,38 @@
      調色盤 — 莫蘭迪色系 + 奶油色系
      ======================================================== */
 
-  --color-bg-primary:   #fcdacd;
+  --color-bg-primary: #fcdacd;
   --color-bg-secondary: rgba(254, 244, 244, 0.45);
-  --color-bg-card:      #FFFFFF;
+  --color-bg-card: #FFFFFF;
 
-  --color-text-primary:     #3A3533;
-  --color-text-secondary:   #777777;
-  --color-text-tertiary:    #8B8B8B;
-  --color-text-disabled:    #B3AFA8;
+  --color-text-primary: #3A3533;
+  --color-text-secondary: #777777;
+  --color-text-tertiary: #8B8B8B;
+  --color-text-disabled: #B3AFA8;
   --color-text-maintenance: #8B8B8B;
-  --color-text-red:         #D24D57;
-  --color-text-success:     #88A08E;
+  --color-text-red: #D24D57;
+  --color-text-success: #88A08E;
 
   /* ========================================================
      任務類型主題色 — 可疑的儀式 / 白青野王 / 仙幻島野王
      ======================================================== */
 
-  --color-gishiki:       #7A4171;
+  --color-gishiki: #7A4171;
   --color-gishiki-light: #B89FB4;
-  --color-gishiki-bg:    rgba(184, 159, 180, 0.25);
-  --color-gishiki-btn:   #A08B9D;
+  --color-gishiki-bg: rgba(184, 159, 180, 0.35);
+  --color-gishiki-btn: #A08B9D;
   --color-gishiki-row-end: rgba(235, 230, 240, 0.35);
 
-  --color-shirao:       #65A48D;
+  --color-shirao: #65A48D;
   --color-shirao-light: #A4B4A4;
-  --color-shirao-bg:    rgba(164, 180, 164, 0.25);
-  --color-shirao-btn:   #92A392;
+  --color-shirao-bg: rgba(164, 180, 164, 0.35);
+  --color-shirao-btn: #92A392;
   --color-shirao-row-end: rgba(230, 238, 230, 0.35);
 
-  --color-sengen:       #B08F3E;
+  --color-sengen: #B08F3E;
   --color-sengen-light: #D6C48F;
-  --color-sengen-bg:    rgba(176, 143, 62, 0.15);
-  --color-sengen-btn:   #B2A086;
+  --color-sengen-bg: rgba(176, 143, 62, 0.25);
+  --color-sengen-btn: #B2A086;
   --color-sengen-row-end: rgba(245, 240, 230, 0.35);
 
   --color-text-on-theme-btn: #F5F1E8;
@@ -51,43 +51,42 @@
      功能性顏色
      ======================================================== */
 
-  --color-accent:       #C4A888;
+  --color-accent: #C4A888;
   --color-accent-hover: #B89978;
-  --color-border:       #E0DDD8;
-  --color-hover:        rgba(0, 0, 0, 0.08);
+  --color-border: #E0DDD8;
+  --color-hover: rgba(0, 0, 0, 0.08);
 
   /* ========================================================
      背景層 — 全頁背景漸層
      ======================================================== */
 
-  --body-bg:linear-gradient(to
-left bottom, #ccc2dd, #bcc7e5, #aacde6,
-#9dd2df,#9bd5d2,#a0d7c7,#abd7bb,
-#bad6af, #c7d5a7, #d5d4a2, #e4d19f,
-#f3ce9f);
-    /* radial-gradient(circle at 75% 70%, rgba(176, 143, 62, 0.38), transparent 50%),
+  --body-bg: linear-gradient(to left bottom, #ccc2dd, #bcc7e5, #aacde6,
+      #9dd2df, #9bd5d2, #a0d7c7, #abd7bb,
+      #bad6af, #c7d5a7, #d5d4a2, #e4d19f,
+      #f3ce9f);
+  /* radial-gradient(circle at 75% 70%, rgba(176, 143, 62, 0.38), transparent 50%),
     radial-gradient(circle at 60% 80%, rgba(122, 65, 113, 0.28), transparent 55%),
     radial-gradient(circle at 30% 75%, rgba(101, 164, 141, 0.28), transparent 55%),
     linear-gradient(180deg, #d4dfe8 0%, #e8dcd0 50%, #e8d8cc 100%); */
 
   /* 主卡片漸層 */
   --color-bg-main-card-start: #FFFDF7;
-  --color-bg-main-card-end:   #FFF8EE;
+  --color-bg-main-card-end: #FFF8EE;
 
   /* 群組背景（微暖奶油色，讓頂部 inset 白光高光可見） */
   --color-bg-group: rgba(255, 252, 248, 0.98);
 
   /* 任務列背景 */
   --color-bg-task-wrapper-from: rgba(230, 230, 230, 0.3);
-  --color-bg-task-wrapper-to:   rgba(250, 250, 250, 0.2);
+  --color-bg-task-wrapper-to: rgba(250, 250, 250, 0.2);
 
   /* 前一小時列背景 */
   --color-bg-previous-from: rgba(192, 198, 201, 0.3);
-  --color-bg-previous-to:   rgba(210, 210, 220, 0.2);
+  --color-bg-previous-to: rgba(210, 210, 220, 0.2);
 
   /* 留言列表背景 */
   --color-bg-reportlist-start: rgba(255, 253, 247, 0.6);
-  --color-bg-reportlist-end:   rgba(255, 248, 238, 0.4);
+  --color-bg-reportlist-end: rgba(255, 248, 238, 0.4);
 
   /* 線上回報 overlay 光澤 */
   --color-online-box-overlay: rgba(255, 248, 238, 0.3);
@@ -96,46 +95,47 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      UI 元件背景
      ======================================================== */
 
-  --color-bg-user-pill:   rgba(255, 255, 255, 0.6);
-  --color-bg-pill:        rgba(255, 252, 248, 0.90);   /* Neo-Tactile ピル背景（膠囊按鈕用） */
-  --color-bg-modal:       #ffffff;
-  --color-text-modal-primary:   #333333;
+  --color-bg-user-pill: rgba(255, 255, 255, 0.6);
+  --color-bg-pill: rgba(255, 252, 248, 0.25);
+  /* Neo-Tactile ピル背景（膠囊按鈕用） */
+  --color-bg-modal: #ffffff;
+  --color-text-modal-primary: #333333;
   --color-text-modal-secondary: #666666;
-  --color-bg-btn-cancel:  #eeeeee;
+  --color-bg-btn-cancel: #eeeeee;
   --color-text-btn-cancel: #333333;
-  --color-bg-admin-tag:   linear-gradient(135deg, #888888 0%, #666666 100%);
+  --color-bg-admin-tag: linear-gradient(135deg, #888888 0%, #666666 100%);
   --color-text-admin-tag: #ffffff;
 
   /* ========================================================
      新擬物主義開關元件
      ======================================================== */
 
-  --color-slider-track:        #e0ddd8;
-  --color-slider-shadow-dark:  #bcbab5;
+  --color-slider-track: #e0ddd8;
+  --color-slider-shadow-dark: #bcbab5;
   --color-slider-shadow-light: #ffffff;
-  --color-slider-knob:         #ffffff;
+  --color-slider-knob: #ffffff;
 
   /* ========================================================
      時間標籤與日期方塊
      ======================================================== */
 
   --color-timelabel-from: #666666;
-  --color-timelabel-to:   #4a4a4a;
-  --color-timelabel-text: #eeeeee;
+  --color-timelabel-to: #4a4a4a;
+  --color-timelabel-text: #666666;
 
   --color-datetimebox-bg-from: rgba(0, 0, 0, 0.08);
-  --color-datetimebox-bg-to:   rgba(0, 0, 0, 0.12);
+  --color-datetimebox-bg-to: rgba(0, 0, 0, 0.12);
 
   /* ========================================================
      間距系統
      ======================================================== */
 
   --space-2xs: 2px;
-  --space-xs:  4px;
-  --space-sm:  8px;
-  --space-md:  12px;
-  --space-lg:  16px;
-  --space-xl:  20px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
   --space-2xl: 24px;
   --space-3xl: 32px;
 
@@ -143,28 +143,28 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      字體系統
      ======================================================== */
 
-  --font-family-time:    "M PLUS 1p", sans-serif;
+  --font-family-time: "M PLUS 1p", sans-serif;
   --font-family-content: "Kosugi Maru", sans-serif;
 
-  --font-size-2xs:  0.5rem;
-  --font-size-xs:   0.75rem;
-  --font-size-sm:   0.875rem;
+  --font-size-2xs: 0.5rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
-  --font-size-md:   1.125rem;
-  --font-size-lg:   1.25rem;
-  --font-size-xl:   1.5rem;
-  --font-size-2xl:  2rem;
-  --font-size-3xl:  2.5rem;
-  --font-size-4xl:  3rem;
+  --font-size-md: 1.125rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.5rem;
+  --font-size-4xl: 3rem;
 
-  --font-weight-light:  300;
+  --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
-  --font-weight-bold:   700;
-  --font-weight-black:  900;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
 
-  --line-height-tight:   1;
-  --line-height-normal:  1.6;
+  --line-height-tight: 1;
+  --line-height-normal: 1.6;
   --line-height-relaxed: 1.8;
 
   /* ========================================================
@@ -174,19 +174,19 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   /* 極細緻浮起（膠囊按鈕等小元件） */
   --shadow-xs:
-    0 1px 2px  rgba(58, 53, 51, 0.06),
-    0 2px 8px  rgba(58, 53, 51, 0.04),
+    0 1px 2px rgba(58, 53, 51, 0.06),
+    0 2px 8px rgba(58, 53, 51, 0.04),
     inset 0 1px 2px rgba(255, 255, 255, 0.65);
 
   /* 輕柔浮起（群組 hover、標籤等） */
   --shadow-sm:
-    0 2px 5px  rgba(58, 53, 51, 0.08),
+    0 2px 5px rgba(58, 53, 51, 0.08),
     0 6px 16px rgba(58, 53, 51, 0.05),
     inset 0 1px 2px rgba(255, 255, 255, 0.75);
 
   /* 明顯浮起（群組卡片） */
   --shadow-md:
-    0 4px 8px  rgba(58, 53, 51, 0.08),
+    0 4px 8px rgba(58, 53, 51, 0.08),
     0 10px 24px rgba(58, 53, 51, 0.06),
     inset 0 1px 3px rgba(255, 255, 255, 0.82);
 
@@ -206,7 +206,7 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   /* 留言卡片陰影 */
   --shadow-card:
-    0 2px 6px  rgba(58, 53, 51, 0.07),
+    0 2px 6px rgba(58, 53, 51, 0.07),
     0 6px 18px rgba(58, 53, 51, 0.05),
     inset 0 1px 2px rgba(255, 255, 255, 0.82);
 
@@ -224,36 +224,36 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   --alert-shadow-pulse: 0 0 50px rgba(210, 77, 87, 0.65), inset 2px 2px 8px rgba(255, 255, 255, 0.9);
 
-  --alert-bg-base:      rgba(210, 77, 87, 0.08);
-  --alert-bg-pulse:     rgba(210, 77, 87, 0.15);
-  --alert-bg-end-base:  rgba(255, 255, 255, 0.95);
+  --alert-bg-base: rgba(210, 77, 87, 0.08);
+  --alert-bg-pulse: rgba(210, 77, 87, 0.15);
+  --alert-bg-end-base: rgba(255, 255, 255, 0.95);
   --alert-bg-end-pulse: rgba(255, 255, 255, 1);
 
-  --alert-edge-glow:       rgba(210, 77, 87, 0.28);
+  --alert-edge-glow: rgba(210, 77, 87, 0.28);
   --alert-time-glow-color: rgba(210, 77, 87, 0.60);
 
   /* 任務類型專屬柔和光暈（Claymorphism 型別色調 + 頂部高光） */
   --shadow-glow-gishiki:
     0 6px 18px rgba(122, 65, 113, 0.10),
-    0 2px 6px  rgba(122, 65, 113, 0.06),
+    0 2px 6px rgba(122, 65, 113, 0.06),
     inset 0 1px 2px rgba(255, 255, 255, 0.55);
   --shadow-glow-shirao:
     0 6px 18px rgba(101, 164, 141, 0.10),
-    0 2px 6px  rgba(101, 164, 141, 0.06),
+    0 2px 6px rgba(101, 164, 141, 0.06),
     inset 0 1px 2px rgba(255, 255, 255, 0.55);
   --shadow-glow-sengen:
     0 6px 18px rgba(176, 143, 62, 0.10),
-    0 2px 6px  rgba(176, 143, 62, 0.06),
+    0 2px 6px rgba(176, 143, 62, 0.06),
     inset 0 1px 2px rgba(255, 255, 255, 0.55);
 
   /* ========================================================
      邊框圓角
      ======================================================== */
 
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   18px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-pill: 999px;
 
   /* ========================================================
@@ -269,15 +269,15 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      ======================================================== */
 
   --layout-max-width: 600px;
-  --layout-padding:   var(--space-md);
+  --layout-padding: var(--space-md);
 
   /* ========================================================
      任務列網格欄位
      ======================================================== */
 
-  --grid-task-row-mobile:  30px 90px 50px 17px auto;
+  --grid-task-row-mobile: 30px 90px 50px 17px auto;
   --grid-task-row-desktop: 50px 125px 70px 17px 1.5fr;
-  --grid-previous-mobile:  135px 50px 0px auto;
+  --grid-previous-mobile: 135px 50px 0px auto;
   --grid-previous-desktop: 190px 70px 17px 1.5fr;
 }
 
@@ -296,38 +296,39 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      調色盤 — 深藍黑底 + 霓虹光
      ======================================================== */
 
-  --color-bg-primary:   #090d18;
+  --color-bg-primary: #090d18;
   --color-bg-secondary: rgba(18, 24, 42, 0.65);
-  --color-bg-card:      #111827;
+  --color-bg-card: #111827;
 
-  --color-text-primary:     #dce8f5;
-  --color-text-secondary:   #7a90b8;
-  --color-text-tertiary:    #4e637f;
-  --color-text-disabled:    #2e3f55;
+  --color-text-primary: #dce8f5;
+  --color-text-secondary: #7a90b8;
+  --color-text-tertiary: #4e637f;
+  --color-text-disabled: #2e3f55;
   --color-text-maintenance: #3a4e66;
-  --color-text-red:         #ff375f;  /* 霓虹緋紅：帶品紅偏向，搭配紫/青色盤 */
-  --color-text-success:     #00e5a0;
+  --color-text-red: #ff375f;
+  /* 霓虹緋紅：帶品紅偏向，搭配紫/青色盤 */
+  --color-text-success: #00e5a0;
 
   /* ========================================================
      任務類型主題色 — 霓虹版
      ======================================================== */
 
-  --color-gishiki:         #cc33fe;
-  --color-gishiki-light:   #dd88ff;
-  --color-gishiki-bg:      rgba(204, 51, 254, 0.12);
-  --color-gishiki-btn:     #cc33fe;
+  --color-gishiki: #cc33fe;
+  --color-gishiki-light: #dd88ff;
+  --color-gishiki-bg: rgba(204, 51, 254, 0.25);
+  --color-gishiki-btn: #cc33fe;
   --color-gishiki-row-end: transparent;
 
-  --color-shirao:         #B0D45D;
-  --color-shirao-light:   #c8e870;
-  --color-shirao-bg:      rgba(176, 212, 93, 0.10);
-  --color-shirao-btn:     #B0D45D;
+  --color-shirao: #B0D45D;
+  --color-shirao-light: #c8e870;
+  --color-shirao-bg: rgba(176, 212, 93, 0.25);
+  --color-shirao-btn: #B0D45D;
   --color-shirao-row-end: transparent;
 
-  --color-sengen:         #ffd60a;
-  --color-sengen-light:   #ffe44d;
-  --color-sengen-bg:      rgba(255, 214, 10, 0.10);
-  --color-sengen-btn:     #ffd60a;
+  --color-sengen: #ffd60a;
+  --color-sengen-light: #ffe44d;
+  --color-sengen-bg: rgba(255, 214, 10, 0.25);
+  --color-sengen-btn: #ffd60a;
   --color-sengen-row-end: transparent;
 
   --color-text-on-theme-btn: #090d18;
@@ -336,10 +337,10 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      功能性顏色
      ======================================================== */
 
-  --color-accent:       #05f5fb;
+  --color-accent: #05f5fb;
   --color-accent-hover: #40f0fa;
-  --color-border:       rgba(5, 245, 251, 0.15);
-  --color-hover:        rgba(5, 245, 251, 0.07);
+  --color-border: rgba(5, 245, 251, 0.15);
+  --color-hover: rgba(5, 245, 251, 0.07);
 
   /* ========================================================
      背景層 — 純平底色，無漸層
@@ -349,22 +350,22 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   /* 主卡片：同色系平底（linear-gradient 兩色相同 = 純色） */
   --color-bg-main-card-start: #0e1422;
-  --color-bg-main-card-end:   #0e1422;
+  --color-bg-main-card-end: #0e1422;
 
   /* 群組：純色 */
   --color-bg-group: #111827;
 
   /* 任務列：輕微深色純色 */
   --color-bg-task-wrapper-from: rgba(17, 24, 39, 0.55);
-  --color-bg-task-wrapper-to:   rgba(17, 24, 39, 0.55);
+  --color-bg-task-wrapper-to: rgba(17, 24, 39, 0.55);
 
   /* 前一小時列：純色 */
   --color-bg-previous-from: rgba(22, 30, 52, 0.40);
-  --color-bg-previous-to:   rgba(22, 30, 52, 0.40);
+  --color-bg-previous-to: rgba(22, 30, 52, 0.40);
 
   /* 留言列表：純色 */
   --color-bg-reportlist-start: #0b1020;
-  --color-bg-reportlist-end:   #0b1020;
+  --color-bg-reportlist-end: #0b1020;
 
   /* 線上回報 overlay：移除光澤疊加 */
   --color-online-box-overlay: transparent;
@@ -373,35 +374,37 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
      UI 元件背景
      ======================================================== */
 
-  --color-bg-user-pill:         rgba(17, 24, 39, 0.92);
-  --color-bg-pill:              rgba(17, 24, 39, 0.80);  /* Cyberpunk 暗クレイ素材 */
-  --color-bg-modal:             #111827;
-  --color-text-modal-primary:   #dce8f5;
+  --color-bg-user-pill: rgba(17, 24, 39, 0.92);
+  --color-bg-pill: rgba(17, 24, 39, 0.50);
+  /* Cyberpunk 暗クレイ素材 */
+  --color-bg-modal: #111827;
+  --color-text-modal-primary: #dce8f5;
   --color-text-modal-secondary: #7a90b8;
-  --color-bg-btn-cancel:        #1c2a44;
-  --color-text-btn-cancel:      #dce8f5;
-  --color-bg-admin-tag:         #1c2a44;   /* 純色，不使用漸層 */
-  --color-text-admin-tag:       #7a90b8;
+  --color-bg-btn-cancel: #1c2a44;
+  --color-text-btn-cancel: #dce8f5;
+  --color-bg-admin-tag: #1c2a44;
+  /* 純色，不使用漸層 */
+  --color-text-admin-tag: #7a90b8;
 
   /* ========================================================
      開關元件 — 霓虹版
      ======================================================== */
 
-  --color-slider-track:        #1a2035;
-  --color-slider-shadow-dark:  #090d18;
+  --color-slider-track: #1a2035;
+  --color-slider-shadow-dark: #090d18;
   --color-slider-shadow-light: rgba(5, 245, 251, 0.07);
-  --color-slider-knob:         #05f5fb;
+  --color-slider-knob: #05f5fb;
 
   /* ========================================================
      時間標籤與日期方塊 — 純色，霓虹文字
      ======================================================== */
 
   --color-timelabel-from: #dce8f5;
-  --color-timelabel-to:   #111827;
+  --color-timelabel-to: #111827;
   --color-timelabel-text: #05f5fb;
 
   --color-datetimebox-bg-from: rgba(17, 24, 39, 0.88);
-  --color-datetimebox-bg-to:   rgba(17, 24, 39, 0.88);
+  --color-datetimebox-bg-to: rgba(17, 24, 39, 0.88);
 
   /* ========================================================
      陰影系統 — Cyberpunk Neo-Tactile Claymorphism
@@ -410,19 +413,19 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   /* 極細緻浮起（膠囊按鈕等小元件） */
   --shadow-xs:
-    0 1px 2px  rgba(0, 0, 0, 0.65),
-    0 2px 8px  rgba(0, 0, 0, 0.50),
+    0 1px 2px rgba(0, 0, 0, 0.65),
+    0 2px 8px rgba(0, 0, 0, 0.50),
     inset 0 1px 2px rgba(5, 245, 251, 0.10);
 
   /* 輕柔浮起 */
   --shadow-sm:
-    0 2px 5px  rgba(0, 0, 0, 0.65),
+    0 2px 5px rgba(0, 0, 0, 0.65),
     0 6px 16px rgba(0, 0, 0, 0.55),
     inset 0 1px 2px rgba(5, 245, 251, 0.12);
 
   /* 明顯浮起 */
   --shadow-md:
-    0 4px 8px  rgba(0, 0, 0, 0.70),
+    0 4px 8px rgba(0, 0, 0, 0.70),
     0 10px 24px rgba(0, 0, 0, 0.60),
     inset 0 1px 3px rgba(5, 245, 251, 0.14);
 
@@ -444,7 +447,7 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   /* 留言卡片陰影 */
   --shadow-card:
-    0 2px 8px  rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.55),
     0 6px 18px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(5, 245, 251, 0.06),
     inset 0 1px 2px rgba(5, 245, 251, 0.10);
@@ -467,14 +470,14 @@ left bottom, #ccc2dd, #bcc7e5, #aacde6,
 
   --alert-shadow-pulse:
     0 0 36px rgba(255, 55, 95, 0.55),
-    0 0 8px  rgba(255, 55, 95, 0.20);
+    0 0 8px rgba(255, 55, 95, 0.20);
 
-  --alert-bg-base:      rgba(255, 55, 95, 0.06);
-  --alert-bg-pulse:     rgba(255, 55, 95, 0.12);
-  --alert-bg-end-base:  rgba(9, 13, 24, 0.95);
+  --alert-bg-base: rgba(255, 55, 95, 0.06);
+  --alert-bg-pulse: rgba(255, 55, 95, 0.12);
+  --alert-bg-end-base: rgba(9, 13, 24, 0.95);
   --alert-bg-end-pulse: rgba(9, 13, 24, 1);
 
-  --alert-edge-glow:       rgba(255, 55, 95, 0.42);
+  --alert-edge-glow: rgba(255, 55, 95, 0.42);
   --alert-time-glow-color: rgba(255, 55, 95, 0.90);
 
   /* ========================================================
