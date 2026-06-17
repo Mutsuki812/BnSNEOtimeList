@@ -139,15 +139,13 @@ export class UserManager {
       this.userInfoEl.innerHTML = `
         <div class="user-info-content">
           <img src="./images/user32_c.png" class="user-info-icon" alt="已登入使用者圖示">
-          <span class="user-name-label"></span>
-          <span class="rename-btn" title="修改暱稱">✎</span>
-          <span class="logout-separator">|</span>
+          <span class="user-name-label" title="點擊修改暱稱"></span>
           <span class="logout-btn">登出</span>
         </div>
       `;
       // 使用 textContent 安全地設置使用者名稱（防止 XSS）
       this.userInfoEl.querySelector(".user-name-label").textContent = this.currentUser.userName;
-      this.userInfoEl.querySelector(".rename-btn").addEventListener("click", () => this.showRenameModal());
+      this.userInfoEl.querySelector(".user-name-label").addEventListener("click", () => this.showRenameModal());
       this.userInfoEl.querySelector(".logout-btn").addEventListener("click", () => this.logout());
     } else {
       this.userInfoEl.innerHTML = `

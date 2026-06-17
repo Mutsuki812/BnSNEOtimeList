@@ -220,9 +220,8 @@ box-shadow: var(--shadow-sm);
   height: 28px; */
 }
 
-.sound-toggle-btn img {
-  /* width: 36px;
-  height: 36px; */
+.sound-toggle-icon img {
+
   border: none;
 }
 

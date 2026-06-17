@@ -364,8 +364,6 @@
 .sound-toggle-icon {
   cursor: pointer;
   transition: opacity var(--transition-fast);
-  width: 32px;
-  height: 32px;
 }
 
 .sound-toggle-icon:hover {

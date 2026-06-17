@@ -19,7 +19,6 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-md);
-  margin-bottom: var(--space-sm);
 }
 
 #topLeft {
@@ -131,13 +130,18 @@
   gap: var(--space-sm);
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
 }
-
 
 /* 使用者資訊區塊：由 userManager.renderUserInfo() 動態填充 */
 .userInfo {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
+}
+
+/* 已登入：userInfo 佔滿整行，將模式/音效推到第二行 */
+#topRight .userInfo:has(.user-info-content:not(.unlogged)) {
+  flex-basis: 100%;
 }
 
 /* 功能按鈕區塊：包含世界王音效開關等，由 main.renderFunctionalButtons() 填充 */
@@ -145,8 +149,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  justify-content: flex-end;
-  flex: 1;
 }
 
 /* ========================================================
@@ -184,30 +186,19 @@
   flex-shrink: 0;
 }
 
-/* 已登入的使用者名稱顯示 */
+/* 已登入的使用者名稱顯示（可點擊以修改暱稱） */
 .user-name-label {
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-}
-
-/* 改名按鈕（✎）與登出按鈕，點擊後觸發對應 Modal */
-.rename-btn,
-.logout-btn {
   cursor: pointer;
-  color: var(--color-text-secondary);
   transition: color var(--transition-fast);
 }
 
-.rename-btn:hover,
-.logout-btn:hover {
+.user-name-label:hover {
   color: var(--color-accent);
+  text-decoration: underline;
 }
 
-/* 分隔符號（|） */
-.logout-separator {
-  color: var(--color-border);
-  font-size: 0.7rem;
-}
 
 /* ========================================================
    主題切換按鈕 (.theme-toggle-btn)
@@ -437,7 +428,7 @@ input:checked + .slider::after {
   top: calc(100% + 8px);
   right: 0;
   min-width: 210px;
-  background: var(--color-bg-card);
+  background: color-mix(in srgb, var(--color-bg-card) 75%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -494,6 +485,10 @@ input:checked + .slider::after {
    .user-info-content / .theme-toggle-btn / .sound-panel-btn
    統一使用霓虹青色邊框 + 背景淡染 + 光暈效果
    ======================================================== */
+
+[data-theme="dark"] .sound-popup {
+  background: var(--color-bg-card);
+}
 
 [data-theme="dark"] .user-info-content.unlogged:hover,
 [data-theme="dark"] .theme-toggle-btn:hover,

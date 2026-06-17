@@ -268,6 +268,24 @@ export class SoundManager {
     this._play(this.audioPlayer, audioSrc, "effect");
   }
 
+  /**
+   * 播放音量試聽音效（放開滑桿時呼叫）。
+   * 與 playEffect 不同，此方法每次都會從頭重播，確保使用者聽到當前音量的即時回饋。
+   * @param {string} audioSrc - 音效檔案路徑
+   */
+  playVolumePreview(audioSrc) {
+    if (!this.isAudioUnlocked) return;
+    this.audioPlayer.pause();
+    this.audioPlayer.currentTime = 0;
+    this.audioPlayer.src         = audioSrc;
+    this.audioPlayer.volume      = this.volume;
+    this.audioPlayer.play().catch((err) => {
+      if (err.name !== "NotAllowedError") {
+        console.warn("[音效] 音量試聽播放失敗", err);
+      }
+    });
+  }
+
   // ============================================================
   // 私有輔助方法
   // ============================================================

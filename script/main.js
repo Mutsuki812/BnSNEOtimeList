@@ -467,6 +467,13 @@ class TaskScheduleApp {
       volLabel.textContent = slider.value + "%";
     });
 
+    // 放開滑鼠／觸控時播放一次試聽音效
+    const previewVolume = () => {
+      this.soundManager.playVolumePreview("./audio/soundON.mp3");
+    };
+    slider.addEventListener("mouseup",  previewVolume);
+    slider.addEventListener("touchend", previewVolume);
+
     // 點擊面板外部 → 關閉 Popup（避免多次渲染堆疊，使用 AbortController 管理生命週期）
     if (this._soundPanelAbort) this._soundPanelAbort.abort();
     this._soundPanelAbort = new AbortController();

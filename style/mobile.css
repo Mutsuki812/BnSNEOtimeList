@@ -53,17 +53,18 @@
   }
 
   /* ========================================================
-   頂部欄 (行動裝置垂直堆疊)
+   頂部欄 (行動裝置：topLeft 與 topRight 水平並排)
    ======================================================== */
 
   #topBar {
-    flex-direction: column;
-    gap: var(--space-md);
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-sm);
     margin-bottom: var(--space-sm);
   }
 
   #topLeft {
-    width: 100%;
+    flex: none;
     align-items: stretch;
   }
 
@@ -76,7 +77,57 @@
 
   .timeBox {
     justify-content: flex-start;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+
+  #topRight {
+    flex: 1;
+    gap: var(--space-2xs);
+  }
+
+
+  /* ========================================================
+   topRight 三個部件：登入 / 模式 / 音效 (行動裝置 28x28px)
+   ======================================================== */
+
+  #topRight .user-info-icon,
+  #topRight .theme-icon,
+  #topRight .sound-icon {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  #topRight .theme-label,
+  #topRight .switch-label {
+    display: none;
+  }
+
+  .user-info-content{
+    gap: var(--space-2xs);
+  }
+
+  /* 已登入：容器撐滿 #topRight 寬度，名稱超出部分顯示為... */
+  #topRight .user-info-content:not(.unlogged) {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #topRight .user-info-content:not(.unlogged) .user-name-label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #topRight .user-info-content:not(.unlogged) .logout-separator,
+  #topRight .user-info-content:not(.unlogged) .logout-btn {
+    display: inline;
   }
 
   /* ========================================================
@@ -409,7 +460,7 @@
    在行動裝置上較小
    ======================================================== */
 
-  .sound-toggle-btn img {
+  .sound-toggle-icon img {
     width: 28px;
     height: 28px;
     margin: 7px 0;
@@ -480,12 +531,12 @@
    確保按鈕至少為 44x44px 以利觸控
    ======================================================== */
 
-  button,
+  /* button,
   .report-submit-btn,
   .report-now-btn,
   .showBtn {
     min-width: 44px;
-  }
+  } */
 
   /* ========================================================
    公用類別 (行動裝置覆蓋)
