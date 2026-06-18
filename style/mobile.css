@@ -102,6 +102,14 @@
     flex-shrink: 0;
   }
 
+  
+.sound-panel-btn,
+.theme-toggle-btn,
+.user-info-content.unlogged{
+padding: 4px 6px;
+}
+
+
   #topRight .theme-label,
   #topRight .switch-label {
     display: none;

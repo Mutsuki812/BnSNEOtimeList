@@ -88,6 +88,13 @@ export class SoundManager {
     this.modalElement = null; // 音訊解鎖提示 Modal 的 DOM 參考
 
     this.volume = StorageHelper.get('bnsneo_volume', 0.8);
+
+    // 分頁重新變成可見時，靜默嘗試重新解鎖音訊
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && this.isAudioUnlocked) {
+        this._silentUnlockCheck();
+      }
+    });
   }
 
   // ============================================================
@@ -318,7 +325,11 @@ export class SoundManager {
         .then(() => console.log(`[音效] 播放成功 (${contextKey})`))
         .catch((error) => {
           if (error.name === "NotAllowedError") {
-            console.log(`[音效] 自動播放被阻擋 (${contextKey})，請等待使用者互動後再試`);
+            // 瀏覽器重新封鎖了音訊，重置解鎖狀態並提示使用者
+            console.log(`[音效] 自動播放被阻擋 (${contextKey})，重置解鎖狀態`);
+            this.isAudioUnlocked = false;
+            this.modalShown = false;
+            this.showUnlockModal();
           } else if (error.name === "NotSupportedError") {
             console.warn(`[音效] 音訊格式不支援或來源無效 (${contextKey})`, error);
           } else {
@@ -326,5 +337,26 @@ export class SoundManager {
           }
         });
     }
+  }
+
+  /**
+   * 分頁重新可見時靜默嘗試播放靜音音訊，確認音訊仍可自動播放。
+   * 若失敗，重置解鎖狀態並顯示提示，讓使用者重新授權。
+   */
+  _silentUnlockCheck() {
+    const tester = new Audio();
+    tester.src = this.silentSource;
+    tester.play()
+      .then(() => {
+        console.log("[音效] 分頁回到前景，音訊狀態正常");
+      })
+      .catch((error) => {
+        if (error.name === "NotAllowedError") {
+          console.log("[音效] 分頁回到前景，音訊已被瀏覽器重新封鎖，需要重新解鎖");
+          this.isAudioUnlocked = false;
+          this.modalShown = false;
+          this.showUnlockModal();
+        }
+      });
   }
 }
