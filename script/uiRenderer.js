@@ -164,6 +164,18 @@ export class UIRenderer {
       const alertClass = isAlert ? "task-alert-active" : "";
     const maintenanceClass = isMaintenance ? "maintenance" : "";
 
+    // shirao/sengen: 超過任務時間+5分鐘 → 灰色；gishiki: 超過任務時間+35分鐘 → 灰色
+    let pastClass = "";
+    const pastOffsetMap = { shirao: 5, sengen: 5, gishiki: 35 };
+    const pastOffset = pastOffsetMap[type.key] ?? null;
+    if (pastOffset !== null && !isMaintenance && !isOnlineMode && item && timeText && timeText !== "--:--") {
+      const now = this.timeUtils.getNowBySVR();
+      const [taskH, taskM] = timeText.split(":").map(Number);
+      if (now.getHours() * 60 + now.getMinutes() > taskH * 60 + taskM + pastOffset) {
+        pastClass = "gray";
+      }
+    }
+
     // 音效圖示邏輯：
     // - 線上模式下的儀式 (gishiki) 不顯示音效圖示（由線上回報系統自行處理）
     // - 其餘情況依 SoundManager 設定顯示對應圖示
@@ -181,9 +193,9 @@ export class UIRenderer {
     row.innerHTML = `
       <span class="col-sound">${soundToggleHtml}</span>
       <span class="col-typeLabel ${maintenanceClass}">${type.label}</span>
-      <span class="col-time ${maintenanceClass}}">${timeText}</span>
-      <span class="col-questionMark ${maintenanceClass}">${questionMark}</span>
-      <span class="col-content ${maintenanceClass} ${longClass}">${content}</span>
+      <span class="col-time ${maintenanceClass} ${pastClass}">${timeText}</span>
+      <span class="col-questionMark ${maintenanceClass} ${pastClass}">${questionMark}</span>
+      <span class="col-content ${maintenanceClass} ${longClass} ${pastClass}">${content}</span>
     `;
 
     // 綁定音效圖示的點擊事件
@@ -231,12 +243,24 @@ export class UIRenderer {
     const longClass     = this._getLongClass(content);
     const tomorrowHtml  = item.isNextDay ? `<span class="tomorrow">明天</span>` : "";
 
+    // shirao/sengen: 超過任務時間+5分鐘 → 灰色；gishiki: 超過任務時間+35分鐘 → 灰色
+    let pastClass = "";
+    const pastOffsetMap = { shirao: 5, sengen: 5, gishiki: 35 };
+    const pastOffset = type ? (pastOffsetMap[type.key] ?? null) : null;
+    if (pastOffset !== null && !isMaintenance && !item.isNextDay && timeText && timeText !== "--:--") {
+      const now = this.timeUtils.getNowBySVR();
+      const [taskH, taskM] = timeText.split(":").map(Number);
+      if (now.getHours() * 60 + now.getMinutes() > taskH * 60 + taskM + pastOffset) {
+        pastClass = "gray";
+      }
+    }
+
     taskRow.innerHTML = `
       <span class=""></span>
       <span class="placeholder">${tomorrowHtml}</span>
-      <span class="col-time ${maintenanceClass}">${timeText}</span>
-      <span class="col-questionMark ${maintenanceClass}">${questionMark}</span>
-      <span class="col-content ${maintenanceClass} ${longClass}">${content}</span>
+      <span class="col-time ${maintenanceClass} ${pastClass}">${timeText}</span>
+      <span class="col-questionMark ${maintenanceClass} ${pastClass}">${questionMark}</span>
+      <span class="col-content ${maintenanceClass} ${longClass} ${pastClass}">${content}</span>
     `;
 
     return taskRow;

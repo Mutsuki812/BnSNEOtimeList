@@ -645,7 +645,7 @@ class TaskScheduleApp {
   /**
    * 每秒檢查是否需要播放仙幻島野王的預告音效（出現前 10 秒）。
    * 只在非活動期間執行（活動期間由線上回報系統負責）。
-   * 觸發邏輯：當前秒數 = 50 且 4 分鐘前有仙幻島任務 → 播放預告音
+   * 觸發邏輯：當前秒數 = 51 且 4 分鐘前有仙幻島任務 → 播放預告音
    */
   checkPreAlerts() {
     if (!this.cachedScheduleRows) {
@@ -667,7 +667,7 @@ class TaskScheduleApp {
     this.alertStatusLogged = false; // 非活動期間，重置旗標以備下次狀態切換
 
     const now = this.timeUtils.getNowBySVR();
-    if (now.getSeconds() !== 51) return; // 只在每分鐘第 50 秒觸發
+    if (now.getSeconds() !== 51) return; // 只在每分鐘第 51 秒觸發
 
     // 從當前時間回推 4 分鐘，找出對應的任務時間點
     const taskTime   = new Date(now.getTime() - 4 * 60_000);

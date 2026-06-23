@@ -184,7 +184,7 @@
 /* 灰色狀態：當前時段無任務，或資料時間已過時顯示 */
 .taskRow.current .col-time.gray,
 .taskRow.current .col-content.gray {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-disabled);
 }
 
 .taskRow.current .col-time.gray {
@@ -193,6 +193,13 @@
 
 .taskRow.current .col-content.gray {
   font-family: var(--font-family-content);
+}
+
+/* 已過時間的一般任務列（非 current）*/
+.taskRow:not(.current) .col-time.gray,
+.taskRow:not(.current) .col-questionMark.gray,
+.taskRow:not(.current) .col-content.gray {
+  color: var(--color-text-disabled);
 }
 
 /* 地點文字長度響應式縮放
