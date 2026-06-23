@@ -11,8 +11,8 @@
    - 回報列表（從 Supabase 即時載入，含刪除功能）
    ============================================================ */
 
-import { CONFIG, DATE_RANGES, REPORT_TASK, REPORT_TYPES, TEXTS, MVP_CONFIG } from "./config.js";
-import { DOMHelper, SupabaseHelper } from "./utils.js";
+import { CONFIG, REPORT_TASK, REPORT_TYPES, TEXTS } from "./config.js";
+import { DOMHelper, SupabaseHelper, RemoteConfig } from "./utils.js";
 
 /**
  * 回報管理器，統一管理留言/回報區塊的所有邏輯。
@@ -108,9 +108,11 @@ export class ReportManager {
    * @returns {boolean}
    */
   isInDateRange() {
+    const ranges = RemoteConfig.getDateRanges();
+    if (!ranges) return false;
     const now   = this.timeUtils.getNowBySVR();
-    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
-    const end   = this.timeUtils.getShiftedDate(DATE_RANGES.end);
+    const start = this.timeUtils.getShiftedDate(ranges.start);
+    const end   = this.timeUtils.getShiftedDate(ranges.end);
     return now >= start && now <= end;
   }
 
@@ -329,11 +331,12 @@ export class ReportManager {
         const isAdmin   = !!(r.Users?.role === "admin");
         const userName  = isAdmin ? "管理者" : (r.Users?.userName ?? "");
 
-        // MVP 榮譽識別：依照 config.js 中的 MVP_CONFIG 設定套用特殊樣式
+        // MVP 榮譽識別：依照 Supabase mvp_config 設定套用特殊樣式
         let userClass = isAdmin ? "msg-user admin-tag" : "msg-user user-tag gray";
         if (!isAdmin) {
-          if (userName === MVP_CONFIG.first)  userClass += " is-mvp-1";
-          else if (userName === MVP_CONFIG.second) userClass += " is-mvp-2";
+          const mvp = RemoteConfig.getMvpConfig();
+          if (userName === mvp.first)  userClass += " is-mvp-1";
+          else if (userName === mvp.second) userClass += " is-mvp-2";
         }
 
         // 「感謝」標記：管理者已回應時顯示感謝圖示

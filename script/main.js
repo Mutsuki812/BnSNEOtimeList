@@ -9,8 +9,8 @@
    - 線上系統：OnlinePredictionManager (活動期間啟用)
    ============================================================ */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS } from "./config.js";
-import { TimeUtils, TaskUtils, DOMHelper } from "./utils.js";
+import { CONFIG, WEEKDAYS } from "./config.js";
+import { TimeUtils, TaskUtils, DOMHelper, RemoteConfig } from "./utils.js";
 import { ScheduleDataLoader, TaskDataProcessor } from "./taskProcessor.js";
 import { UIRenderer } from "./uiRenderer.js";
 import { ReportManager } from "./reportManager.js";
@@ -75,6 +75,7 @@ class TaskScheduleApp {
    * 依序啟動：UI 更新 → Web Worker → 功能按鈕 → 活動期間判斷 → 回報系統 → 計時器。
    */
   async init() {
+    await RemoteConfig.refresh();
     this.uiRenderer.updateTopTime();
     this.initWorker();
 
@@ -145,14 +146,16 @@ class TaskScheduleApp {
   // ============================================================
 
   /**
-   * 判斷當前台灣時間是否在 DATE_RANGES 設定的活動期間內。
+   * 判斷當前台灣時間是否在 event_config 設定的活動期間內。
    * 活動期間會啟用線上回報系統與限時公告。
    * @returns {boolean}
    */
   isInDateRange() {
+    const ranges = RemoteConfig.getDateRanges();
+    if (!ranges) return false;
     const now   = this.timeUtils.getNowBySVR();
-    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
-    const end   = this.timeUtils.getShiftedDate(DATE_RANGES.end);
+    const start = this.timeUtils.getShiftedDate(ranges.start);
+    const end   = this.timeUtils.getShiftedDate(ranges.end);
     return now >= start && now <= end;
   }
 
@@ -516,7 +519,8 @@ class TaskScheduleApp {
     }, 1000);
 
     // 時級計時器：對齊下一個整點後開始，每小時執行一次完整初始化
-    const hourlyUpdate = () => {
+    const hourlyUpdate = async () => {
+      await RemoteConfig.refresh();
       this.uiRenderer.updateTopTime();
       if (this.isInDateRange()) {
         this.initInDateRange();

@@ -375,3 +375,42 @@ export class SupabaseHelper {
     return this._client;
   }
 }
+
+// ============================================================
+// 遠端設定快取
+// ============================================================
+
+/**
+ * 從 Supabase 取得 event_config（活動期間）與 mvp_config（MVP 排行）。
+ * 結果快取於 _cache，透過 refresh() 清除快取以重新取得最新資料。
+ */
+export class RemoteConfig {
+  static _cache = null;
+
+  static async refresh() {
+    const supabase = await SupabaseHelper.getClient();
+    const [{ data: eventData }, { data: mvpData }] = await Promise.all([
+      supabase.from("event_config").select("start, end").eq("id", 1).single(),
+      supabase.from("mvp_config").select("first, second").eq("id", 1).single(),
+    ]);
+    this._cache = {
+      dateRanges: {
+        start: new Date(eventData.start),
+        end:   new Date(eventData.end),
+      },
+      mvpConfig: {
+        first:  mvpData?.first  ?? "",
+        second: mvpData?.second ?? "",
+      },
+    };
+    return this._cache;
+  }
+
+  static getDateRanges() {
+    return this._cache?.dateRanges ?? null;
+  }
+
+  static getMvpConfig() {
+    return this._cache?.mvpConfig ?? { first: "", second: "" };
+  }
+}

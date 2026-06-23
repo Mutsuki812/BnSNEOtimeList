@@ -6,7 +6,7 @@
    - schedule_data：儲存各野王/儀式的每週出現時刻表
    ============================================================ */
 
-import { CONFIG, DATE_RANGES, TASK_TYPES } from "./config.js";
+import { CONFIG, TASK_TYPES } from "./config.js";
 import { TimeUtils, TaskUtils, SupabaseHelper } from "./utils.js";
 
 // ============================================================

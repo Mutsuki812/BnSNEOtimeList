@@ -2,8 +2,8 @@
    ==== 線上預測與回報系統 ====
    ========================== */
 
-import { CONFIG, DATE_RANGES, WEEKDAYS, TASK_TYPES, MVP_CONFIG } from './config.js';
-import { DOMHelper, SupabaseHelper } from './utils.js';
+import { CONFIG, WEEKDAYS, TASK_TYPES } from './config.js';
+import { DOMHelper, SupabaseHelper, RemoteConfig } from './utils.js';
 
 const CONSTANTS = {
   PREDICTION_OFFSET_MINUTES: {
@@ -40,9 +40,11 @@ export class OnlinePredictionManager {
    * 檢查是否在活動期間內
    */
   isInDateRange() {
-    const now = this.timeUtils.getNowBySVR();
-    const start = this.timeUtils.getShiftedDate(DATE_RANGES.start);
-    const end = this.timeUtils.getShiftedDate(DATE_RANGES.end);
+    const ranges = RemoteConfig.getDateRanges();
+    if (!ranges) return false;
+    const now   = this.timeUtils.getNowBySVR();
+    const start = this.timeUtils.getShiftedDate(ranges.start);
+    const end   = this.timeUtils.getShiftedDate(ranges.end);
     return now >= start && now <= end;
   }
 
@@ -744,8 +746,9 @@ export class OnlinePredictionManager {
       
       // MVP 樣式注入邏輯
       if (!isAdmin) {
-        if (userName === MVP_CONFIG.first) userClass += " is-mvp-1";
-        else if (userName === MVP_CONFIG.second) userClass += " is-mvp-2";
+        const mvp = RemoteConfig.getMvpConfig();
+        if (userName === mvp.first) userClass += " is-mvp-1";
+        else if (userName === mvp.second) userClass += " is-mvp-2";
       }
 
       // 優化歷史記録顯示：只有在 A 有值且 B 也有值時才顯示斜線
