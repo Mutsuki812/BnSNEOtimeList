@@ -132,6 +132,9 @@ class TaskScheduleApp {
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
         if (this.cachedScheduleRows) this.renderAllGroups(this.cachedScheduleRows);
+        // Worker 不受瀏覽器節流影響，作為靜態班表音效與世界王倒計時的備援觸發來源
+        this.checkStaticTaskSounds(true);
+        this.checkAndPlayWorldBossSound(true);
       } else if (type === "REALTIME_READY") {
         console.log("[Worker] Realtime 連線成功，即時監聽已就緒");
       } else if (type === "INIT_FAILED") {
@@ -369,7 +372,7 @@ class TaskScheduleApp {
     remainingItems.forEach((item) => remWrapper.appendChild(this.uiRenderer.createTaskRow(item, true, type)));
     wrapper.appendChild(remWrapper);
 
-    const footer = this.uiRenderer.createFooterWithButton(remWrapper, remainingItems, openStates[type.key]);
+    const footer = this.uiRenderer.createFooterWithButton(remWrapper, remainingItems, openStates[type.key], isActivityPeriod);
     wrapper.appendChild(footer);
 
     group.appendChild(wrapper);
@@ -516,6 +519,17 @@ class TaskScheduleApp {
       this.checkStaticTaskSounds();
       this.checkPreAlerts();
       this.uiRenderer.updateTopTime();
+      // 活動期間內，timeValue 秒數顯示 :00 時自動更新 report-time-input
+      if (this.isInDateRange()) {
+        const timeValueEl = document.querySelector(".timeValue");
+        if (timeValueEl && timeValueEl.textContent.trim().endsWith(":00")) {
+          const now     = this.timeUtils.getNowBySVR();
+          const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+          document.querySelectorAll(".report-time-input").forEach((input) => {
+            input.value = timeStr;
+          });
+        }
+      }
     }, 1000);
 
     // 時級計時器：對齊下一個整點後開始，每小時執行一次完整初始化
@@ -552,7 +566,7 @@ class TaskScheduleApp {
    * - 使用 lastPlayedId 防止同一分鐘內重複觸發
    * - 維護期間強制靜音
    */
-  checkAndPlayWorldBossSound() {
+  checkAndPlayWorldBossSound(fromWorker = false) {
     if (this.isMaintenanceActive) return;
 
     const now    = this.timeUtils.getNowBySVR();
@@ -561,8 +575,9 @@ class TaskScheduleApp {
     const minute = now.getMinutes();
     const second = now.getSeconds();
 
-    // 只在進入新分鐘的 0-5 秒內觸發（容忍計時器漂移）
-    if (second > 5) return;
+    // 主執行緒呼叫：只在進入新分鐘的 0-5 秒內觸發（容忍計時器漂移）
+    // Worker 呼叫：跳過此限制，允許在當分鐘任意秒補觸發
+    if (!fromWorker && second > 5) return;
 
     const playId    = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     if (this.lastPlayedId === playId) return; // 此分鐘已處理
@@ -595,7 +610,7 @@ class TaskScheduleApp {
    * 適用條件：非活動期間，或該任務類型未啟用線上系統。
    * 維護任務不播放音效；世界王倒計時時間段內也不播放（避免音效堆疊）。
    */
-  checkStaticTaskSounds() {
+  checkStaticTaskSounds(fromWorker = false) {
     if (!this.cachedScheduleRows) return;
 
     const now           = this.timeUtils.getNowBySVR();
@@ -603,12 +618,11 @@ class TaskScheduleApp {
     const currentMinute = now.getMinutes();
     const second        = now.getSeconds();
 
-    // 只在進入新分鐘的 0-5 秒內觸發（容忍計時器漂移）
-    if (second > 5) return;
+    // 主執行緒呼叫：只在進入新分鐘的 0-5 秒內觸發（容忍計時器漂移）
+    // Worker 呼叫：跳過此限制，允許在當分鐘任意秒補觸發
+    if (!fromWorker && second > 5) return;
 
-    // 同一分鐘內只播放一次：
-    // 每秒計時器在 second=0~5 這 6 次都會通過上方的檢查，
-    // 若不加此去重機制，同一個音效會被連續呼叫 6 次造成重複播放。
+    // 同一分鐘內只播放一次（主執行緒與 Worker 共用此去重機制，防止雙重觸發）
     const playId = `static_${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
     if (this.lastStaticSoundPlayedId === playId) return;
     this.lastStaticSoundPlayedId = playId;

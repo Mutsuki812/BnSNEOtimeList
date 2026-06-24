@@ -37,6 +37,14 @@ const SOUND_MAP = {
   },
 };
 
+/** 各音效類型對應的通知顯示名稱 */
+const TASK_LABELS = {
+  gishiki:    "儀式",
+  shirao:     "白青",
+  sengen:     "仙幻島",
+  world_boss: "世界王",
+};
+
 // ============================================================
 // SoundManager 類別
 // ============================================================
@@ -157,6 +165,11 @@ export class SoundManager {
     this.isAudioUnlocked = true;
     console.log("[音效] 音訊播放已解鎖");
 
+    // 趁使用者互動時一併申請桌面通知權限（分頁隱藏時的替代提醒）
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     // 解鎖後移除提示 Modal
     if (this.modalElement) {
       this.modalElement.remove();
@@ -224,6 +237,12 @@ export class SoundManager {
     const location    = item?.content || "";
     let   audioSrc    = locationMap?.[location] ?? `./audio/${taskTypeKey}.mp3`;
 
+    if (document.hidden) {
+      const label = TASK_LABELS[taskTypeKey] || taskTypeKey;
+      this._notify(`${label}出現`, location);
+      return;
+    }
+
     this._play(this.audioPlayer, audioSrc, taskTypeKey);
   }
 
@@ -234,6 +253,10 @@ export class SoundManager {
   playSengenPreAlert() {
     if (!this.isSoundEnabled("sengen")) return;
     if (!this.isAudioUnlocked) return;
+    if (document.hidden) {
+      this._notify("仙幻島野王", "10 秒後出現");
+      return;
+    }
     this._play(this.audioPlayer, "./audio/sengen10.mp3", "sengen_pre_alert");
   }
 
@@ -255,6 +278,12 @@ export class SoundManager {
     const src = typeKey === "shirao"
       ? "./audio/shiraoForecast.mp3"
       : "./audio/sengenForecast.mp3";
+
+    if (document.hidden) {
+      const label = TASK_LABELS[typeKey] || typeKey;
+      this._notify(label, "推算開始時間到達");
+      return;
+    }
 
     console.log(`[音效] 播放預測提醒音 (${typeKey})：${src}`);
     this._play(this.audioPlayer, src, `${typeKey}_forecast`);
@@ -279,6 +308,12 @@ export class SoundManager {
 
     this.lastPlayed[playId] = true;
     console.log(`[音效] 播放世界王提示音 (${playId})：${audioSrc}`);
+
+    if (document.hidden) {
+      this._notify("世界王倒計時", playId);
+      return;
+    }
+
     this._play(this.bossPlayer, audioSrc, "world_boss");
   }
 
@@ -312,6 +347,17 @@ export class SoundManager {
   // ============================================================
   // 私有輔助方法
   // ============================================================
+
+  /**
+   * 送出系統桌面通知（分頁隱藏時的音效替代手段）。
+   * 需要使用者已授予通知權限；未授權時靜默略過。
+   * @param {string} title - 通知標題
+   * @param {string} body  - 通知內文（可空白）
+   */
+  _notify(title, body = "") {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    new Notification(title, { body, icon: "./img/icon.png" });
+  }
 
   /**
    * 通用音效播放邏輯，包含錯誤處理。

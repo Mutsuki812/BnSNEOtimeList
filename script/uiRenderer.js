@@ -275,7 +275,7 @@ export class UIRenderer {
    * @param {boolean}     [isInitiallyOpen=false] - 初始狀態是否為展開
    * @returns {HTMLElement} - 頁尾元素
    */
-  createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = false) {
+  createFooterWithButton(remWrapper, remainingItems, isInitiallyOpen = false, isActivityPeriod = true) {
     const footer = DOMHelper.createElement("div", "groupFooter");
     if (remainingItems.length === 0) return footer;
 
@@ -286,6 +286,17 @@ export class UIRenderer {
     btn.addEventListener("click", () => {
       const isOpen = remWrapper.classList.toggle("open");
       btn.textContent = isOpen ? "其他時間 ▲" : `其他時間 ▼`;
+
+      // 活動期間外：手風琴效果，開啟時關閉其他已展開的群組
+      if (!isActivityPeriod && isOpen) {
+        document.querySelectorAll(".remainingContainer.open").forEach((other) => {
+          if (other !== remWrapper) {
+            other.classList.remove("open");
+            const otherBtn = other.closest(".taskWrapper")?.querySelector(".showBtn");
+            if (otherBtn) otherBtn.textContent = "其他時間 ▼";
+          }
+        });
+      }
     });
 
     footer.appendChild(btn);
