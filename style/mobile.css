@@ -223,6 +223,10 @@ padding: 4px 6px;
     padding: var(--space-xs);
   }
 
+  .taskRow .col-time.maintenance {
+    overflow: hidden;
+  }
+
   .taskRow .col-content.maintenance {
     text-align: center;
     font-size: var(--font-size-md);
