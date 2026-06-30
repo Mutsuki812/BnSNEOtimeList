@@ -239,7 +239,7 @@ export class SupplementalManager {
         bossType: this.activeTaskKey,
         locationA: "補完數據",
         method: '補完計畫',
-        user_id: user.id
+        user_name: user.userName
       };
 
       const { error } = await supabase.from('spawn_reports').insert([payload]);

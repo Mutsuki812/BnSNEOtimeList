@@ -78,9 +78,17 @@ self.onmessage = async function (e) {
     // ----------------------------------------------------------
     if (!tickerStarted) {
       tickerStarted = true;
-      setInterval(() => {
-        self.postMessage({ type: "TICK_MINUTE" });
-      }, 60_000);
+
+      // 對齊到下一個分鐘邊界 (:00 秒)，之後每次重新計算確保不漂移
+      const scheduleTick = () => {
+        const msUntilNextMinute = 60_000 - (Date.now() % 60_000);
+        setTimeout(() => {
+          self.postMessage({ type: "TICK_MINUTE" });
+          scheduleTick();
+        }, msUntilNextMinute);
+      };
+
+      scheduleTick();
     }
   }
 

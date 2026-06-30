@@ -387,7 +387,10 @@ export class SoundManager {
         .then(() => console.log(`[音效] 播放成功 (${contextKey})`))
         .catch((error) => {
           if (error.name === "NotAllowedError") {
-            console.log(`[音效] 自動播放被阻擋 (${contextKey})，請等待使用者互動後再試`);
+            console.log(`[音效] 自動播放被阻擋 (${contextKey})，重置解鎖狀態`);
+            this.isAudioUnlocked = false;
+            this.modalShown = false;
+            this.showUnlockModal();
           } else if (error.name === "NotSupportedError") {
             console.warn(`[音效] 音訊格式不支援或來源無效 (${contextKey})`, error);
           } else {

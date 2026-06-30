@@ -422,13 +422,6 @@ export class OnlinePredictionManager {
         const predEndStr = formatMinutesToTime(endPredTotalMinutes, false);
         predInfo = `${predStartStr} ～ ${predEndStr}`;
 
-        // 檢查是否到達啟動音效的時間點
-        // 僅針對白青 (shirao) 與 仙幻島 (sengen) 在預測開始的那一分鐘觸發
-        const isTargetType = (typeKey === 'shirao' || typeKey === 'sengen');
-        if (isTargetType && effectiveCurrentMinutes === startPredTotalMinutes) {
-          console.log(`[預測音效] 觸發預測提醒: ${typeKey} 於推算時間 ${predStartStr}`);
-          this.soundManager.playForecastSound(typeKey);
-        }
       }
 
       // 顯示兩行資訊：上次出現 & 推算時間
@@ -691,7 +684,7 @@ export class OnlinePredictionManager {
 
       const { data: historyData, error } = await supabase
         .from('spawn_reports')
-        .select('*, Users!user_id(userName, role)')
+        .select('*, Users!user_name(role)')
         .eq('bossType', typeKey)
         .eq('weekDay', todayWeekDay)
         .order('timeStamp', { ascending: false });
@@ -725,17 +718,17 @@ export class OnlinePredictionManager {
       return;
     }
 
-    const currentUserId = this.userManager.getCurrentUser()?.id;
+    const currentUserName = this.userManager.getCurrentUser()?.userName;
     listDiv.innerHTML = '';
 
     historyData.forEach(item => {
       const row = document.createElement('div');
       row.className = 'report-history-item';
       if (animate) row.classList.add('history-item-animate');
-      
+
       const formattedTime = this._parseAndFormatTime(item.timeStamp);
-      const isAdmin = !!(item.Users && item.Users.role === 'admin'); // 判斷是否為管理者
-      const userName = isAdmin ? '管理者' : (item.Users ? item.Users.userName : ''); // 管理者顯示為 [管理者]，一般使用者顯示其名稱
+      const isAdmin = !!(item.Users && item.Users.role === 'admin');
+      const userName = isAdmin ? '管理者' : (item.user_name ?? '');
 
       let methodClass = 'hist-tag';
       if (item.method === '系統出字') methodClass += ' tag-system';
@@ -771,7 +764,7 @@ export class OnlinePredictionManager {
         </div>
       `;
 
-      if (currentUserId && item.user_id === currentUserId) {
+      if (currentUserName && item.user_name === currentUserName) {
         const actionsSpan = row.querySelector('.hist-del'); // 修正選擇器
         const delBtn = document.createElement('span');
         delBtn.innerHTML = '<img src="./images/delete24_c.png" alt="刪除" class="icon-delete" data-icon-light="./images/delete24_c.png" data-icon-dark="./images/delete24_w.png">';
@@ -796,15 +789,15 @@ export class OnlinePredictionManager {
           timeStamp: item.timeStamp,
           bossType: item.bossType,
           weekDay: item.weekDay,
-          user_id: user.id
+          user_name: user.userName
         });
 
-        // 使用複合主鍵 + user_id 刪除，確保只能刪除自己的資料
+        // 使用複合主鍵 + user_name 刪除，確保只能刪除自己的資料
         const { error } = await supabase.from('spawn_reports').delete().match({
           timeStamp: item.timeStamp,
           bossType: item.bossType,
           weekDay: item.weekDay,
-          user_id: user.id
+          user_name: user.userName
         });
         if (error) throw error;
         // 顯示成功訊息
@@ -885,7 +878,7 @@ export class OnlinePredictionManager {
       weekDay: weekdayNumber,
       timeStamp: `${timeVal}:00`, // 傳送 HH:MM:SS 格式
       bossType: typeKey,
-      user_id: user.id
+      user_name: user.userName
     };
 
     if (typeKey === 'gishiki') {
@@ -951,5 +944,35 @@ export class OnlinePredictionManager {
       btnElement.textContent = "回報";
 			btnElement.dataset.isSubmitting = 'false';
     }
+  }
+
+  /**
+   * 每秒由 main.js 的 setInterval 呼叫，判斷是否到達推算開始時間並播放音效。
+   * playForecastSound 內部以 lastPlayed 去重，同一分鐘只播一次。
+   */
+  checkForecastSounds() {
+    if (!this.isInitialized || !this.isInDateRange()) return;
+
+    const now = this.timeUtils.getNowBySVR();
+    const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+    const dayOfWeek = now.getDay();
+    const todayWeekDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+    ['shirao', 'sengen'].forEach(typeKey => {
+      const lastReport = this.lastReports[typeKey];
+      if (!lastReport || !lastReport.time) return;
+
+      const formattedTime = this._parseAndFormatTime(lastReport.time);
+      const [h, m] = formattedTime.split(':').map(Number);
+      if (isNaN(h) || isNaN(m)) return;
+
+      let effectiveCurrentMinutes = currentTotalMinutes;
+      if (lastReport.weekDay !== todayWeekDay) effectiveCurrentMinutes += 1440;
+
+      const startPredTotalMinutes = h * 60 + m + CONSTANTS.PREDICTION_OFFSET_MINUTES.START;
+      if (effectiveCurrentMinutes === startPredTotalMinutes) {
+        this.soundManager.playForecastSound(typeKey);
+      }
+    });
   }
 }

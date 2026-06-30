@@ -518,6 +518,7 @@ class TaskScheduleApp {
       this.checkAndPlayWorldBossSound();
       this.checkStaticTaskSounds();
       this.checkPreAlerts();
+      this.onlinePredictionManager.checkForecastSounds();
       this.uiRenderer.updateTopTime();
       // 活動期間內，timeValue 秒數顯示 :00 時自動更新 report-time-input
       if (this.isInDateRange()) {
