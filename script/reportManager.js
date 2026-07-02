@@ -270,8 +270,8 @@ export class ReportManager {
       bossType:      taskType,
       reportType:    reportType,
       comment:       comment,
-      user_id:       user.id,
-      adminResponse: null, // 管理者回覆初始為 null
+      user_name:     user.userName,
+      adminResponse: null,
     };
 
     try {
@@ -310,7 +310,7 @@ export class ReportManager {
       const supabase = await SupabaseHelper.getClient();
       const { data: reports, error } = await supabase
         .from("feedback_reports")
-        .select("*, Users!user_id(userName, role)")
+        .select("*, Users!user_name(role)")
         .order("postTime", { ascending: false });
 
       if (error) throw error;
@@ -322,14 +322,14 @@ export class ReportManager {
         return;
       }
 
-      const currentUserId = this.userManager.getCurrentUser()?.id;
+      const currentUserName = this.userManager.getCurrentUser()?.userName;
 
       reports.forEach((r) => {
         const div         = DOMHelper.createElement("div", "report-message-item");
         const displayTime = r.postTime.substring(5, 16).replace("-", "/").replace("T", " "); // MM/DD HH:mm
 
         const isAdmin   = !!(r.Users?.role === "admin");
-        const userName  = isAdmin ? "管理者" : (r.Users?.userName ?? "");
+        const userName  = isAdmin ? "管理者" : (r.user_name ?? "");
 
         // MVP 榮譽識別：依照 Supabase mvp_config 設定套用特殊樣式
         let userClass = isAdmin ? "msg-user admin-tag" : "msg-user user-tag gray";
@@ -382,7 +382,7 @@ export class ReportManager {
         `;
 
         // 若為當前使用者的留言，掛載刪除按鈕
-        if (currentUserId && r.user_id === currentUserId) {
+        if (currentUserName && r.user_name === currentUserName) {
           const actionsSpan = div.querySelector(".msg-actions");
           const delBtn      = DOMHelper.createElement("span", "msg-del-btn");
           delBtn.innerHTML  = `<img src="./images/delete24_c.png" alt="刪除" class="icon-delete" data-icon-light="./images/delete24_c.png" data-icon-dark="./images/delete24_w.png">`;
@@ -415,14 +415,13 @@ export class ReportManager {
           if (!user) return;
 
           const supabase  = await SupabaseHelper.getClient();
-          console.log("[回報] 刪除留言：", { postTime, user_id: user.id });
+          console.log("[回報] 刪除留言：", { postTime, user_name: user.userName });
 
-          // user_id 條件確保使用者只能刪除自己的留言（雙重保護，Supabase RLS 也應設定）
           const { error } = await supabase
             .from("feedback_reports")
             .delete()
             .eq("postTime", postTime)
-            .eq("user_id", user.id);
+            .eq("user_name", user.userName);
 
           if (error) throw error;
 
