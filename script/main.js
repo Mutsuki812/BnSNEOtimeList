@@ -135,6 +135,14 @@ class TaskScheduleApp {
         // Worker 不受瀏覽器節流影響，作為靜態班表音效與世界王倒計時的備援觸發來源
         this.checkStaticTaskSounds(true);
         this.checkAndPlayWorldBossSound(true);
+        // 分頁不在最上層時 setInterval 會被節流，改由 Worker 觸發 report-time-input 更新
+        if (this.isInDateRange()) {
+          const now     = this.timeUtils.getNowBySVR();
+          const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+          document.querySelectorAll(".report-time-input").forEach((input) => {
+            input.value = timeStr;
+          });
+        }
       } else if (type === "REALTIME_READY") {
         console.log("[Worker] Realtime 連線成功，即時監聽已就緒");
       } else if (type === "INIT_FAILED") {
