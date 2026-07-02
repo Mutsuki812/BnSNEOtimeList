@@ -23,6 +23,30 @@ export class OnlinePredictionManager {
     // 初始化狀態旗標
     this.isInitialized = false;
     this.openHistoryType = null; // 記録當前開啟的歷史記録類型
+    this.activeMessages = {}; // 記録各任務類型目前顯示中的回報訊息（跨重新渲染保留）
+    this.msgTimers = {}; // 對應的自動清除計時器
+  }
+
+  /**
+   * 顯示暫時性回報訊息，並記録其到期時間，
+   * 讓訊息在 renderAllGroups 觸發的整頁重繪（例如 Realtime DB_UPDATE）後仍能還原顯示。
+   * @param {string} typeKey
+   * @param {HTMLElement} msgDiv
+   * @param {string} text
+   * @param {string} className
+   * @param {number} durationMs
+   */
+  _showTemporaryMessage(typeKey, msgDiv, text, className, durationMs = 10000) {
+    msgDiv.className = className;
+    msgDiv.textContent = text;
+
+    this.activeMessages[typeKey] = { text, className, expireAt: Date.now() + durationMs };
+
+    clearTimeout(this.msgTimers[typeKey]);
+    this.msgTimers[typeKey] = setTimeout(() => {
+      delete this.activeMessages[typeKey];
+      msgDiv.textContent = "";
+    }, durationMs);
   }
 
   /**
@@ -468,6 +492,17 @@ export class OnlinePredictionManager {
     const historyListDiv = DOMHelper.createElement('div', 'report-history-list');
     const { msgDiv, historyBtn, submitBtn, footerRow } = this._createFooterControls(typeKey, historyListDiv);
 
+    // 若此類型有尚未到期的訊息（例如剛回報成功後，因 Realtime DB_UPDATE 觸發整頁重繪），還原顯示剩餘時間
+    const activeMsg = this.activeMessages[typeKey];
+    if (activeMsg) {
+      const remaining = activeMsg.expireAt - Date.now();
+      if (remaining > 0) {
+        this._showTemporaryMessage(typeKey, msgDiv, activeMsg.text, activeMsg.className, remaining);
+      } else {
+        delete this.activeMessages[typeKey];
+      }
+    }
+
     let extraInputs, specificInputsRow;
 
     if (typeKey === 'gishiki') {
@@ -855,8 +890,10 @@ export class OnlinePredictionManager {
     const user = await this.userManager.requireUser();
     if (!user) return;
 
+    delete this.activeMessages[typeKey];
+    clearTimeout(this.msgTimers[typeKey]);
     msgDiv.textContent = "";
-		
+
 		// 增加一個鎖，避免短時間重複提交
 		if (btnElement.dataset.isSubmitting === 'true') return;
 
@@ -919,9 +956,8 @@ export class OnlinePredictionManager {
         throw error;
       }
 
-      msgDiv.className = "report-msg success";
-      msgDiv.textContent = "回報成功！感謝您的貢獻。";
-      
+      this._showTemporaryMessage(typeKey, msgDiv, "回報成功！感謝您的貢獻。　　　　　點擊時鐘 可查看/刪除今日紀錄⇒", "report-msg success", 10000);
+
       // 1. 立即重新抓取預測基準數據
       await this.fetchPredictionData();
       

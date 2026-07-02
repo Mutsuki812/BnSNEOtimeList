@@ -241,7 +241,7 @@ export class ReportManager {
     if (!this.msgEl) return;
     this.msgEl.textContent = text;
     this.msgEl.className   = isError ? "report-msg error" : "report-msg success";
-    setTimeout(() => { this.msgEl.textContent = ""; }, 3000);
+    setTimeout(() => { this.msgEl.textContent = ""; }, 10000);
   }
 
   // ============================================================

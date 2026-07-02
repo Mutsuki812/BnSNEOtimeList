@@ -110,6 +110,12 @@
   min-width: 80px;
 }
 
+/* Dark Mode 下讓原生時間欄位（小時/分鐘數字、微調按鈕）改用淺色渲染，
+   否則瀏覽器預設以淺色主題繪製，數字會呈深色而幾乎不可見 */
+[data-theme="dark"] .report-time-input {
+  color-scheme: dark;
+}
+
 /* 地點選擇下拉：使用內容字體 */
 .report-select {
   font-family: var(--font-family-content);
@@ -259,7 +265,7 @@
 /* 其他：預設強調色（Light: cream #F5F1E8 on brown, Dark: dark #090d18 on cyan） */
 .type-other {
   background-color: var(--color-accent);
-  color: #090d18;
+  color: var(--color-text-on-theme-btn);
 }
 
 /* ========================================================
