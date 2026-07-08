@@ -345,6 +345,14 @@
   padding: var(--space-xs);
 }
 
+.taskRow .col-time.maintenance,
+.taskRow .col-questionMark.maintenance {
+  min-width: 0;
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .taskRow .col-content.maintenance {
   background-color: var(--color-text-maintenance);
   color: #D6D5D5;
