@@ -140,14 +140,14 @@ export class ReportManager {
   }
 
   /**
-   * 更新回報區塊頂部的說明文字（依活動期間顯示不同內容）。
+   * 留言區塊頂部的說明文字（依活動期間顯示不同內容）
    */
   updateReportText() {
     if (!this.reportTextEl) return;
     const isActivity = this.isInDateRange();
-    this.reportTextEl.innerHTML = isActivity
-      ? TEXTS.Report_temporaryNotice
-      : TEXTS.Report_regularNotice;
+    this.reportTextEl.innerHTML =
+      TEXTS.Report_temporaryNotice +
+      (isActivity ? TEXTS.Report_regularNotice : "");
   }
 
   /**
