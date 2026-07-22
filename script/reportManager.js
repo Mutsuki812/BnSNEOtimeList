@@ -146,8 +146,9 @@ export class ReportManager {
     if (!this.reportTextEl) return;
     const isActivity = this.isInDateRange();
     this.reportTextEl.innerHTML =
-      TEXTS.Report_temporaryNotice +
-      (isActivity ? TEXTS.Report_regularNotice : "");
+    
+      (isActivity ? TEXTS.Report_regularNotice : "") +
+      TEXTS.Report_temporaryNotice;
   }
 
   /**
