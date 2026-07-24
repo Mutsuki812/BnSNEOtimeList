@@ -648,7 +648,8 @@
 }
 
 .report-history-list.open {
-  max-height: 500px;
+  max-height: 280px;
+  overflow-y: auto;
   opacity: 1;
 }
 
