@@ -357,7 +357,7 @@ export class SoundManager {
    */
   _notify(title, body = "") {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
-    new Notification(title, { body, icon: "./img/icon.png" });
+    new Notification(title, { body, icon: "./images/icons8-bell.gif" });
   }
 
   /**
