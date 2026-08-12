@@ -132,9 +132,10 @@ class TaskScheduleApp {
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
         if (this.cachedScheduleRows) this.renderAllGroups(this.cachedScheduleRows);
-        // Worker 不受瀏覽器節流影響，作為靜態班表音效與世界王倒計時的備援觸發來源
+        // Worker 的整分鐘事件是靜態、世界王與活動預測音效的唯一觸發來源。
         this.checkStaticTaskSounds(true);
         this.checkAndPlayWorldBossSound(true);
+        this.onlinePredictionManager.checkForecastSounds();
         // 分頁不在最上層時 setInterval 會被節流，改由 Worker 觸發 report-time-input 更新
         if (this.isInDateRange()) {
           const now     = this.timeUtils.getNowBySVR();
@@ -143,6 +144,8 @@ class TaskScheduleApp {
             input.value = timeStr;
           });
         }
+      } else if (type === "TICK_PRE_ALERT") {
+        this.checkPreAlerts(true);
       } else if (type === "REALTIME_READY") {
         console.log("[Worker] Realtime 連線成功，即時監聽已就緒");
       } else if (type === "INIT_FAILED") {
@@ -507,7 +510,7 @@ class TaskScheduleApp {
 
   /**
    * 啟動所有計時器。
-   * - 秒級計時器：每秒更新頂部時間、檢查音效觸發
+   * - 秒級計時器：每秒更新頂部時間與輸入欄位
    * - 時級計時器：與整點同步，每小時重新初始化一次（更新公告與任務群組）
    * - 分鐘計時器：由 Web Worker 的 TICK_MINUTE 事件取代，不在此啟動
    */
@@ -521,12 +524,8 @@ class TaskScheduleApp {
 
     const now = this.timeUtils.getNowBySVR();
 
-    // 秒級計時器：優先執行音效檢查，再更新 UI（避免 UI 渲染阻塞音效）
+    // 秒級計時器只更新 UI；所有定時音效均由 Web Worker 事件觸發。
     this.secondlyIntervalId = setInterval(() => {
-      this.checkAndPlayWorldBossSound();
-      this.checkStaticTaskSounds();
-      this.checkPreAlerts();
-      this.onlinePredictionManager.checkForecastSounds();
       this.uiRenderer.updateTopTime();
       // 活動期間內，timeValue 秒數顯示 :00 時自動更新 report-time-input
       if (this.isInDateRange()) {
@@ -666,11 +665,11 @@ class TaskScheduleApp {
   }
 
   /**
-   * 每秒檢查是否需要播放仙幻島野王的預告音效（出現前 10 秒）。
+   * 由 Web Worker 在每分鐘第 55 秒檢查是否需要播放仙幻島野王預告音效。
    * 只在非活動期間執行（活動期間由線上回報系統負責）。
-   * 觸發邏輯：當前秒數 = 51 且 4 分鐘前有仙幻島任務 → 播放預告音
+   * 觸發邏輯：當前秒數 = 55 且 4 分鐘前有仙幻島任務 → 播放預告音
    */
-  checkPreAlerts() {
+  checkPreAlerts(fromWorker = false) {
     if (!this.cachedScheduleRows) {
       if (!this.alertStatusLogged) {
         console.log("[預警] 排程資料尚未載入，靜待中...");
@@ -690,7 +689,7 @@ class TaskScheduleApp {
     this.alertStatusLogged = false; // 非活動期間，重置旗標以備下次狀態切換
 
     const now = this.timeUtils.getNowBySVR();
-    if (now.getSeconds() !== 51) return; // 只在每分鐘第 51 秒觸發
+    if (!fromWorker && now.getSeconds() !== 55) return; // 非 Worker 呼叫只允許在第 55 秒觸發
 
     // 從當前時間回推 4 分鐘，找出對應的任務時間點
     const taskTime   = new Date(now.getTime() - 4 * 60_000);

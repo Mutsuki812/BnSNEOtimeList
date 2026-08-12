@@ -254,7 +254,6 @@ export class SoundManager {
     if (!this.isSoundEnabled("sengen")) return;
     if (!this.isAudioUnlocked) return;
     if (document.hidden) {
-      this._notify("仙幻島野王", "10 秒後出現");
       return;
     }
     this._play(this.audioPlayer, "./audio/sengen10.mp3", "sengen_pre_alert");
@@ -281,7 +280,7 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[typeKey] || typeKey;
-      this._notify(label, "推算開始時間到達");
+      this._notify(`${label} 野王將在接下來10分鐘內出現`);
       return;
     }
 
@@ -310,7 +309,9 @@ export class SoundManager {
     console.log(`[音效] 播放世界王提示音 (${playId})：${audioSrc}`);
 
     if (document.hidden) {
-      this._notify("世界王倒計時", playId);
+      if (playId === "20:50" || playId === "14:50") {
+        this._notify("世界王將在十分鐘後出現", playId);
+      }
       return;
     }
 

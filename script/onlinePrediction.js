@@ -423,7 +423,6 @@ export class OnlinePredictionManager {
         const hoursFromTodayMidnight = totalHours + (dayOffset * 24);
 
         if (hoursFromTodayMidnight < 0) label = '昨天';
-        else if (hoursFromTodayMidnight >= 48) label = '後天';
         else if (hoursFromTodayMidnight >= 24) label = '明天';
 
         return label ? `<span style="font-size: 0.8em;">${label}</span> ${timeStr}` : timeStr;
@@ -983,7 +982,7 @@ export class OnlinePredictionManager {
   }
 
   /**
-   * 每秒由 main.js 的 setInterval 呼叫，判斷是否到達推算開始時間並播放音效。
+   * 由 Web Worker 的整分鐘事件呼叫，判斷是否到達推算開始時間並播放音效。
    * playForecastSound 內部以 lastPlayed 去重，同一分鐘只播一次。
    */
   checkForecastSounds() {

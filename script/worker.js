@@ -88,7 +88,19 @@ self.onmessage = async function (e) {
         }, msUntilNextMinute);
       };
 
+      const schedulePreAlertTick = () => {
+        const msIntoMinute = Date.now() % 60_000;
+        let msUntilPreAlert = 55_000 - msIntoMinute;
+        if (msUntilPreAlert <= 0) msUntilPreAlert += 60_000;
+
+        setTimeout(() => {
+          self.postMessage({ type: "TICK_PRE_ALERT" });
+          schedulePreAlertTick();
+        }, msUntilPreAlert);
+      };
+
       scheduleTick();
+      schedulePreAlertTick();
     }
   }
 
