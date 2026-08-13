@@ -39,9 +39,9 @@ const SOUND_MAP = {
 
 /** 各音效類型對應的通知顯示名稱 */
 const TASK_LABELS = {
-  gishiki:    "儀式",
-  shirao:     "白青",
-  sengen:     "仙幻島",
+  gishiki:    "可疑的儀式",
+  shirao:     "白青野王",
+  sengen:     "仙幻島野王",
   world_boss: "世界王",
 };
 
@@ -239,7 +239,7 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[taskTypeKey] || taskTypeKey;
-      this._notify(`${label}出現`, location);
+      this._notify(`${label}將在十分鐘後出現`, location);
       return;
     }
 
@@ -280,7 +280,7 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[typeKey] || typeKey;
-      this._notify(`${label} 野王將在接下來10分鐘內出現`);
+      this._notify(`${label} 將在接下來10分鐘內出現`);
       return;
     }
 
@@ -357,7 +357,7 @@ export class SoundManager {
    */
   _notify(title, body = "") {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
-    new Notification(title, { body, icon: "./images/icons8-bell.gif" });
+    new Notification(title, { body, icon: "./images/BSNEO.png" });
   }
 
   /**
