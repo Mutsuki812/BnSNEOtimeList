@@ -239,7 +239,8 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[taskTypeKey] || taskTypeKey;
-      this._notify(`${label}將在十分鐘後出現`, location);
+      const minutes = taskTypeKey === "gishiki" ? "３分鐘" : "５分鐘";
+      this._notify(`${label}將在${minutes}後出現`, location);
       return;
     }
 
@@ -264,8 +265,9 @@ export class SoundManager {
    * 由 OnlinePredictionManager.updatePredictionDisplay 在推算開始分鐘呼叫。
    * 使用 lastPlayed 去重，確保同一分鐘內無論 renderAllGroups 被呼叫幾次都只播一次。
    * @param {string} typeKey - "shirao" 或 "sengen"
+   * @param {string} location - 預測的出現地點
    */
-  playForecastSound(typeKey) {
+  playForecastSound(typeKey, location = "") {
     if (!this.isSoundEnabled(typeKey)) return;
     if (!this.isAudioUnlocked) return;
 
@@ -280,7 +282,7 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[typeKey] || typeKey;
-      this._notify(`${label} 將在接下來10分鐘內出現`);
+      this._notify(`${label}將在１０分鐘內出現`, location);
       return;
     }
 
@@ -310,7 +312,7 @@ export class SoundManager {
 
     if (document.hidden) {
       if (playId === "20:50" || playId === "14:50") {
-        this._notify("世界王將在十分鐘後出現", playId);
+        this._notify("世界王將在１０分鐘後出現", playId);
       }
       return;
     }
