@@ -273,31 +273,6 @@ padding: 4px 6px;
     border-radius: var(--radius-sm);
 }
 
-  /* 儀式 */
-  .group.gishiki .report-form-row.flex-row {
-    grid-template-areas: "labelTime time button";
-    grid-template-columns: auto 1fr auto;
-  }
-
-  .report-label.time {
-    grid-area: labelTime;
-  }
-
-  .report-time-input {
-    grid-area: time;
-  }
-
-  .group.gishiki .now-btn,
-  .gishiki .now-btn {
-    grid-area: button;
-  }
-
-  .group.gishiki .report-form-row.location {
-    align-items: center;
-    border-radius: var(--radius-sm);
-    gap: var(--space-sm);
-  }
-
   .report-label.label-inline {
     align-items: center;
     border-radius: var(--radius-sm);

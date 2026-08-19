@@ -760,6 +760,20 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* 歷史記録項目進入動畫 */
+.history-item-animate {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 加載狀態 */
+.report-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+}
+
 /* ========================================================
    Dark Mode 覆蓋
    ======================================================== */

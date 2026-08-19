@@ -10,7 +10,8 @@ const CONSTANTS = {
     START: 85, // +1h 25m
     END: 100,  // +1h 40m
   },
-  GISHIKI_LOCATIONS: ['-', '黒森林', '巨岩海岸', '孤村', '土門客桟', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
+  GISHIKI_LOCATIONS: ['-', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
+  // GISHIKI_LOCATIONS: ['-', '黒森林', '巨岩海岸', '孤村', '土門客桟', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
 };
 
 export class OnlinePredictionManager {
@@ -142,7 +143,6 @@ export class OnlinePredictionManager {
               time: result.baseDate, // 這是一個 Date 物件
               location: result.targetReport.locationA,
               locationA: result.targetReport.locationA,
-              locationB: result.targetReport.locationB,
               weekDay: weekDay,
               method: result.targetReport.method
             };
@@ -163,16 +163,16 @@ export class OnlinePredictionManager {
 
   /**
    * 基準時間判定函式
-   * 權重：系統出字(3) > 打雷中(2) > 王已出(1)
-   * 修正：打雷 -1m, 王已出 -5m
+   * 權重：系統出字(3) > 打雷中/召喚中(2) > 王已出/濁魔魂已出(1)
+   * 修正：打雷中/召喚中 -1m, 王已出/濁魔魂已出 -5m
    * @param {Array} eventReports - 同一場事件的回報集合
    * @returns {Object|null} 包含計算後的 Date 物件與所選的回報原始資料
    */
   _calculateBaseTime(eventReports) {
     if (!eventReports || eventReports.length === 0) return null;
 
-    const weights = { '系統出字': 3, '打雷中': 2, '王已出': 1 };
-    const offsets = { '系統出字': 0, '打雷中': -1, '王已出': -5 };
+    const weights = { '系統出字': 3, '打雷中': 2, '王已出': 1, '召喚中': 2, '濁魔魂已出': 1 };
+    const offsets = { '系統出字': 0, '打雷中': -1, '王已出': -5, '召喚中': -1, '濁魔魂已出': -5 };
 
     // 1. 找出目前的最高優先級權重
     let maxWeight = 0;
@@ -263,13 +263,9 @@ export class OnlinePredictionManager {
 
       const savedState = savedStates[type.key] || null;
 
-      if (type.key === 'gishiki') {
-        this.updateGishikiDisplay();
-        this.injectReportingUI("gishiki", savedState);
-      } else if (type.key === 'shirao' || type.key === 'sengen') {
-        this.updatePredictionDisplay(type.key);
-        this.injectReportingUI(type.key, savedState);
-      }
+      // 所有類型統一使用預測顯示
+      this.updatePredictionDisplay(type.key);
+      this.injectReportingUI(type.key, savedState);
     });
   }
 
@@ -289,76 +285,17 @@ export class OnlinePredictionManager {
         time: timeInput ? timeInput.value : null,
       };
 
-      if (type.key === 'gishiki') {
-        const selects = reportBox.querySelectorAll('.report-select');
-        state.locA = selects[0] ? selects[0].value : null;
-        state.locB = selects[1] ? selects[1].value : null;
-      } else {
-        const select = reportBox.querySelector('.report-select');
-        state.location = select ? select.value : null;
-        
-        const checkedRadio = reportBox.querySelector(`input[name="report-method-${type.key}"]:checked`);
-        state.method = checkedRadio ? checkedRadio.value : null;
-      }
+      const select = reportBox.querySelector('.report-select');
+      state.location = select ? select.value : null;
+      
+      const checkedRadio = reportBox.querySelector(`input[name="report-method-${type.key}"]:checked`);
+      state.method = checkedRadio ? checkedRadio.value : null;
       states[type.key] = state;
     });
     return states;
   }
 
-  /**
-   * 更新儀式顯示 (只顯示上次出現時間)
-   */
-  updateGishikiDisplay() {
-    const group = document.querySelector(`.group.gishiki`);
-    if (!group) return;
 
-    const currentTaskRow = group.querySelector('.taskRow.current');
-    if (currentTaskRow) {
-      const timeEl = currentTaskRow.querySelector('.col-time');
-      const contentEl = currentTaskRow.querySelector('.col-content');
-
-      // 移除可能由 uiRenderer 添加的灰色樣式
-      timeEl.classList.remove('gray', 'text-placeholder');
-      contentEl.classList.remove('gray', 'text-placeholder');
-      
-      const lastReport = this.lastReports['gishiki'];
-      
-      if (lastReport && lastReport.time) {
-        const now = this.timeUtils.getNowBySVR();
-        const dayOfWeek = now.getDay();
-        const todayWeekDay = dayOfWeek === 0 ? 7 : dayOfWeek;
-        const yesterdayPrefix = (lastReport.weekDay !== todayWeekDay) ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
-
-        const formattedTime = this._parseAndFormatTime(lastReport.time);
-        
-        // 動態警示判定：如果回報時間是在今天且在 5 分鐘窗口內
-        const isAlert = (lastReport.weekDay === todayWeekDay) && this.timeUtils.isWithinWindow(formattedTime, 5);
-        currentTaskRow.classList.toggle('task-alert-active', isAlert);
-
-        timeEl.textContent = "上次出現";
-        timeEl.classList.add('prediction-label');
-        
-        // 優化顯示邏輯：僅在雙地點皆有時顯示斜線
-        let locText = lastReport.locationA || '-';
-        if (lastReport.locationB && lastReport.locationB !== '-') {
-          const totalLen = (lastReport.locationA || "").length + (lastReport.locationB || "").length;
-          // 總字數 10 以上才在斜線後換行，否則保持單行顯示以增加美觀度
-          const separator = totalLen >= 10 ? ' /<br>' : ' / ';
-          locText = `${lastReport.locationA}${separator}${lastReport.locationB}`;
-        } else if (locText === '-') {
-          locText = '位置未知';
-        }
-
-        contentEl.innerHTML = `${yesterdayPrefix}${formattedTime} ${locText}`;
-      } else {
-        timeEl.textContent = "尚無數據";
-        timeEl.classList.add('prediction-label', 'text-placeholder');
-        contentEl.textContent = "等待回報...";
-        contentEl.classList.add('text-placeholder');
-        currentTaskRow.classList.remove('task-alert-active');
-      }
-    }
-  }
 
   /**
    * 更新預測顯示 (白青/仙幻島)
@@ -447,20 +384,29 @@ export class OnlinePredictionManager {
 
       }
 
-      // 顯示兩行資訊：上次出現 & 推算時間
-      timeEl.innerHTML = `
-        <div class="pred-row-label">上次出現</div>
-        <div class="pred-row-value">推算時間</div>
-      `;
-      timeEl.classList.remove('prediction-highlight', 'prediction-label');
-
       const yesterdayPrefix = (lastReport.weekDay !== todayWeekDay) ? '<span style="font-size: 0.8em;">昨天</span> ' : '';
       const lastInfo = `${yesterdayPrefix}${formattedTime} ${lastReport.location || ''}`;
-      contentEl.innerHTML = `
-        <div class="pred-row-info">${lastInfo}</div>
-        <div class="${predTimeClass}">${predInfo}</div>
-      `;
-      contentEl.classList.remove('prediction-highlight');
+
+      if (typeKey === 'gishiki') {
+        // gishiki: 只顯示上次出現時間
+        timeEl.textContent = "上次出現";
+        timeEl.classList.add('prediction-label');
+        contentEl.innerHTML = `<div class="pred-row-info">${lastInfo}</div>`;
+        // 推算時間不顯示（之後可再次啟用）
+        // contentEl.innerHTML += `<div class="${predTimeClass}">${predInfo}</div>`;
+      } else {
+        // shirao / sengen: 顯示上次出現 + 推算時間
+        timeEl.innerHTML = `
+          <div class="pred-row-label">上次出現</div>
+          <div class="pred-row-value">推算時間</div>
+        `;
+        timeEl.classList.remove('prediction-highlight', 'prediction-label');
+        contentEl.innerHTML = `
+          <div class="pred-row-info">${lastInfo}</div>
+          <div class="${predTimeClass}">${predInfo}</div>
+        `;
+        contentEl.classList.remove('prediction-highlight');
+      }
     } else {
       timeEl.textContent = "尚無數據";
       timeEl.classList.add('prediction-label', 'text-placeholder');
@@ -504,17 +450,11 @@ export class OnlinePredictionManager {
 
     let extraInputs, specificInputsRow;
 
-    if (typeKey === 'gishiki') {
-      reportBox.appendChild(timeControlsRow);
-      ({ specificInputsRow, extraInputs } = this._createGishikiInputs(savedState));
-      reportBox.appendChild(specificInputsRow);
-    } else {
-      // _createBossInputs 會直接修改 timeControlsRow，我們只需要接收它回傳的新元素即可。
-      const bossInputs = this._createBossInputs(typeKey, timeControlsRow, savedState);
-      ({ specificInputsRow, extraInputs } = bossInputs);
-      reportBox.appendChild(timeControlsRow);
-      reportBox.appendChild(specificInputsRow);
-    }
+    // 使用與其他王相同的輸入建立器，讓 gishiki 的 UI 與 shirao/sengen 一致
+    const bossInputs = this._createBossInputs(typeKey, timeControlsRow, savedState);
+    ({ specificInputsRow, extraInputs } = bossInputs);
+    reportBox.appendChild(timeControlsRow);
+    reportBox.appendChild(specificInputsRow);
 
     reportBox.appendChild(footerRow);
     reportBox.appendChild(historyListDiv);
@@ -563,37 +503,7 @@ export class OnlinePredictionManager {
     return { timeInput, timeControlsRow };
   }
 
-  /**
-   * 輔助函式：建立儀式專用的地點輸入 UI
-   * @param {Object} savedState
-   */
-  _createGishikiInputs(savedState) {
-    const specificInputsRow = DOMHelper.createElement('div', 'report-form-row location');
 
-    const createSelect = (label, savedVal) => {
-      const wrap = DOMHelper.createElement('span', 'report-label label-inline', `${label} `);
-      const sel = document.createElement('select');
-      sel.className = 'report-select';
-      CONSTANTS.GISHIKI_LOCATIONS.forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt;
-        o.textContent = opt;
-        sel.appendChild(o);
-      });
-      if (savedVal) sel.value = savedVal;
-      wrap.appendChild(sel);
-      return { wrap, sel };
-    };
-
-    const locA = createSelect("地點１", savedState?.locA);
-    const locB = createSelect("地點２", savedState?.locB);
-    
-    specificInputsRow.appendChild(locA.wrap);
-    specificInputsRow.appendChild(locB.wrap);
-    
-    const extraInputs = { locA: locA.sel, locB: locB.sel };
-    return { specificInputsRow, extraInputs };
-  }
 
   /**
    * 輔助函式：建立野王專用的地點與方式輸入 UI
@@ -603,7 +513,7 @@ export class OnlinePredictionManager {
    */
   _createBossInputs(typeKey, timeControlsRow, savedState) {
     // 1. 地點
-    const locationOptions = typeKey === 'shirao' ? ['白樺林', '風之平原'] : ['知性森林', '力王山脈', '武神荒野'];
+    const locationOptions = typeKey === 'shirao' ? ['白樺林', '風之平原'] : (typeKey === 'gishiki' ? CONSTANTS.GISHIKI_LOCATIONS : ['知性森林', '力王山脈', '武神荒野']);
     const locSelect = document.createElement('select');
     locSelect.className = 'report-select';
     locationOptions.forEach(l => {
@@ -618,7 +528,7 @@ export class OnlinePredictionManager {
 
     // 2. 出現方式
     const specificInputsRow = DOMHelper.createElement('div', 'report-form-row');
-    const methodOptions = ['系統出字', '打雷中', '王已出'];
+    const methodOptions = typeKey === 'gishiki' ? ['系統出字', '召喚中', '濁魔魂已出'] : ['系統出字', '打雷中', '王已出'];
     const radioGroupName = `report-method-${typeKey}`;
     const methodContainer = DOMHelper.createElement('div', 'report-radio-container');
     const radioInputs = [];
@@ -766,7 +676,7 @@ export class OnlinePredictionManager {
 
       let methodClass = 'hist-tag';
       if (item.method === '系統出字') methodClass += ' tag-system';
-      else if (item.method === '打雷中') methodClass += ' tag-thunder';
+      else if (item.method === '打雷中' || item.method === '召喚中') methodClass += ' tag-thunder';
       else methodClass += ' tag-spawned';
 
       let userClass = isAdmin ? 'hist-user admin-tag' : 'hist-user user-tag gray';
@@ -778,13 +688,8 @@ export class OnlinePredictionManager {
         else if (userName === mvp.second) userClass += " is-mvp-2";
       }
 
-      // 優化歷史記録顯示：只有在 A 有值且 B 也有值時才顯示斜線
-      let locText = item.locationA || '-';
-      if (typeKey === 'gishiki') {
-        if (item.locationB && item.locationB !== '-') {
-          locText = `${item.locationA}&nbsp;/&nbsp;${item.locationB}`;
-        }
-      }
+      // 歷史記録顯示使用 location（若沒有則回退到 locationA）
+      let locText = item.location || item.locationA || '-';
 
       row.innerHTML = `
         <div class="hist-left">
@@ -878,14 +783,6 @@ export class OnlinePredictionManager {
       return;
     }
 
-    if (typeKey === 'gishiki') {
-      if (inputs.locA.value === '-' && inputs.locB.value === '-') {
-        msgDiv.className = "report-msg error";
-        msgDiv.textContent = "請至少選擇一個地點";
-        return;
-      }
-    }
-
     const user = await this.userManager.requireUser();
     if (!user) return;
 
@@ -917,31 +814,9 @@ export class OnlinePredictionManager {
       user_name: user.userName
     };
 
-    if (typeKey === 'gishiki') {
-      let locA = inputs.locA.value;
-      let locB = inputs.locB.value;
-
-      // 資料正規化邏輯
-      // 1. 如果兩個地點相同，視為只有一個地點
-      if (locA === locB) {
-        locB = '-';
-      }
-      
-      // 2. 自動移位：確保有效資料優先存入 locationA
-      if (locA === '-' && locB !== '-') {
-        locA = locB;
-        locB = '-';
-      }
-
-      payload.locationA = locA;
-      payload.locationB = locB;
-      payload.method = "系統出字";
-    } else {
-      const selectedMethod = inputs.methodRadios.find(radio => radio.checked);
-      payload.method = selectedMethod ? selectedMethod.value : '王已出'; // Fallback
-      payload.locationA = inputs.location.value;
-      payload.locationB = "";
-    }
+    const selectedMethod = inputs.methodRadios.find(radio => radio.checked);
+    payload.method = selectedMethod ? selectedMethod.value : '王已出'; // Fallback
+    payload.locationA = inputs.location.value;
 
     try {
       const supabase = await SupabaseHelper.getClient();
