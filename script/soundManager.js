@@ -78,6 +78,7 @@ export class SoundManager {
     this.modalShown      = false; // 音訊解鎖提示 Modal 是否已顯示過
     this.isAudioUnlocked = false; // 使用者是否已透過互動解鎖音訊自動播放
     this.lastPlayed      = {};    // 記錄各 playId 是否已播放，防止世界王音效重複觸發
+    this.lastNotificationWeekDay = null; // 目前去重記錄所屬的星期（1=週一 ~ 7=週日）
 
     // 使用固定的 Audio 物件，重複設定 src 來播放不同音效
     // 這是行動版瀏覽器的必要做法（禁止連續建立新 Audio 實例）
@@ -265,14 +266,16 @@ export class SoundManager {
    * 由 OnlinePredictionManager.updatePredictionDisplay 在推算開始分鐘呼叫。
    * 使用 lastPlayed 去重，確保同一分鐘內無論 renderAllGroups 被呼叫幾次都只播一次。
    * @param {string} typeKey - "shirao" 或 "sengen"
-   * @param {string} location - 預測的出現地點
+   * @param {number} reportWeekDay - 回報資料的星期（1=週一 ~ 7=週日）
+   * @param {number} currentWeekDay - 目前台灣時間的星期（1=週一 ~ 7=週日）
+   * @param {string} reportTime - 回報時間（HH:MM）
    */
-  playForecastSound(typeKey, location = "") {
+  playForecastSound(typeKey, reportWeekDay, currentWeekDay, reportTime) {
     if (!this.isSoundEnabled(typeKey)) return;
     if (!this.isAudioUnlocked) return;
 
-    const now    = new Date();
-    const playId = `forecast_${typeKey}_${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    this._resetNotificationDeduplication(currentWeekDay);
+    const playId = `forecast_${typeKey}_${reportWeekDay}_${reportTime}`;
     if (this.lastPlayed[playId]) return;
     this.lastPlayed[playId] = true;
 
@@ -282,7 +285,7 @@ export class SoundManager {
 
     if (document.hidden) {
       const label = TASK_LABELS[typeKey] || typeKey;
-      this._notify(`${label}將在１０分鐘內出現`, location);
+      this._notify(`${label}將在十分鐘內出現`);
       return;
     }
 
@@ -296,7 +299,7 @@ export class SoundManager {
    * @param {string} audioSrc - 音效檔案路徑
    * @param {string} playId   - 本分鐘的唯一識別 ID（格式 "HH:MM"），防止重複播放
    */
-  playWorldBossSound(audioSrc, playId) {
+  playWorldBossSound(audioSrc, playId, currentWeekDay) {
     if (!this.isSoundEnabled("world_boss")) {
       console.log("[音效] 世界王音效已關閉，跳過");
       return;
@@ -305,9 +308,11 @@ export class SoundManager {
       console.log("[音效] 音訊未解鎖，跳過世界王音效");
       return;
     }
-    if (this.lastPlayed[playId]) return; // 此分鐘已播放過，不重複
+    this._resetNotificationDeduplication(currentWeekDay);
+    const weeklyPlayId = `world_boss_${currentWeekDay}_${playId}`;
+    if (this.lastPlayed[weeklyPlayId]) return; // 此分鐘已播放過，不重複
 
-    this.lastPlayed[playId] = true;
+    this.lastPlayed[weeklyPlayId] = true;
     console.log(`[音效] 播放世界王提示音 (${playId})：${audioSrc}`);
 
     if (document.hidden) {
@@ -360,6 +365,17 @@ export class SoundManager {
   _notify(title, body = "") {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     new Notification(title, { body, icon: "./images/BSNEO.png" });
+  }
+
+  /**
+   * 星期變更時清空通知去重記錄。
+   * 以週內星期為範圍去重，避免分頁持續開啟一週後沿用舊記錄。
+   * @param {number} currentWeekDay - 1=週一 ~ 7=週日
+   */
+  _resetNotificationDeduplication(currentWeekDay) {
+    if (this.lastNotificationWeekDay === currentWeekDay) return;
+    this.lastPlayed = {};
+    this.lastNotificationWeekDay = currentWeekDay;
   }
 
   /**

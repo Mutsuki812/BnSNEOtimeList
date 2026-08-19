@@ -1006,7 +1006,7 @@ export class OnlinePredictionManager {
 
       const startPredTotalMinutes = h * 60 + m + CONSTANTS.PREDICTION_OFFSET_MINUTES.START;
       if (effectiveCurrentMinutes === startPredTotalMinutes) {
-        this.soundManager.playForecastSound(typeKey, lastReport.location || "");
+        this.soundManager.playForecastSound(typeKey, lastReport.weekDay, todayWeekDay, formattedTime);
       }
     });
   }

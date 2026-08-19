@@ -587,7 +587,9 @@ class TaskScheduleApp {
     // Worker 呼叫：跳過此限制，允許在當分鐘任意秒補觸發
     if (!fromWorker && second > 5) return;
 
-    const playId    = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const currentWeekDay = day === 0 ? 7 : day;
+    const timePlayId = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const playId = `${currentWeekDay}_${timePlayId}`;
     if (this.lastPlayedId === playId) return; // 此分鐘已處理
 
     const isWeekend = day === 0 || day === 6;
@@ -609,7 +611,7 @@ class TaskScheduleApp {
     if (audioSrc) {
       this.lastPlayedId = playId;
       console.log(`[世界王] 觸發提示音 ${playId}：${audioSrc}`);
-      this.soundManager.playWorldBossSound(audioSrc, playId);
+      this.soundManager.playWorldBossSound(audioSrc, timePlayId, currentWeekDay);
     }
   }
 
