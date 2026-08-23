@@ -466,7 +466,7 @@ padding: 4px 6px;
   }
 
   .hist-time{ grid-area: time; width:40px;}
-  .hist-tag{ grid-area: tag; width:60px;}
+  .hist-tag{ grid-area: tag; width:70px;}
   .hist-loc{ grid-area: loc;padding-left: 3px;}
 
   .hist-right {
