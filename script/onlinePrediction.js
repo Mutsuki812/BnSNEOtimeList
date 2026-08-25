@@ -611,14 +611,25 @@ export class OnlinePredictionManager {
    * 載入並渲染歷史數據
    */
   async loadAndRenderHistory(typeKey, listDiv) {
-    const hasCache = this.historyCache[typeKey] && this.historyCache[typeKey].length > 0;
+    const historyWindow = this._getHistoryWindow();
+    const cacheKey = `${typeKey}:${historyWindow.key}`;
+    const hasCache = this.historyCache[cacheKey] && this.historyCache[cacheKey].length > 0;
+
+    // 星期三的週期切換時，不讓上一個時段的資料短暫出現在畫面上。
+    if (this.historyCache[typeKey] && this.historyCache[typeKey].cacheKey !== cacheKey) {
+      delete this.historyCache[typeKey];
+    }
 
     // 如果有快取，先行渲染以防止畫面閃爍
     if (hasCache) {
-      this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey], false);
+      this._renderHistoryItems(typeKey, listDiv, this.historyCache[cacheKey], false);
+    } else if (!historyWindow) {
+      listDiv.innerHTML = '本時段尚無記錄';
     } else {
       listDiv.innerHTML = '<div class="report-loading">載入中...</div>';
     }
+
+    if (!historyWindow) return;
 
     try {
       const supabase = await SupabaseHelper.getClient();
@@ -626,23 +637,29 @@ export class OnlinePredictionManager {
       const dayOfWeek = now.getDay();
       const todayWeekDay = dayOfWeek === 0 ? 7 : dayOfWeek;
 
-      const { data: historyData, error } = await supabase
+      let historyQuery = supabase
         .from('spawn_reports')
         .select('*, Users!user_name(role)')
         .eq('bossType', typeKey)
         .eq('weekDay', todayWeekDay)
         .order('timeStamp', { ascending: false });
 
+      if (historyWindow.start) historyQuery = historyQuery.gte('timeStamp', historyWindow.start);
+      if (historyWindow.end) historyQuery = historyQuery.lt('timeStamp', historyWindow.end);
+
+      const { data: historyData, error } = await historyQuery;
+
       if (error) throw error;
 
       const newData = historyData || [];
       
       // 比對資料是否有變動，若無變動則不重複渲染 DOM
-      const isSameData = hasCache && JSON.stringify(this.historyCache[typeKey]) === JSON.stringify(newData);
+      const isSameData = hasCache && JSON.stringify(this.historyCache[cacheKey]) === JSON.stringify(newData);
       
       if (!isSameData) {
-        this.historyCache[typeKey] = newData;
-        this._renderHistoryItems(typeKey, listDiv, this.historyCache[typeKey], hasCache);
+        this.historyCache[cacheKey] = newData;
+        this.historyCache[typeKey] = { cacheKey, data: newData };
+        this._renderHistoryItems(typeKey, listDiv, newData, hasCache);
       }
 
     } catch (e) {
@@ -651,6 +668,21 @@ export class OnlinePredictionManager {
         listDiv.innerHTML = '載入失敗';
       }
     }
+  }
+
+  /**
+   * 取得歷史紀錄可顯示的時間區間。
+   * 星期三 06:00～11:00 是遊戲週切換空窗，不顯示任何資料。
+   */
+  _getHistoryWindow() {
+    const now = this.timeUtils.getNowBySVR();
+    const isWednesday = now.getDay() === 3;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (!isWednesday) return { key: 'normal' };
+    if (currentMinutes < 360) return { key: 'wed-00-06', start: '00:00:00', end: '06:00:00' };
+    if (currentMinutes < 660) return null;
+    return { key: 'wed-11-24', start: '11:00:00', end: '24:00:00' };
   }
 
   /**
