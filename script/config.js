@@ -91,6 +91,7 @@ export const TEXTS = {
     "・出王後30分鐘後沒人打會消失。<br>",
   /** 限時說明文字 (活動期間內顯示) */
   temporaryNotice:
+    "・<span style='color:#ff0000;'>台服專用　台服專用　台服專用</span><br>" +
     "・該系統極致仰賴各位回報者的準確度 如有錯誤的回報 請記得自行刪除<br>",
 
   /**
