@@ -90,7 +90,6 @@ class TaskScheduleApp {
     }
 
     this.reportManager.updateAll();
-    this.reportManager.loadReports();
     this.startTimers();
 
     // 綁定管理者登入的隱藏觸發點（點擊時間標籤區域的特定元素）
@@ -128,7 +127,7 @@ class TaskScheduleApp {
       if (type === "DB_UPDATE") {
         // Supabase Realtime 偵測到 spawn_reports 資料異動，觸發全域重新渲染
         console.log("[即時更新] 偵測到資料異動，重新載入資料並渲染");
-        this.loadTasksAndRender();
+        this.refreshPredictionOnly();
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
         if (this.cachedScheduleRows) this.renderAllGroups(this.cachedScheduleRows);
@@ -212,6 +211,25 @@ class TaskScheduleApp {
   // ============================================================
   // 資料載入與渲染
   // ============================================================
+
+  /**
+   * Realtime 偵測到 spawn_reports 異動時，
+   * 只重新取得預測資料並更新畫面。
+   * 不重新讀取 schedule_data。
+   */
+  async refreshPredictionOnly() {
+    if (!this.isInDateRange()) return;
+
+    try {
+      await this.onlinePredictionManager.fetchPredictionData();
+
+      if (this.cachedScheduleRows) {
+        this.renderAllGroups(this.cachedScheduleRows);
+      }
+    } catch (error) {
+      console.error("[即時更新] 更新預測資料失敗：", error);
+    }
+  }
 
   /**
    * 從 Supabase 載入排程資料，並在完成後觸發全域渲染。

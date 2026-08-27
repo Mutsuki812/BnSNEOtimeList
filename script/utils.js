@@ -387,24 +387,74 @@ export class SupabaseHelper {
 export class RemoteConfig {
   static _cache = null;
 
-  static async refresh() {
+static async refresh() {
+  try {
     const supabase = await SupabaseHelper.getClient();
-    const [{ data: eventData }, { data: mvpData }] = await Promise.all([
-      supabase.from("event_config").select("start, end").eq("id", 1).single(),
-      supabase.from("mvp_config").select("first, second").eq("id", 1).single(),
+
+    const [eventResult, mvpResult] = await Promise.all([
+      supabase
+        .from("event_config")
+        .select("start, end")
+        .eq("id", 1)
+        .single(),
+
+      supabase
+        .from("mvp_config")
+        .select("first, second")
+        .eq("id", 1)
+        .single(),
     ]);
+
+    if (eventResult.error) {
+      console.warn(
+        "[RemoteConfig] event_config 讀取失敗：",
+        eventResult.error
+      );
+    }
+
+    if (mvpResult.error) {
+      console.warn(
+        "[RemoteConfig] mvp_config 讀取失敗：",
+        mvpResult.error
+      );
+    }
+
+    const eventData = eventResult.data;
+    const mvpData   = mvpResult.data;
+
     this._cache = {
-      dateRanges: {
-        start: new Date(eventData.start),
-        end:   new Date(eventData.end),
-      },
+      dateRanges: eventData
+        ? {
+            start: new Date(eventData.start),
+            end:   new Date(eventData.end),
+          }
+        : null,
+
       mvpConfig: {
         first:  mvpData?.first  ?? "",
         second: mvpData?.second ?? "",
       },
     };
+
+    return this._cache;
+
+  } catch (error) {
+    console.warn(
+      "[RemoteConfig] Supabase 設定讀取失敗，使用預設值繼續執行：",
+      error
+    );
+
+    this._cache = {
+      dateRanges: null,
+      mvpConfig: {
+        first: "",
+        second: "",
+      },
+    };
+
     return this._cache;
   }
+}
 
   static getDateRanges() {
     return this._cache?.dateRanges ?? null;

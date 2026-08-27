@@ -10,7 +10,7 @@ const CONSTANTS = {
     START: 85, // +1h 25m
     END: 100,  // +1h 40m
   },
-  GISHIKI_LOCATIONS: ['雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
+  GISHIKI_LOCATIONS: ['雪原(叛軍駐地)', '染坊'],
   // GISHIKI_LOCATIONS: ['-', '黒森林', '巨岩海岸', '孤村', '土門客桟', '悲鳴村', '灰狼村', '豬豬農場', '鬼都', '雪原(叛軍駐地)', '樹林(北方討伐隊)', '染坊'],
 };
 
@@ -93,13 +93,13 @@ export class OnlinePredictionManager {
       const [todayRes, yesterdayRes] = await Promise.all([
         supabase
         .from('spawn_reports')
-        .select('*')
+        .select('bossType,timeStamp,locationA,method,weekDay')
         .eq('weekDay', todayWeekDay)
         .order('timeStamp', { ascending: false }),
         
         supabase
         .from('spawn_reports')
-        .select('*')
+        .select('bossType,timeStamp,locationA,method,weekDay')
         .eq('weekDay', yesterdayWeekDay)
         .order('timeStamp', { ascending: false })
       ]);
