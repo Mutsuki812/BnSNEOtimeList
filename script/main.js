@@ -10,7 +10,7 @@
    ============================================================ */
 
 import { CONFIG, WEEKDAYS } from "./config.js";
-import { TimeUtils, TaskUtils, DOMHelper, RemoteConfig } from "./utils.js";
+import { TimeUtils,  TaskUtils,  DOMHelper, RemoteConfig, DatabaseErrorHelper} from "./utils.js";
 import { ScheduleDataLoader, TaskDataProcessor } from "./taskProcessor.js";
 import { UIRenderer } from "./uiRenderer.js";
 import { ReportManager } from "./reportManager.js";
@@ -36,7 +36,7 @@ class TaskScheduleApp {
     // --- 資料層 ---
     this.scheduleLoader = new ScheduleDataLoader(this.timeUtils);
     this.taskProcessor  = new TaskDataProcessor(this.timeUtils, this.taskUtils);
-
+    this.realtimeRefreshTimer = null;
     // --- 功能模組 ---
     this.soundManager            = new SoundManager();
     this.userManager             = new UserManager(this.soundManager);
@@ -65,6 +65,45 @@ class TaskScheduleApp {
     this.lastPlayedId         = null;  // 本分鐘世界王音效的播放 ID，防止重複播放
     this.lastStaticSoundPlayedId = null; // 本分鐘靜態班表音效的播放 ID，防止 0-5 秒重複播放
   }
+
+
+
+  // ============================================================
+  // error 數據庫過載入
+  // 數據庫過載中 ・ 數據庫連線異常
+  // ============================================================
+
+showDatabaseError(error) {
+  const type = DatabaseErrorHelper.classify(error);
+
+  if (!type) return false;
+
+  const app = document.getElementById("app");
+  if (!app) return false;
+
+  if (type === "overload") {
+    app.innerHTML = `
+      <div class="database-error">
+        <h2>數據庫過載中</h2>
+        <div>無法正常導入</div>
+        <div>請稍後再試</div>
+      </div>
+    `;
+  }
+
+  if (type === "permission") {
+    app.innerHTML = `
+      <div class="database-error">
+        <h2>數據庫連線異常</h2>
+        <div>無法正常取得資料</div>
+        <div>請稍後再試</div>
+      </div>
+    `;
+  }
+
+  return true;
+}
+
 
   // ============================================================
   // 初始化流程
@@ -128,6 +167,10 @@ class TaskScheduleApp {
         // Supabase Realtime 偵測到 spawn_reports 資料異動，觸發全域重新渲染
         console.log("[即時更新] 偵測到資料異動，重新載入資料並渲染");
         this.refreshPredictionOnly();
+
+        this.realtimeRefreshTimer = setTimeout(() => {
+          this.refreshPredictionOnly();
+        }, 1000);
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
         if (this.cachedScheduleRows) this.renderAllGroups(this.cachedScheduleRows);
@@ -240,25 +283,42 @@ class TaskScheduleApp {
     this.loadToken++;
     const currentToken = this.loadToken;
 
-    const loadPromises = [this.scheduleLoader.loadSchedule()];
+    try {
 
-    if (this.isInDateRange()) {
-      // 活動期間同時初始化線上預測系統（抓取最新回報資料）
-      loadPromises.push(this.onlinePredictionManager.init());
-    } else {
-      this.onlinePredictionManager.isInitialized = false;
+      const loadPromises = [
+        this.scheduleLoader.loadSchedule()
+      ];
+
+      if (this.isInDateRange()) {
+        loadPromises.push(
+          this.onlinePredictionManager.init()
+        );
+      } else {
+        this.onlinePredictionManager.isInitialized = false;
+      }
+
+      const [rows] = await Promise.all(loadPromises);
+
+      if (currentToken !== this.loadToken) {
+        return;
+      }
+
+      this.cachedScheduleRows = rows;
+      this.renderAllGroups(rows);
+
+    } catch (error) {
+
+      console.error(
+        "[主資料] Supabase 資料取得失敗：",
+        error
+      );
+
+      if (!this.showDatabaseError(error)) {
+        console.error(
+          "[主資料] 非指定 Supabase 錯誤，不切換 DB Error 畫面"
+        );
+      }
     }
-
-    const [rows] = await Promise.all(loadPromises);
-
-    // 檢查是否有更新的載入請求：若有，放棄本次渲染（避免用舊資料覆蓋新結果）
-    if (currentToken !== this.loadToken) {
-      console.log(`[渲染] 已中止（序號 ${currentToken}），新請求序號：${this.loadToken}`);
-      return;
-    }
-
-    this.cachedScheduleRows = rows;
-    this.renderAllGroups(rows);
   }
 
   /**

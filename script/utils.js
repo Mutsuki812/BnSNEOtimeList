@@ -14,7 +14,7 @@ import { CONFIG, MAINTENANCE_PATTERN, WEEKDAYS } from "./config.js";
  * 本專案以台灣伺服器時間 (UTC+8) 為基準，所有時間操作皆需透過此類別。
  */
 export class TimeUtils {
-  constructor() {}
+  constructor() { }
 
   /**
    * 將任意 Date 物件強制轉換至 UTC+8 時區。
@@ -43,9 +43,9 @@ export class TimeUtils {
    * @returns {string} - 格式化後的日期字串
    */
   formatDateLabel(date) {
-    const year    = date.getFullYear();
-    const month   = date.getMonth() + 1;
-    const day     = date.getDate();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
     const weekday = WEEKDAYS[date.getDay()];
     return `${year}/${month}/${day}（${weekday}）`;
   }
@@ -87,7 +87,7 @@ export class TimeUtils {
    */
   isWithinWindow(taskTimeStr, windowMinutes = 5) {
     if (!taskTimeStr || taskTimeStr === "--:--") return false;
-    const now     = this.getNowBySVR();
+    const now = this.getNowBySVR();
     const nowMins = now.getHours() * 60 + now.getMinutes();
     const taskMins = this.timeToMinutes(taskTimeStr);
     return nowMins >= taskMins && nowMins < taskMins + windowMinutes;
@@ -103,7 +103,7 @@ export class TimeUtils {
    */
   normalizeScheduleTime(timeStr) {
     if (typeof timeStr === "number") {
-      const hours   = Math.floor(timeStr * 24);
+      const hours = Math.floor(timeStr * 24);
       const minutes = Math.floor((timeStr * 24 - hours) * 60);
       return {
         time: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
@@ -125,9 +125,9 @@ export class TimeUtils {
    * @returns {string} - "YYYY-MM-DD" 格式的日期字串
    */
   formatDateToYYYYMMDD(date) {
-    const year  = date.getFullYear();
+    const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day   = String(date.getDate()).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
 }
@@ -140,7 +140,7 @@ export class TimeUtils {
  * 負責任務資料判斷與列表處理的工具類別。
  */
 export class TaskUtils {
-  constructor() {}
+  constructor() { }
 
   /**
    * 判斷一個任務項目是否為「例行維護中」的維護任務。
@@ -171,13 +171,13 @@ export class TaskUtils {
    * @returns {Array<object>} - 合併維護任務後的列表
    */
   mergeConsecutiveMaintenance(list) {
-    const merged   = [];
-    let skipUntil  = -1;
+    const merged = [];
+    let skipUntil = -1;
 
     list.forEach((item, index) => {
       if (index < skipUntil) return;
 
-      const content       = this.getTaskContent(item);
+      const content = this.getTaskContent(item);
       const isMaintenance = MAINTENANCE_PATTERN.test(content);
 
       if (isMaintenance) {
@@ -194,7 +194,7 @@ export class TaskUtils {
         merged.push({
           ...item,
           maintenanceSpanStart: parseInt(item.time.split(":")[0], 10),
-          maintenanceSpanEnd:   parseInt(list[lastIndex].time.split(":")[0], 10),
+          maintenanceSpanEnd: parseInt(list[lastIndex].time.split(":")[0], 10),
         });
         skipUntil = lastIndex + 1;
       } else {
@@ -225,7 +225,7 @@ export class DOMHelper {
     const el = document.getElementById(id);
     if (!el) return;
     if (content !== undefined) el.innerHTML = content;
-    if (display !== null)      el.style.display = display;
+    if (display !== null) el.style.display = display;
   }
 
   /**
@@ -363,8 +363,8 @@ export class SupabaseHelper {
     // 若 SDK 尚未載入，動態插入 script 標籤並等待其完成
     if (!window.supabase) {
       await new Promise((resolve, reject) => {
-        const script  = document.createElement("script");
-        script.src    = CONFIG.SUPABASE_CDN;
+        const script = document.createElement("script");
+        script.src = CONFIG.SUPABASE_CDN;
         script.onload = resolve;
         script.onerror = () => reject(new Error("Supabase SDK 載入失敗"));
         document.head.appendChild(script);
@@ -387,74 +387,75 @@ export class SupabaseHelper {
 export class RemoteConfig {
   static _cache = null;
 
-static async refresh() {
-  try {
-    const supabase = await SupabaseHelper.getClient();
+  static async refresh() {
 
-    const [eventResult, mvpResult] = await Promise.all([
-      supabase
-        .from("event_config")
-        .select("start, end")
-        .eq("id", 1)
-        .single(),
+    try {
+      const supabase = await SupabaseHelper.getClient();
 
-      supabase
-        .from("mvp_config")
-        .select("first, second")
-        .eq("id", 1)
-        .single(),
-    ]);
+      const [eventResult, mvpResult] = await Promise.all([
+        supabase
+          .from("event_config")
+          .select("start, end")
+          .eq("id", 1)
+          .maybeSingle(),
 
-    if (eventResult.error) {
-      console.warn(
-        "[RemoteConfig] event_config 讀取失敗：",
-        eventResult.error
-      );
-    }
+        supabase
+          .from("mvp_config")
+          .select("first, second")
+          .eq("id", 1)
+          .maybeSingle(),
+      ]);
 
-    if (mvpResult.error) {
-      console.warn(
-        "[RemoteConfig] mvp_config 讀取失敗：",
-        mvpResult.error
-      );
-    }
+      if (eventResult.error) {
+        console.warn(
+          "[RemoteConfig] event_config 讀取失敗：",
+          eventResult.error
+        );
+      }
 
-    const eventData = eventResult.data;
-    const mvpData   = mvpResult.data;
+      if (mvpResult.error) {
+        console.warn(
+          "[RemoteConfig] mvp_config 讀取失敗：",
+          mvpResult.error
+        );
+      }
 
-    this._cache = {
-      dateRanges: eventData
-        ? {
+      const eventData = eventResult.data;
+      const mvpData = mvpResult.data;
+
+      this._cache = {
+        dateRanges: eventData
+          ? {
             start: new Date(eventData.start),
-            end:   new Date(eventData.end),
+            end: new Date(eventData.end),
           }
-        : null,
+          : null,
 
-      mvpConfig: {
-        first:  mvpData?.first  ?? "",
-        second: mvpData?.second ?? "",
-      },
-    };
+        mvpConfig: {
+          first: mvpData?.first ?? "",
+          second: mvpData?.second ?? "",
+        },
+      };
 
-    return this._cache;
+      return this._cache;
 
-  } catch (error) {
-    console.warn(
-      "[RemoteConfig] Supabase 設定讀取失敗，使用預設值繼續執行：",
-      error
-    );
+    } catch (error) {
+      console.warn(
+        "[RemoteConfig] Supabase 設定讀取失敗，使用預設值繼續執行：",
+        error
+      );
 
-    this._cache = {
-      dateRanges: null,
-      mvpConfig: {
-        first: "",
-        second: "",
-      },
-    };
+      this._cache = {
+        dateRanges: null,
+        mvpConfig: {
+          first: "",
+          second: "",
+        },
+      };
 
-    return this._cache;
+      return this._cache;
+    }
   }
-}
 
   static getDateRanges() {
     return this._cache?.dateRanges ?? null;
@@ -462,5 +463,59 @@ static async refresh() {
 
   static getMvpConfig() {
     return this._cache?.mvpConfig ?? { first: "", second: "" };
+  }
+}
+
+
+
+// ============================================================
+// ERROR
+// ============================================================
+export class DatabaseErrorHelper {
+
+  static classify(error) {
+    if (!error) return null;
+
+    const status =
+      error.status ??
+      error.statusCode ??
+      error?.context?.status;
+
+    const text = [
+      error.message,
+      error.details,
+      error.hint,
+      error.code
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    // 權限 / RLS
+    if (
+      status === 401 ||
+      status === 403 ||
+      text.includes("permission denied") ||
+      text.includes("row-level security") ||
+      text.includes("rls")
+    ) {
+      return "permission";
+    }
+
+    // DB overload / timeout / gateway
+    if (
+      status === 504 ||
+      status === 502 ||
+      status === 503 ||
+      text.includes("timeout") ||
+      text.includes("timed out") ||
+      text.includes("connection terminated") ||
+      text.includes("connection timeout") ||
+      text.includes("connection reset")
+    ) {
+      return "overload";
+    }
+
+    return null;
   }
 }

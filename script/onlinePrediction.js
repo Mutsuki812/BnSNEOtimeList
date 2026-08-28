@@ -156,7 +156,7 @@ export class OnlinePredictionManager {
 
       this.lastReports = reports;
     } catch (e) {
-      console.error("Fetch prediction data error:", e);
+      console.error("...");
       this.lastReports = {};
     }
   }

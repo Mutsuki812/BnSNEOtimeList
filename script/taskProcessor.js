@@ -31,21 +31,33 @@ export class ScheduleDataLoader {
    * @returns {Promise<Array>} - 轉換後的排程資料陣列；失敗時回傳空陣列
    */
   async loadSchedule() {
-    try {
-      const supabase = await SupabaseHelper.getClient();
-      const { data, error } = await supabase.from("schedule_data").select("*");
 
-      if (error) {
-        console.error("[ScheduleDataLoader] Supabase 查詢失敗 (schedule_data)：", error);
-        throw error;
-      }
+    // // TEST ONLY
+    // throw {
+    //   //status: 403,
+    //   message: "connection terminated due to connection timeout"
+    // };
 
-      console.log(`[ScheduleDataLoader] 排程資料載入成功，共 ${data?.length ?? 0} 筆`);
-      return this._transformData(data || []);
-    } catch (err) {
-      console.error("[ScheduleDataLoader] 排程資料載入發生錯誤：", err);
-      return [];
+    const supabase = await SupabaseHelper.getClient();
+
+    const { data, error } = await supabase
+      .from("schedule_data")
+      .select("*");
+
+    if (error) {
+      console.error(
+        "[ScheduleDataLoader] Supabase 查詢失敗：",
+        error
+      );
+
+      throw error;
     }
+
+    console.log(
+      `[ScheduleDataLoader] 排程資料載入成功，共 ${data?.length ?? 0} 筆`
+    );
+
+    return this._transformData(data || []);
   }
 
   /**

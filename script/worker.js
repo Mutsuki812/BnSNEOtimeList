@@ -49,11 +49,24 @@ self.onmessage = async function (e) {
         .channel("db-changes")
         .on(
           "postgres_changes",
-          { event: "*", table: "spawn_reports", schema: "public" },
-          (payload) => {
-            // 當 spawn_reports 資料表發生任何異動 (INSERT / UPDATE / DELETE)，
-            // 立即通知主執行緒觸發全域重新渲染
-            self.postMessage({ type: "DB_UPDATE", payload });
+          {
+            event: "INSERT",
+            table: "spawn_reports",
+            schema: "public"
+          },
+          () => {
+            self.postMessage({ type: "DB_UPDATE" });
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            table: "spawn_reports",
+            schema: "public"
+          },
+          () => {
+            self.postMessage({ type: "DB_UPDATE" });
           }
         )
         .subscribe((status) => {
