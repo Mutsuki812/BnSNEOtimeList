@@ -90,25 +90,37 @@ export class OnlinePredictionManager {
       const yesterdayWeekDay = todayWeekDay === 1 ? 7 : todayWeekDay - 1;
 
       // 同時抓取今天和昨天的回報資料
+      const bossTypes = ['gishiki', 'shirao', 'sengen'];
+
       const [todayRes, yesterdayRes] = await Promise.all([
         supabase
-        .from('spawn_reports')
-        .select('bossType,timeStamp,locationA,method,weekDay')
-        .eq('weekDay', todayWeekDay)
-        .order('timeStamp', { ascending: false }),
-        
+          .from('spawn_reports')
+          .select('bossType,timeStamp,locationA,method,weekDay')
+          .eq('weekDay', todayWeekDay)
+          .in('bossType', bossTypes)
+          .order('timeStamp', { ascending: false }),
+
         supabase
-        .from('spawn_reports')
-        .select('bossType,timeStamp,locationA,method,weekDay')
-        .eq('weekDay', yesterdayWeekDay)
-        .order('timeStamp', { ascending: false })
+          .from('spawn_reports')
+          .select('bossType,timeStamp,locationA,method,weekDay')
+          .eq('weekDay', yesterdayWeekDay)
+          .in('bossType', bossTypes)
+          .order('timeStamp', { ascending: false })
       ]);
+
+      // Supabase 查詢錯誤時直接拋出，避免把錯誤誤判成「今天沒有回報」
+      if (todayRes.error) {
+        throw todayRes.error;
+      }
+
+      if (yesterdayRes.error) {
+        throw yesterdayRes.error;
+      }
 
       const todayData = todayRes.data || [];
       const yesterdayData = yesterdayRes.data || [];
 
       const reports = {};
-      const bossTypes = ['gishiki', 'shirao', 'sengen'];
 
       // 定義處理單日數據的內部邏輯
       const processDayData = (data, weekDay) => {

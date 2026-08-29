@@ -164,13 +164,18 @@ showDatabaseError(error) {
       const { type, reason } = e.data;
 
       if (type === "DB_UPDATE") {
-        // Supabase Realtime 偵測到 spawn_reports 資料異動，觸發全域重新渲染
-        console.log("[即時更新] 偵測到資料異動，重新載入資料並渲染");
-        this.refreshPredictionOnly();
+        // Supabase Realtime 偵測到 spawn_reports 資料異動。
+        // 使用 debounce 合併短時間內的多次通知，
+        // 避免大量使用者同時回報時產生重複 Supabase 查詢。
+        console.log("[即時更新] 偵測到資料異動");
 
+        // 如果前一次更新還在等待，取消它
+        clearTimeout(this.realtimeRefreshTimer);
+
+        // 500ms 內即使收到多次 Realtime 通知，也只查詢一次
         this.realtimeRefreshTimer = setTimeout(() => {
           this.refreshPredictionOnly();
-        }, 1000);
+        }, 500);
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
         if (this.cachedScheduleRows) this.renderAllGroups(this.cachedScheduleRows);
