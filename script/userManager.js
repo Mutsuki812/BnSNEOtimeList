@@ -62,6 +62,9 @@ export class UserManager {
         // 驗證成功：更新最後上線時間，並同步 Cookie 延長有效期
         this.updateLastOnline(this.currentUser.id);
         CookieHelper.set(this.tokenKey, this.currentUser.device_token);
+
+        // 背景補 Anonymous Auth
+        this.ensureAnonymousAuth(this.currentUser);
       }
     }
 
@@ -163,6 +166,83 @@ export class UserManager {
   // ============================================================
 
   /**
+   * 建立或取得 Supabase Anonymous Auth，
+   * 並將 auth.uid() 綁定至 Users.auth_user_id。
+   */
+  async ensureAnonymousAuth(user) {
+    try {
+      const supabase = await SupabaseHelper.getClient();
+
+      // 先確認目前是否已存在 Supabase Auth Session
+      let {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+      // 沒有 Session 才建立 Anonymous Auth
+      if (!session) {
+        const { data, error } =
+          await supabase.auth.signInAnonymously();
+
+        if (error) {
+          console.warn(
+            "[Auth] Anonymous Auth 建立失敗：",
+            error
+          );
+          return;
+        }
+
+        session = data.session;
+      }
+
+      const authUserId = session?.user?.id;
+
+      if (!authUserId || !user?.id) {
+        return;
+      }
+
+      // 已經是相同 UID，不需要再次 UPDATE
+      if (user.auth_user_id === authUserId) {
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from("Users")
+        .update({
+          auth_user_id: authUserId
+        })
+        .eq("id", user.id);
+
+      if (updateError) {
+        console.warn(
+          "[Auth] auth_user_id 綁定失敗：",
+          updateError
+        );
+        return;
+      }
+
+      // 更新前端目前保存的 User
+      user.auth_user_id = authUserId;
+      this.currentUser = user;
+
+      StorageHelper.set(
+        this.storageKey,
+        user
+      );
+
+      console.log(
+        "[Auth] Anonymous Auth 綁定完成：",
+        authUserId
+      );
+
+    } catch (error) {
+      console.warn(
+        "[Auth] Anonymous Auth 初始化失敗：",
+        error
+      );
+    }
+  }
+  
+  /**
    * 向 Supabase 驗證本地儲存的使用者 Token 是否有效。
    * 同時更新本地快取的 role 等資訊（確保與資料庫同步）。
    * @param {object} user - 本地儲存的使用者物件（需含 device_token）
@@ -173,7 +253,7 @@ export class UserManager {
       const supabase = await SupabaseHelper.getClient();
       const { data, error } = await supabase
         .from("Users")
-        .select("id, userName, device_token, role")
+        .select("id, userName, device_token, role, auth_user_id")
         .eq("device_token", user.device_token)
         .single();
 
@@ -281,7 +361,7 @@ export class UserManager {
         // 查詢是否已有相同名稱的使用者
         const { data: users } = await supabase
           .from("Users")
-          .select("id, userName, role, device_token")
+          .select("id, userName, role, device_token, auth_user_id")
           .eq("userName", name);
 
         let user = users?.length > 0 ? users[0] : null;
@@ -292,7 +372,7 @@ export class UserManager {
           const { data: newUsers, error } = await supabase
             .from("Users")
             .insert([{ userName: name }])
-            .select("id, userName, role, device_token");
+            .select("id, userName, role, device_token, auth_user_id")
           if (error) throw error;
           user = newUsers[0];
         } else {
@@ -313,6 +393,8 @@ export class UserManager {
         CookieHelper.set(this.tokenKey, user.device_token);
         this.updateLastOnline(user.id);
         this.currentUser = user;
+        // 背景建立 / 綁定 Anonymous Auth
+        this.ensureAnonymousAuth(user);
         close();
         onSuccess(user);
       } catch (e) {
@@ -473,7 +555,7 @@ export class UserManager {
         // 步驟 1：確認使用者存在且為管理者角色
         const { data: user } = await supabase
           .from("Users")
-          .select("id, userName, role, device_token")
+          .select("id, userName, role, device_token, auth_user_id")
           .eq("userName", name)
           .maybeSingle();
 
@@ -507,6 +589,8 @@ export class UserManager {
         CookieHelper.set(this.tokenKey, user.device_token);
         StorageHelper.set(this.storageKey, user);
         this.renderUserInfo();
+        // 背景建立 / 綁定 Anonymous Auth
+        this.ensureAnonymousAuth(user);
         close();
         window.location.reload();
       } catch (e) {
