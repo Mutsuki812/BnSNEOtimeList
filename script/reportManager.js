@@ -271,6 +271,7 @@ export class ReportManager {
       bossType:      taskType,
       reportType:    reportType,
       comment:       comment,
+      user_id:       user.id,
       user_name:     user.userName,
       adminResponse: null,
     };
