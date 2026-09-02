@@ -89,36 +89,21 @@ export class OnlinePredictionManager {
       const todayWeekDay = dayOfWeek === 0 ? 7 : dayOfWeek;
       const yesterdayWeekDay = todayWeekDay === 1 ? 7 : todayWeekDay - 1;
 
-      // 同時抓取今天和昨天的回報資料
+      // 一次取得今天與昨天，避免每次 polling 產生兩個 REST SELECT。
       const bossTypes = ['gishiki', 'shirao', 'sengen'];
 
-      const [todayRes, yesterdayRes] = await Promise.all([
-        supabase
-          .from('spawn_reports')
-          .select('bossType,timeStamp,locationA,method,weekDay')
-          .eq('weekDay', todayWeekDay)
-          .in('bossType', bossTypes)
-          .order('timeStamp', { ascending: false }),
+      const { data, error } = await supabase
+        .from('spawn_reports')
+        .select('bossType,timeStamp,locationA,method,weekDay')
+        .in('weekDay', [todayWeekDay, yesterdayWeekDay])
+        .in('bossType', bossTypes)
+        .order('timeStamp', { ascending: false });
 
-        supabase
-          .from('spawn_reports')
-          .select('bossType,timeStamp,locationA,method,weekDay')
-          .eq('weekDay', yesterdayWeekDay)
-          .in('bossType', bossTypes)
-          .order('timeStamp', { ascending: false })
-      ]);
+      if (error) throw error;
 
-      // Supabase 查詢錯誤時直接拋出，避免把錯誤誤判成「今天沒有回報」
-      if (todayRes.error) {
-        throw todayRes.error;
-      }
-
-      if (yesterdayRes.error) {
-        throw yesterdayRes.error;
-      }
-
-      const todayData = todayRes.data || [];
-      const yesterdayData = yesterdayRes.data || [];
+      const allData = data || [];
+      const todayData = allData.filter(row => row.weekDay === todayWeekDay);
+      const yesterdayData = allData.filter(row => row.weekDay === yesterdayWeekDay);
 
       const reports = {};
 
@@ -167,9 +152,10 @@ export class OnlinePredictionManager {
       processDayData(yesterdayData, yesterdayWeekDay);
 
       this.lastReports = reports;
-    } catch (e) {
-      console.error("...");
-      this.lastReports = {};
+    } catch (error) {
+      console.error("[預測資料] Supabase 查詢失敗：", error);
+      // 保留最後一次成功資料，避免短暫 timeout 讓畫面清空。
+      throw error;
     }
   }
 
