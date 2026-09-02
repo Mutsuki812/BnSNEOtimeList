@@ -36,7 +36,9 @@ class TaskScheduleApp {
     // --- 資料層 ---
     this.scheduleLoader = new ScheduleDataLoader(this.timeUtils);
     this.taskProcessor  = new TaskDataProcessor(this.timeUtils, this.taskUtils);
-    this.realtimeRefreshTimer = null;
+    this.feedbackRefreshTimer = null;
+    this.predictionPollingTimeoutId = null;
+    this.isPredictionRefreshing = false;
     // --- 功能模組 ---
     this.soundManager            = new SoundManager();
     this.userManager             = new UserManager(this.soundManager);
@@ -130,6 +132,7 @@ showDatabaseError(error) {
 
     this.reportManager.updateAll();
     this.startTimers();
+    this.syncPredictionPolling();
 
     // 綁定管理者登入的隱藏觸發點（點擊時間標籤區域的特定元素）
     const timeBox = document.getElementById("timeBox");
@@ -163,18 +166,11 @@ showDatabaseError(error) {
     this.worker.onmessage = (e) => {
       const { type, reason } = e.data;
 
-      if (type === "DB_UPDATE") {
-        // Supabase Realtime 偵測到 spawn_reports 資料異動。
-        // 使用 debounce 合併短時間內的多次通知，
-        // 避免大量使用者同時回報時產生重複 Supabase 查詢。
-        console.log("[即時更新] 偵測到資料異動");
-
-        // 如果前一次更新還在等待，取消它
-        clearTimeout(this.realtimeRefreshTimer);
-
-        // 500ms 內即使收到多次 Realtime 通知，也只查詢一次
-        this.realtimeRefreshTimer = setTimeout(() => {
-          this.refreshPredictionOnly();
+      if (type === "FEEDBACK_UPDATE") {
+        // feedback_reports 全年維持 Realtime，只刷新留言列表。
+        clearTimeout(this.feedbackRefreshTimer);
+        this.feedbackRefreshTimer = setTimeout(() => {
+          this.reportManager.loadReports();
         }, 500);
       } else if (type === "TICK_MINUTE") {
         // Worker 精準分鐘計時觸發，在有快取資料的情況下重新渲染任務列表
@@ -194,7 +190,7 @@ showDatabaseError(error) {
       } else if (type === "TICK_PRE_ALERT") {
         this.checkPreAlerts(true);
       } else if (type === "REALTIME_READY") {
-        console.log("[Worker] Realtime 連線成功，即時監聽已就緒");
+        console.log("[Worker] feedback_reports Realtime 已就緒");
       } else if (type === "INIT_FAILED") {
         // Worker 初始化失敗，應用程式降級為純定時器模式（仍可正常運作）
         console.warn(`[Worker] Realtime 初始化失敗：${reason}，已降級為純定時器模式`);
@@ -280,6 +276,39 @@ showDatabaseError(error) {
   }
 
   /**
+   * 活動期間限定的 spawn_reports polling。
+   * 每次完成後重新產生 5～10 秒延遲，將不同使用者的查詢時間錯開。
+   */
+  syncPredictionPolling() {
+    clearTimeout(this.predictionPollingTimeoutId);
+    this.predictionPollingTimeoutId = null;
+
+    if (!this.isInDateRange()) return;
+
+    const scheduleNext = () => {
+      if (!this.isInDateRange()) {
+        this.predictionPollingTimeoutId = null;
+        return;
+      }
+
+      const delay = 5000 + Math.floor(Math.random() * 5001);
+      this.predictionPollingTimeoutId = setTimeout(async () => {
+        if (!document.hidden && !this.isPredictionRefreshing) {
+          this.isPredictionRefreshing = true;
+          try {
+            await this.refreshPredictionOnly();
+          } finally {
+            this.isPredictionRefreshing = false;
+          }
+        }
+        scheduleNext();
+      }, delay);
+    };
+
+    scheduleNext();
+  }
+
+  /**
    * 從 Supabase 載入排程資料，並在完成後觸發全域渲染。
    * 使用 loadToken 機制處理非同步競爭問題：
    * 若在 await 期間有新的載入請求發出，本次渲染將被中止。
@@ -290,14 +319,17 @@ showDatabaseError(error) {
 
     try {
 
-      const loadPromises = [
-        this.scheduleLoader.loadSchedule()
-      ];
+      const isSpecialPeriod = this.isInDateRange();
 
-      if (this.isInDateRange()) {
-        loadPromises.push(
-          this.onlinePredictionManager.init()
-        );
+      // 特殊期間不使用 schedule_data；以空陣列建立線上回報容器。
+      const schedulePromise = isSpecialPeriod
+        ? Promise.resolve([])
+        : this.scheduleLoader.loadSchedule();
+
+      const loadPromises = [schedulePromise];
+
+      if (isSpecialPeriod) {
+        loadPromises.push(this.onlinePredictionManager.init());
       } else {
         this.onlinePredictionManager.isInitialized = false;
       }
@@ -632,6 +664,7 @@ showDatabaseError(error) {
       } else {
         this.initOutDateRange();
       }
+      this.syncPredictionPolling();
     };
 
     const nextHour     = new Date(now);
